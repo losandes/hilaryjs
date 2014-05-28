@@ -208,8 +208,7 @@ var hilary = (function () {
             exceptions = opts.exceptions || $exceptions,
             notResolvableHandler = opts.notResolvableHandler || defaultNotResolvableHandler,
             parent = opts.parentContainer,
-            container,
-            registerMany;
+            container;
 
         container = utils.isObject(opts.container) ? opts.container : {};
 
@@ -318,8 +317,10 @@ var hilary = (function () {
             if (utils.isFunction(opts.beforeRegister))
                 opts.beforeRegister(moduleNameOrFunc, moduleDefinition);
 
-            if (utils.isFunction(moduleNameOrFunc))
-                return registerMany(moduleNameOrFunc);
+            if (utils.isFunction(moduleNameOrFunc)) {
+                moduleNameOrFunc(container);
+                return $this;
+            }
 
             if (utils.notString(moduleNameOrFunc))
                 exceptions.argumentException('The first argument must be the name of the module', 'moduleNameOrFunc');
@@ -331,17 +332,6 @@ var hilary = (function () {
 
             if (utils.isFunction(opts.afterRegister))
                 opts.afterRegister(moduleNameOrFunc, moduleDefinition);
-
-            return $this;
-        };
-
-        // register multiple models in one closure
-        // @param moduleFunc: must be a function that accepts a single parameter: container.
-        //                    To register new modules, add them as properties to container.
-        registerMany = function (moduleFunc) {
-            if (utils.notFunction(moduleFunc))
-                exceptions.argumentException('The first argument must be a function that accepts on parameter: container', 'moduleFunc');
-            else moduleFunc(container);
 
             return $this;
         };
@@ -400,11 +390,11 @@ var hilary = (function () {
                 for (var i in moduleNameOrDependencies) {
                     var _moduleName = moduleNameOrDependencies[i];
 
-                    if (_moduleName === '$container')
+                    if (_moduleName === 'hilary::container')
                         _depends.push(container);
-                    else if (_moduleName === '$parentContainer' && parent !== undefined)
+                    else if (_moduleName === 'hilary::parentContainer' && parent !== undefined)
                         _depends.push($this.getParentContainer());
-                    else if (_moduleName === '$parentContainer')
+                    else if (_moduleName === 'hilary::parentContainer')
                         _depends.push(null);
                     else
                         _depends.push($this.resolveOne(_moduleName));
