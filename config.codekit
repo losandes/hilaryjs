@@ -19,7 +19,7 @@
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/src\/hilary.js",
-		"outputAbbreviatedPath": "\/hilary.min.js",
+		"outputAbbreviatedPath": "\/src\/min\/hilary.min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 1,
 		"outputStyle": 1,
