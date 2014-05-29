@@ -30,17 +30,17 @@ describe("hilary", function() {
 
   describe('hilary.ctor', function(){
 
-    it('should exist in window', function() {
+    it('hilary should exist in window', function() {
       expect(window.hilary).toBeDefined();
     });
 
 
-    it('should create new parent containers', function() {
+    it('createContainer should construct new parent containers', function() {
       expect(container).toBeDefined();
     });
 
 
-    it('should create child containers', function() {
+    it('createChildContainer should construct child containers', function() {
       var _child = container.createChildContainer();
 
       container.register(testModuleDefinitions.empty.name, function() {
@@ -63,7 +63,7 @@ describe("hilary", function() {
 
   describe('hilary.register', function(){
 
-    it('should register single modules by name', function() {
+    it('register should register single modules by name', function() {
       container.register(testModuleDefinitions.empty.name, function() {
         return testModuleDefinitions.empty.output;
       });
@@ -72,7 +72,7 @@ describe("hilary", function() {
     });
 
 
-    it('should register any number of modules by func', function() {
+    it('register should register any number of modules by func', function() {
       container.register(function(cntr) {
         cntr.hello = function() { return 'world' };
         cntr.ola = function() { return 'el mundo' };
@@ -86,7 +86,7 @@ describe("hilary", function() {
 
   describe('hilary.resolve', function(){
 
-    it('should resolve single modules by name', function() {
+    it('resolve should resolve single modules by name', function() {
       container.register(testModuleDefinitions.empty.name, function() {
         return testModuleDefinitions.empty.output;
       });
@@ -95,7 +95,7 @@ describe("hilary", function() {
     });
 
 
-    it('should resolve multiple modules by name', function() {
+    it('resolve should resolve multiple modules by name', function() {
       container.register(testModuleDefinitions.empty.name, function() {
         return testModuleDefinitions.empty.output;
       });
@@ -111,7 +111,7 @@ describe("hilary", function() {
     });
 
 
-    it('should resolve container and parentContainer modules by name', function() {
+    it('resolve should resolve container and parentContainer modules by name', function() {
       container.createChildContainer().resolve([constants.container, constants.parentContainer], function (ctnr, parent) {
         expect(ctnr).not.toBe(null);
         expect(ctnr.getContainer).not.toBe(null);
@@ -121,7 +121,7 @@ describe("hilary", function() {
     });
 
 
-    it('should resolve through parent hierarchy', function() {
+    it('resolve should resolve through parent hierarchy', function() {
       var _child = container.createChildContainer();
       var _grandChild = _child.createChildContainer();
 
@@ -141,7 +141,7 @@ describe("hilary", function() {
 
   describe('hilary.pipeline', function() {
 
-    it('should allow injection for before register', function() {
+    it('a registered "hilary::before::register" module should allow feature injection before registration', function() {
       container.register(constants.beforeRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
         cntr.fooB4Register = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
       });
@@ -154,7 +154,7 @@ describe("hilary", function() {
     });
 
 
-    it('should allow injection for after register', function() {
+    it('a registered "hilary::after::register" module should allow feature injection after registration', function() {
       container.register(constants.afterRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
         cntr.fooAfterRegister = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
       });
@@ -167,7 +167,7 @@ describe("hilary", function() {
     });
 
 
-    it('should allow injection for before resolve', function() {
+    it('a registered "hilary::before::resolve" module hould allow feature injection before resolving a module', function() {
       container.register(constants.beforeResolve, function(cntr, moduleNameOrDependencies, callback) {
         cntr.fooB4Resolve = function() { return 'resolving!'; }
       });
@@ -182,7 +182,7 @@ describe("hilary", function() {
     });
 
 
-    it('should allow injection for after resolve', function() {
+    it('a registered "hilary::after::resolve" module should allow feature injection after resolving a module', function() {
       container.register(constants.afterResolve, function(cntr, moduleNameOrDependencies, callback) {
         cntr.fooB4Resolve = function() { return moduleNameOrDependencies; }
       });
@@ -203,14 +203,14 @@ describe("hilary", function() {
     });
 
 
-    it('should allow injection for before create child', function() {
+    it('a registered "hilary::before::new::child" module should allow feature injection before new child containers are created', function() {
       container.register(constants.beforeNewChild, function() {
           // TODO
       });
     });
 
 
-    it('should allow injection for after create child', function() {
+    it('a registered "hilary::after::new::child" module should allow feature injection after new child containers are created', function() {
       // TODO
     });
 
