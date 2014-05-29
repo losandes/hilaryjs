@@ -29,13 +29,16 @@ describe("hilary", function() {
   });
 
   describe('hilary.ctor', function(){
+
     it('should exist in window', function() {
       expect(window.hilary).toBeDefined();
     });
 
+
     it('should create new parent containers', function() {
       expect(container).toBeDefined();
     });
+
 
     it('should create child containers', function() {
       var _child = container.createChildContainer();
@@ -59,6 +62,7 @@ describe("hilary", function() {
   }); // / ctor
 
   describe('hilary.register', function(){
+
     it('should register single modules by name', function() {
       container.register(testModuleDefinitions.empty.name, function() {
         return testModuleDefinitions.empty.output;
@@ -66,6 +70,7 @@ describe("hilary", function() {
 
       expect(container.resolve(testModuleDefinitions.empty.name)()).toBe(testModuleDefinitions.empty.output);
     });
+
 
     it('should register any number of modules by func', function() {
       container.register(function(cntr) {
@@ -76,6 +81,7 @@ describe("hilary", function() {
       expect(container.resolve('hello')()).toBe('world');
       expect(container.resolve('ola')()).toBe('el mundo');
     });
+
   }); // /register
 
   describe('hilary.resolve', function(){
@@ -87,6 +93,7 @@ describe("hilary", function() {
 
       expect(container.resolve(testModuleDefinitions.empty.name)()).toBe(testModuleDefinitions.empty.output);
     });
+
 
     it('should resolve multiple modules by name', function() {
       container.register(testModuleDefinitions.empty.name, function() {
@@ -103,6 +110,7 @@ describe("hilary", function() {
       });
     });
 
+
     it('should resolve container and parentContainer modules by name', function() {
       container.createChildContainer().resolve([constants.container, constants.parentContainer], function (ctnr, parent) {
         expect(ctnr).not.toBe(null);
@@ -111,6 +119,7 @@ describe("hilary", function() {
         expect(parent.getContainer).not.toBe(null);
       });
     });
+
 
     it('should resolve through parent hierarchy', function() {
       var _child = container.createChildContainer();
@@ -131,6 +140,7 @@ describe("hilary", function() {
   }); // /resolve
 
   describe('hilary.pipeline', function() {
+
     it('should allow injection for before register', function() {
       container.register(constants.beforeRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
         cntr.fooB4Register = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
@@ -143,6 +153,7 @@ describe("hilary", function() {
       expect(container.resolve('fooB4Register')().name).toBe(testModuleDefinitions.empty.name);
     });
 
+
     it('should allow injection for after register', function() {
       container.register(constants.afterRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
         cntr.fooAfterRegister = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
@@ -154,6 +165,7 @@ describe("hilary", function() {
 
       expect(container.resolve('fooAfterRegister')().name).toBe(testModuleDefinitions.empty.name);      
     });
+
 
     it('should allow injection for before resolve', function() {
       container.register(constants.beforeResolve, function(cntr, moduleNameOrDependencies, callback) {
@@ -168,6 +180,7 @@ describe("hilary", function() {
         expect(cntr.fooB4Resolve()).toBe('resolving!'); 
       });
     });
+
 
     it('should allow injection for after resolve', function() {
       container.register(constants.afterResolve, function(cntr, moduleNameOrDependencies, callback) {
@@ -189,11 +202,13 @@ describe("hilary", function() {
       });
     });
 
+
     it('should allow injection for before create child', function() {
       container.register(constants.beforeNewChild, function() {
           // TODO
       });
     });
+
 
     it('should allow injection for after create child', function() {
       // TODO
