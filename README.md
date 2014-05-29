@@ -40,7 +40,7 @@ hilary.register('myOtherModule', function(myModule) {
 });
 ```
 
-If you have more complex needs, or want to register something other than a function, such as an object literal, you can register modules directly against the conatainer.  This feature can easily be misused (i.e. using the container for Service Location).  We recommend keeping it simple, and only use the container for registration.
+If you have more complex needs, want to register something other than a function, such as an object literal, or you just want to write pure JavaScript, you can register modules directly against the conatainer.  This feature can easily be misused (i.e. using the container for Service Location).  We recommend keeping it simple, and only use the container for registration.
 
 ```JavaScript
 hilary.register(function(container) {
