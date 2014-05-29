@@ -1,7 +1,7 @@
 hilary.js
 ========
 
-hilary.js is a simple JavaScript IoC container.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
+hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-ceremony dependency injection, to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
 ##The singleton container, and constructors
 
@@ -150,4 +150,35 @@ hilary.register('hilary::after::resolve', function(container, moduleNameOrDepend
       $(document).trigger('resolved:' + moduleNameOrDependencies);
 });
 ```
+###The before new child event
+
+Before a new child container is created, the "hilary::before::new::child" event is fired, if a function is registered. It accepts two arguments:
+
+```
+@param container: the current container
+@param options: any options that were passed into createChildContainer
+```
+
+```JavaScript
+hilary.register('hilary::before::new::child', function (container, options) {
+  $(document).trigger('creatingChildContainer');
+});
+```
+
+###The after new child event
+
+After a new child container is created, the "hilary::after::new::child" event is fired, if a function is registered. It accepts three arguments:
+
+```
+@param container: the current container
+@param options: any options that were passed into createChildContainer
+@param child: the new child hilary instance
+```
+
+```JavaScript
+hilary.register('hilary::after::new::child', function (container, options, child) {
+  $(document).trigger('createdChildContainer');
+});
+```
+
 
