@@ -378,7 +378,7 @@
 			"flagValue": -1
 			},
 		"forin": {
-			"active": 0,
+			"active": 1,
 			"flagValue": -1
 			},
 		"freeze": {
@@ -538,7 +538,7 @@
 			"flagValue": -1
 			},
 		"strict": {
-			"active": 0,
+			"active": 1,
 			"flagValue": -1
 			},
 		"sub": {

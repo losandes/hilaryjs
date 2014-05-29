@@ -208,7 +208,19 @@ var hilary = (function () {
             exceptions = opts.exceptions || $exceptions,
             notResolvableHandler = opts.notResolvableHandler || defaultNotResolvableHandler,
             parent = opts.parentContainer,
-            container;
+            container,
+            constants = {
+                containerRegistration: 'hilary::container',
+                parentContainerRegistration: 'hilary::parent'
+            },
+            pipeline = {
+                beforeRegister: 'hilary::before::register',
+                afterRegister: 'hilary::after::register',
+                beforeResolve: 'hilary::before::resolve',
+                afterResolve: 'hilary::after::resolve',
+                beforeNewChild: 'hilary::before::new::child',
+                afterNewChild: 'hilary::after::new::child'
+            };
 
         container = utils.isObject(opts.container) ? opts.container : {};
 
@@ -235,15 +247,7 @@ var hilary = (function () {
         //      // accepts 2 arguments, the moduleName and the hilary instance
         // @param options.parentContainer (hilary instance): the parent container
         $this.createContainer = function (options) {
-            if (utils.isFunction(opts.beforeCreateContainer))
-                opts.beforeCreateContainer(options);
-
-            var _new = $hilary(options);
-
-            if (utils.isFunction(opts.afterCreateContainer))
-                opts.afterCreateContainer(options, _new);
-
-            return _new;
+            return $hilary(options);
         };
 
         // exposes the constructor for hilary so you can create child contexts
@@ -255,13 +259,13 @@ var hilary = (function () {
             options = options || {};
             options.parentContainer = $this;
 
-            if (utils.isFunction(opts.beforeCreateContainer))
-                opts.beforeCreateContainer(options);
+            if (utils.isFunction(container[pipeline.beforeNewChild]))
+                container[pipeline.beforeNewChild](container, options);
 
             var _new = $hilary(options);
 
-            if (utils.isFunction(opts.afterCreateContainer))
-                opts.afterCreateContainer(options, _new);
+            if (utils.isFunction(container[pipeline.afterNewChild]))
+                container[pipeline.afterNewChild](container, options, _new);
 
             return _new;
         };
@@ -314,8 +318,8 @@ var hilary = (function () {
         // @param moduleName (string or function): the name of the module or a function that accepts a single parameter: container
         // @param moduleDefinition (object literal or function): the module definition
         $this.register = function (moduleNameOrFunc, moduleDefinition) {
-            if (utils.isFunction(opts.beforeRegister))
-                opts.beforeRegister(moduleNameOrFunc, moduleDefinition);
+            if(utils.isFunction(container[pipeline.beforeRegister]))
+                container[pipeline.beforeRegister](container, moduleNameOrFunc, moduleDefinition);
 
             if (utils.isFunction(moduleNameOrFunc)) {
                 moduleNameOrFunc(container);
@@ -330,8 +334,8 @@ var hilary = (function () {
 
             container[moduleNameOrFunc] = moduleDefinition;
 
-            if (utils.isFunction(opts.afterRegister))
-                opts.afterRegister(moduleNameOrFunc, moduleDefinition);
+            if(utils.isFunction(container[pipeline.afterRegister]))
+                container[pipeline.afterRegister](container, moduleNameOrFunc, moduleDefinition);
 
             return $this;
         };
@@ -373,14 +377,14 @@ var hilary = (function () {
         // @param callback (function): if the first argument is an array, then the resolved dependencies 
         //      will be passed into the callback function in the order that they exist in the array
         $this.resolve = function (moduleNameOrDependencies, callback) {
-            if (utils.isFunction(opts.beforeResolve))
-                opts.beforeResolve(moduleNameOrDependencies, callback);
+            if(utils.isFunction(container[pipeline.beforeResolve]))
+                container[pipeline.beforeResolve](container, moduleNameOrDependencies, callback);
 
             if (utils.isString(moduleNameOrDependencies)) {
                 var _result = $this.resolveOne(moduleNameOrDependencies);
 
-                if (utils.isFunction(opts.afterResolve))
-                    opts.afterResolve(moduleNameOrDependencies, callback);
+                if(utils.isFunction(container[pipeline.afterResolve]))
+                    container[pipeline.afterResolve](container, moduleNameOrDependencies, callback);
 
                 return _result;
             }
@@ -390,11 +394,11 @@ var hilary = (function () {
                 for (var i in moduleNameOrDependencies) {
                     var _moduleName = moduleNameOrDependencies[i];
 
-                    if (_moduleName === 'hilary::container')
+                    if (_moduleName === constants.containerRegistration)
                         _depends.push(container);
-                    else if (_moduleName === 'hilary::parentContainer' && parent !== undefined)
+                    else if (_moduleName === constants.parentContainerRegistration && parent !== undefined)
                         _depends.push($this.getParentContainer());
-                    else if (_moduleName === 'hilary::parentContainer')
+                    else if (_moduleName === constants.parentContainerRegistration)
                         _depends.push(null);
                     else
                         _depends.push($this.resolveOne(_moduleName));
@@ -406,8 +410,8 @@ var hilary = (function () {
                     'module name, dependencies or callback');
             }
 
-            if (utils.isFunction(opts.afterResolve))
-                opts.afterResolve(moduleNameOrDependencies, callback);
+            if(utils.isFunction(container[pipeline.afterResolve]))
+                container[pipeline.afterResolve](container, moduleNameOrDependencies, callback);
 
             return $this;
         };
