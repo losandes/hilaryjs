@@ -40,16 +40,47 @@ hilary.register('myOtherModule', function(myModule) {
 });
 ```
 
-If you have more complex needs, you can register modules directly against the conatainer.  This feature can easily be misused (i.e. using the container for Service Location).  We recommend keeping it simple, and only use the container for registration.
+If you have more complex needs, or want to register something other than a function, such as an object literal, you can register modules directly against the conatainer.  This feature can easily be misused (i.e. using the container for Service Location).  We recommend keeping it simple, and only use the container for registration.
 
 ```JavaScript
 hilary.register(function(container) {
-  container.myModule = function() {
-    return 'hello world!';
-  };
-  
-  container.myOtherModule = function(myModule) {
-    return myModule();
+  container.moduleWithInnerRegistration = function() {
+    var complex = doSomeReallyComplexStuff();
+    container.getComplex = function() {
+      return complex;
+    };
   };
 });
 ```
+
+##Resolving modules
+
+Resolving modules simply returns the registered function or object.  Invocation is in the scope of the caller.  We recommend doing all resolving in a single module (i.e. compositionRoot.js).
+
+```JavaScript
+var myModule = hilary.resolve('myModule');
+var myOtherModule = hilary.resolve('myOtherModule');
+
+myOtherModule(myModule);
+```
+
+Or, if you prefer to resolve many at once:
+
+```JavaScript
+hilary.resolve(['myModule', 'myOtherModule'], function (myModule, MyOtherModule) {
+  myOtherModule(myModule);
+});
+```
+If you need access to the container or its parent, when resolving many, there are module names for that:
+
+```JavaScript
+hilary.resolve(['hilary::container', 'hilary::parent'], function (container, parent) {
+  // ...
+});
+```
+
+
+
+
+
+
