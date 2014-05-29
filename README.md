@@ -85,12 +85,57 @@ There are several before and after events that you can tie into, to extend hilar
 
 ###The before register event
 
+Before a module is registered, the "hilary::before::register" event is fired, if a function is registered. It accepts 3 parameters: 
+
+```
+@param container: the current container
+@param moduleName (string or function): the name of the module or a function that accepts a single parameter: container
+@param moduleDefinition (object literal or function): the module definition
+```
+
 ```JavaScript
 hilary.register('hilary::before::register', function(container, moduleNameOrFunc, moduleDefinition) {
   $(document).trigger('registering:' + moduleNameOrFunc);
 });
 ```
 
+###The after register event
 
+```JavaScript
+hilary.register('hilary::after::register', function(container, moduleNameOrFunc, moduleDefinition) {
+  $(document).trigger('registered:' + moduleNameOrFunc);
+});
+```
 
+###The before resolveOne event
+
+Before each dependency is resolved, the "hilary::before::resolve::one" event is fired, if a function is registered. It accepts two parameters: container, which will be passed the current container, and the moduleName (string).
+
+```JavaScript
+hilary.register('hilary::before::resolve::one', function(container, moduleName) {
+  $(document).trigger('resolving:' + moduleName);
+});
+```
+
+###The before resolve event
+
+Before any dependencies are resolved, the "hilary::before::resolve" event is fired, if a function is registered. If you also register the "hilary::before::resolve::one" event, both events will fire.  This module accepts 3 parameters: the current container, the moduleName or module name array, and the callback, if the first parameter being passed to resolve is an array.
+
+```JavaScript
+hilary.register('hilary::before::resolve', function(container, moduleNameOrDependencies, callback) {
+  if (typeof(moduleNameOrDependencies) === 'string')
+    $(document).trigger('resolving:' + moduleNameOrDependencies);
+});
+```
+
+###The after resolve event
+
+After the module(s) are resolved, the "hilary::after::resolve" event is fired, if a function is registered. It accepts the same parameters as the "hilary::before::resolve" event.
+
+```JavaScript
+hilary.register('hilary::after::resolve', function(container, moduleNameOrDependencies, callback) {
+    if (typeof(moduleNameOrDependencies) === 'string')
+      $(document).trigger('resolved:' + moduleNameOrDependencies);
+});
+```
 
