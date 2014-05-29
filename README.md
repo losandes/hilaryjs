@@ -57,6 +57,8 @@ hilary.register(function(container) {
 
 Resolving modules simply returns the registered function or object.  Invocation is in the scope of the caller.  We recommend doing all resolving in a single module (i.e. compositionRoot.js).
 
+Resolving is recursively hierarchical, so if you attempt to resolve a module in a child container, and the child container does not have a registration, but the parent container does, the module from the parent will be returned.
+
 ```JavaScript
 var myModule = hilary.resolve('myModule'),
     myOtherModule = hilary.resolve('myOtherModule');
