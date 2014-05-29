@@ -5,8 +5,7 @@ hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-
 
 ##The singleton container, and constructors
 
-hilary exists on window, and you can use it directly.  Most of the examples assume that is your use case, but hilary allows the 
-construction of new parent containers, as well as child containers, for scoping.
+hilary exists on window, as a singleton, and you can use it directly.  Most of the examples assume that is your use case.  Hilary also provides construction of new instances: parent containers, as well as child containers, for scoping.
 
 ```JavaScript
 var container = hilary.createContainer();
