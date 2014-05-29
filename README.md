@@ -8,7 +8,20 @@ hilary.js is a simple JavaScript IoC container.  It's named after Hilary Page, w
 hilary exists on window, and you can use it directly.  Most of the examples assume that is your use case, but hilary allows the 
 construction of new parent containers, as well as child containers, for scoping.
 
-```
+```JavaScript
 var container = hilary.createContainer();
 var child = container.createChildContainer();
+```
+
+The constructors accept a single argument: options.
+
+```JavaScript
+var container = hilary.createContainer({
+  utils: myUtilityOverride,
+  exceptions: myExceptionsOverride,
+  container: { alreadyComposed: function() {  
+      return 'you can pass in an existing object literal to get started if you want.';
+    }  
+  }
+});
 ```
