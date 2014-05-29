@@ -206,16 +206,17 @@ var hilary = (function () {
             opts = options || {},
             utils = opts.utils || $utils,
             exceptions = opts.exceptions || $exceptions,
-            notResolvableHandler = opts.notResolvableHandler || defaultNotResolvableHandler,
             parent = opts.parentContainer,
             container,
             constants = {
                 containerRegistration: 'hilary::container',
-                parentContainerRegistration: 'hilary::parent'
+                parentContainerRegistration: 'hilary::parent',
+                notResolvable: 'hilary::handler::not::resolvable'
             },
             pipeline = {
                 beforeRegister: 'hilary::before::register',
                 afterRegister: 'hilary::after::register',
+                beforeResolveOne: 'hilary::before::resolve::one',
                 beforeResolve: 'hilary::before::resolve',
                 afterResolve: 'hilary::after::resolve',
                 beforeNewChild: 'hilary::before::new::child',
@@ -243,8 +244,6 @@ var hilary = (function () {
         // exposes the constructor for hilary so you can create new top level containers
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
         // @param options.exceptions (object): exception handling
-        // @param options.notResolvableHandler (function): handler for modules that fail to resolve
-        //      // accepts 2 arguments, the moduleName and the hilary instance
         // @param options.parentContainer (hilary instance): the parent container
         $this.createContainer = function (options) {
             return $hilary(options);
@@ -253,8 +252,6 @@ var hilary = (function () {
         // exposes the constructor for hilary so you can create child contexts
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
         // @param options.exceptions (object): exception handling
-        // @param options.notResolvableHandler (function): handler for modules that fail to resolve
-        //      // accepts 2 arguments, the moduleName and the hilary instance
         $this.createChildContainer = function (options) {
             options = options || {};
             options.parentContainer = $this;
@@ -357,16 +354,20 @@ var hilary = (function () {
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         $this.resolveOne = function (moduleName) {
-            if (utils.isFunction(opts.beforeResolveOne))
-                opts.beforeResolveOne(moduleName);
+            if(utils.isFunction(container[pipeline.beforeResolveOne]))
+                container[pipeline.beforeResolveOne](container, moduleName);
 
             var _module = container[moduleName];
 
             if (_module !== undefined)
                 return _module;
 
-            if (parent === undefined)
-                notResolvableHandler(moduleName, $this);
+            if (parent === undefined && utils.isFunction(container[constants.notResolvable])) {
+                container[constants.notResolvable](moduleName, $this);
+            }
+            else if (parent === undefined) {
+                defaultNotResolvableHandler(moduleName, $this);
+            }
 
             return parent.resolveOne(moduleName);
         };
@@ -424,7 +425,6 @@ var hilary = (function () {
     // put a ready-to-use hilary instance on window
     return $hilary({
         utils: $utils,
-        exceptions: $exceptions,
-        notResolvableHandler: defaultNotResolvableHandler
+        exceptions: $exceptions
     });
 })();
