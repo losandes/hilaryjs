@@ -167,7 +167,7 @@ hilary.register('hilary::before::new::child', function (container, options) {
 
 ###The after new child event
 
-After a new child container is created, the "hilary::after::new::child" event is fired, if a function is registered. It accepts three arguments:
+After a new child container is created, the "hilary::after:::new::child" event is fired, if a function is registered. It accepts three arguments:
 
 ```
 @param container: the current container
