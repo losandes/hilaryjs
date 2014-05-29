@@ -83,7 +83,7 @@ hilary.resolve(['hilary::container', 'hilary::parent'], function (container, par
 
 There are several before and after events that you can tie into, to extend hilary.  All of these events can be leveraged by registering a function with the appropriate key name.
 
-#The before register event
+###The before register event
 
 ```JavaScript
 hilary.register('hilary::before::register', function(container, moduleNameOrFunc, moduleDefinition) {
