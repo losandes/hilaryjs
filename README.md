@@ -13,7 +13,7 @@ var container = hilary.createContainer();
 var child = container.createChildContainer();
 ```
 
-The constructors accept a single argument: options.
+The constructors accept a single argument that you may never need to use because most of hilary's dependencies are registered as modules: options.
 
 ```JavaScript
 var container = hilary.createContainer({
@@ -23,5 +23,33 @@ var container = hilary.createContainer({
       return 'you can pass in an existing object literal to get started if you want.';
     }  
   }
+});
+```
+
+##Registering modules
+
+We register single modules by name:
+
+```JavaScript
+hilary.register('myModule', function() {
+  return 'hello world!';
+});
+
+hilary.register('myOtherModule', function(myModule) {
+  return myModule();
+});
+```
+
+If you have more complex needs, you can register modules directly against the conatainer.  This feature can easily be misused (i.e. using the container for Service Location).  We recommend keeping it simple, and only use the container for registration.
+
+```JavaScript
+hilary.register(function(container) {
+  container.myModule = function() {
+    return 'hello world!';
+  };
+  
+  container.myOtherModule = function(myModule) {
+    return myModule();
+  };
 });
 ```
