@@ -207,7 +207,22 @@ var hilary = (function () {
             utils = opts.utils || $utils,
             exceptions = opts.exceptions || $exceptions,
             parent = opts.parentContainer,
-            container,
+            container = {},
+            beforeRegisterEvents = [],
+            afterRegisterEvents = [],
+            beforeResolveOneEvents = [],
+            beforeResolveEvents = [],
+            afterResolveEvents = [],
+            beforeNewChildEvents = [],
+            afterNewChildEvents = [],
+            beforeRegister,
+            afterRegister,
+            beforeResolveOne,
+            beforeResolve,
+            afterResolve,
+            beforeNewChild,
+            afterNewChild,
+            executeEvent,
             constants = {
                 containerRegistration: 'hilary::container',
                 parentContainerRegistration: 'hilary::parent',
@@ -222,9 +237,6 @@ var hilary = (function () {
                 beforeNewChild: 'hilary::before::new::child',
                 afterNewChild: 'hilary::after::new::child'
             };
-
-        container = utils.isObject(opts.container) ? opts.container : {};
-
 
         // validates that a dependency is registered in this container
         // @param name (string): a friendly name for the dependency, which is used if the dependency is missing
@@ -254,15 +266,15 @@ var hilary = (function () {
         // @param options.exceptions (object): exception handling
         $this.createChildContainer = function (options) {
             options = options || {};
-            options.parentContainer = $this;
+            var _opts = {
+                parentContainer: $this,
+                utils: options.utils || utils,
+                exceptions: options.exceptions || exceptions
+            };
 
-            if (utils.isFunction(container[pipeline.beforeNewChild]))
-                container[pipeline.beforeNewChild](container, options);
-
-            var _new = $hilary(options);
-
-            if (utils.isFunction(container[pipeline.afterNewChild]))
-                container[pipeline.afterNewChild](container, options, _new);
+            beforeNewChild(_opts);
+            var _new = $hilary(_opts);
+            afterNewChild(_opts, _new);
 
             return _new;
         };
@@ -315,8 +327,7 @@ var hilary = (function () {
         // @param moduleName (string or function): the name of the module or a function that accepts a single parameter: container
         // @param moduleDefinition (object literal or function): the module definition
         $this.register = function (moduleNameOrFunc, moduleDefinition) {
-            if(utils.isFunction(container[pipeline.beforeRegister]))
-                container[pipeline.beforeRegister](container, moduleNameOrFunc, moduleDefinition);
+            beforeRegister(moduleNameOrFunc, moduleDefinition);
 
             if (utils.isFunction(moduleNameOrFunc)) {
                 moduleNameOrFunc(container);
@@ -331,8 +342,7 @@ var hilary = (function () {
 
             container[moduleNameOrFunc] = moduleDefinition;
 
-            if(utils.isFunction(container[pipeline.afterRegister]))
-                container[pipeline.afterRegister](container, moduleNameOrFunc, moduleDefinition);
+            afterRegister(moduleNameOrFunc, moduleDefinition);
 
             return $this;
         };
@@ -354,8 +364,7 @@ var hilary = (function () {
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         $this.resolveOne = function (moduleName) {
-            if(utils.isFunction(container[pipeline.beforeResolveOne]))
-                container[pipeline.beforeResolveOne](container, moduleName);
+            beforeResolveOne(moduleName);
 
             var _module = container[moduleName];
 
@@ -378,14 +387,12 @@ var hilary = (function () {
         // @param callback (function): if the first argument is an array, then the resolved dependencies 
         //      will be passed into the callback function in the order that they exist in the array
         $this.resolve = function (moduleNameOrDependencies, callback) {
-            if(utils.isFunction(container[pipeline.beforeResolve]))
-                container[pipeline.beforeResolve](container, moduleNameOrDependencies, callback);
+            beforeResolve(moduleNameOrDependencies, callback);
 
             if (utils.isString(moduleNameOrDependencies)) {
                 var _result = $this.resolveOne(moduleNameOrDependencies);
 
-                if(utils.isFunction(container[pipeline.afterResolve]))
-                    container[pipeline.afterResolve](container, moduleNameOrDependencies, callback);
+                afterResolve(moduleNameOrDependencies, callback);
 
                 return _result;
             }
@@ -411,11 +418,79 @@ var hilary = (function () {
                     'module name, dependencies or callback');
             }
 
-            if(utils.isFunction(container[pipeline.afterResolve]))
-                container[pipeline.afterResolve](container, moduleNameOrDependencies, callback);
+            afterResolve(moduleNameOrDependencies, callback);
 
             return $this;
         };
+
+        //#region events
+
+        $this.registerEvent = function(name, callback) {
+            switch(name) {
+                case pipeline.beforeRegister:
+                    beforeRegisterEvents.push(callback);
+                    break;
+                case pipeline.afterRegister:
+                    afterRegisterEvents.push(callback);
+                    break;
+                case pipeline.beforeResolveOne:
+                    beforeResolveOneEvents.push(callback);
+                    break;
+                case pipeline.beforeResolve:
+                    beforeResolveEvents.push(callback);
+                    break;
+                case pipeline.afterResolve:
+                    afterResolveEvents.push(callback);
+                    break;
+                case pipeline.beforeNewChild:
+                    beforeNewChildEvents.push(callback);
+                    break;
+                case pipeline.afterNewChild:
+                    afterNewChildEvents.push(callback);
+                    break;
+                default:
+                    throw exceptions.notImplementedException('the pipeline event you are trying to register is not implemented (name: ' + name + ')');
+            };
+        };
+
+        executeEvent = function(eventArray, argumentArray) {
+            for (var i in eventArray) {
+                var _event = eventArray[i];
+
+                if(utils.isFunction(_event))
+                    _event.apply(null, argumentArray);
+            }
+        };
+
+        beforeRegister = function(moduleNameOrFunc, moduleDefinition) {
+            executeEvent(beforeRegisterEvents, [container, moduleNameOrFunc, moduleDefinition]);
+        };
+
+        afterRegister = function(moduleNameOrFunc, moduleDefinition) {
+            executeEvent(afterRegisterEvents, [container, moduleNameOrFunc, moduleDefinition]);
+        };
+
+        beforeResolveOne = function (moduleName) {
+            executeEvent(beforeResolveOneEvents, [container, moduleName]);
+        };
+
+        beforeResolve = function (moduleNameOrDependencies, callback) {
+            executeEvent(beforeResolveEvents, [container, moduleNameOrDependencies, callback]);
+        };
+
+        afterResolve = function (moduleNameOrDependencies, callback) {
+            executeEvent(afterResolveEvents, [container, moduleNameOrDependencies, callback]);
+        };
+
+        beforeNewChild = function(options) {
+            executeEvent(beforeNewChildEvents, [container, options]);
+        };
+        
+        afterNewChild = function(options, child) {
+            executeEvent(afterNewChildEvents, [container, options, child]);
+        };
+
+        //#endregion events
 
         // return the public members
         return $this;

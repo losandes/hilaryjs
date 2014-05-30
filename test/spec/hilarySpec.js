@@ -142,7 +142,7 @@ describe("hilary", function() {
   describe('hilary.pipeline', function() {
 
     it('a registered "hilary::before::register" module should allow feature injection before registration', function() {
-      container.register(constants.beforeRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
+      container.registerEvent(constants.beforeRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
         cntr.fooB4Register = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
       });
 
@@ -155,7 +155,7 @@ describe("hilary", function() {
 
 
     it('a registered "hilary::after::register" module should allow feature injection after registration', function() {
-      container.register(constants.afterRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
+      container.registerEvent(constants.afterRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
         cntr.fooAfterRegister = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
       });
 
@@ -168,7 +168,7 @@ describe("hilary", function() {
 
 
     it('a registered "hilary::before::resolve" module hould allow feature injection before resolving a module', function() {
-      container.register(constants.beforeResolve, function(cntr, moduleNameOrDependencies, callback) {
+      container.registerEvent(constants.beforeResolve, function(cntr, moduleNameOrDependencies, callback) {
         cntr.fooB4Resolve = function() { return 'resolving!'; }
       });
 
@@ -183,7 +183,7 @@ describe("hilary", function() {
 
 
     it('a registered "hilary::after::resolve" module should allow feature injection after resolving a module', function() {
-      container.register(constants.afterResolve, function(cntr, moduleNameOrDependencies, callback) {
+      container.registerEvent(constants.afterResolve, function(cntr, moduleNameOrDependencies, callback) {
         cntr.fooB4Resolve = function() { return moduleNameOrDependencies; }
       });
 
@@ -204,7 +204,7 @@ describe("hilary", function() {
 
 
     it('a registered "hilary::before::new::child" module should allow feature injection before new child containers are created', function() {
-      container.register(constants.beforeNewChild, function() {
+      container.registerEvent(constants.beforeNewChild, function() {
           // TODO
       });
     });
