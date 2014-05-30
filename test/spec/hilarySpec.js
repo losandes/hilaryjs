@@ -82,6 +82,24 @@ describe("hilary", function() {
       expect(container.resolve('ola')()).toBe('el mundo');
     });
 
+    it('register should register factories', function() {
+      container.register(testModuleDefinitions.empty.name, function() {
+        return testModuleDefinitions.empty.output;
+      });
+
+      container.register('factoryTest', function(foo, saySomething) {
+        return foo() + saySomething;
+      });      
+
+      container.register('factory', function(saySomething) {
+        var _test = container.resolve('factoryTest');
+        var _foo = container.resolve(testModuleDefinitions.empty.name);
+        return _test(_foo, saySomething);
+      });
+
+      expect(container.resolve('factory')(' hello world!')).toBe(testModuleDefinitions.empty.output + ' hello world!');
+    });
+
   }); // /register
 
   describe('hilary.resolve', function(){
