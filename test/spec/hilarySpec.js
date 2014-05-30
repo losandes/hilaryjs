@@ -222,14 +222,42 @@ describe("hilary", function() {
 
 
     it('a registered "hilary::before::new::child" module should allow feature injection before new child containers are created', function() {
-      container.registerEvent(constants.beforeNewChild, function() {
-          // TODO
+      container.registerEvent(constants.beforeNewChild, function(cntr, options) {
+          cntr.fooB4NewChild = function() { return 'hello world!'; }
       });
+
+      container.createChildContainer();
+
+      expect(container.resolve('fooB4NewChild')()).toBe('hello world!');
+
     });
 
 
     it('a registered "hilary::after::new::child" module should allow feature injection after new child containers are created', function() {
-      // TODO
+      container.registerEvent(constants.afterNewChild, function(cntr, options) {
+          cntr.fooAfterNewChild = function() { return 'hello world!'; }
+      });
+
+      container.createChildContainer();
+
+      expect(container.resolve('fooAfterNewChild')()).toBe('hello world!');
+    });
+
+    it('an event that has multiple registered handlers should execute each one of them', function() {
+      container.registerEvent(constants.beforeRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
+        cntr.fooB4Register = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
+      });
+
+      container.registerEvent(constants.beforeRegister, function(cntr, moduleNameOrFunc, moduleDefinition) {
+        cntr.fooB4Register2 = function() { return { name: moduleNameOrFunc, definition: moduleDefinition }; }
+      });
+
+      container.register(testModuleDefinitions.empty.name, function() {
+        return testModuleDefinitions.empty.output;
+      });
+
+      expect(container.resolve('fooB4Register')().name).toBe(testModuleDefinitions.empty.name);
+      expect(container.resolve('fooB4Register2')().name).toBe(testModuleDefinitions.empty.name);
     });
 
   });
