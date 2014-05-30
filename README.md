@@ -48,6 +48,34 @@ hilary.register(function(container) {
 });
 ```
 
+###Registering factories
+
+You can register factories too.  If you have modules with arguments that should be new instances every time, factories can be used to keep all of the container logic in one module: your composition root.
+
+```JavaScript
+container.register('echo', function() {
+  return 'echo: ';
+});
+
+container.register('saySomething', function(echo, saySomething) {
+  return echo() + saySomething;
+});      
+
+container.register('echoFactory', function(saySomething) {
+  var _echo = container.resolve('echo');
+  var _saySomething = container.resolve('saySomething');
+  return _saySomething(_echo, saySomething);
+});
+
+// the single _echoFactory could be passed as an argument to another module
+var _echoFactory = container.resolve('echoFactory');
+
+// ... inside that module
+// should output 'echo: hello world!'
+_echoFactory('hello world!');
+```
+
+
 ##Resolving modules
 
 Resolving modules simply returns the registered function or object.  Invocation is in the scope of the caller.  We recommend doing all resolving in a single module (i.e. compositionRoot.js).
