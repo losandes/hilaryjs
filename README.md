@@ -3,6 +3,9 @@ hilary.js
 
 hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-ceremony dependency injection, to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
+Most of the basics are covered here. For a deeper understanding of how to use hilary to compose your app, check out 
+our [getting started](http://acatar.github.io/hilary/gettingStarted/) example or our [getting started with AMD](http://acatar.github.io/hilary/gettingStartedWithRequire/) example.
+
 ##The singleton container, and constructors
 
 hilary exists on window, as a singleton, and you can use it directly.  Most of the examples assume that is your use case.  hilary also provides construction of new instances: parent containers, as well as child containers, for scoping.
