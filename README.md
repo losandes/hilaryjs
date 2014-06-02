@@ -6,24 +6,6 @@ hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-
 Most of the basics are covered here. For a deeper understanding of how to use hilary to compose your app, check out 
 our [getting started](http://acatar.github.io/hilary/gettingStarted/) example or our [getting started with AMD](http://acatar.github.io/hilary/gettingStartedWithRequire/) example.
 
-##The singleton container, and constructors
-
-hilary exists on window, as a singleton, and you can use it directly.  Most of the examples assume that is your use case.  hilary also provides construction of new instances: parent containers, as well as child containers, for scoping.
-
-```JavaScript
-var container = hilary.createContainer();
-var child = container.createChildContainer();
-```
-
-The constructors accept a single argument that you may never need to use because most of hilary's dependencies are registered as modules: options. The options allow the caller to define handlers for features that need to be in place before the first registration occurs, such as exceptions (i.e. throw argumentException) and utilities (i.e. isFunction).
-
-```JavaScript
-var container = hilary.createContainer({
-  utils: myUtilityOverride,
-  exceptions: myExceptionsOverride
-});
-```
-
 ##Registering modules
 
 We register single modules by name:
@@ -208,5 +190,24 @@ hilary.registerEvent('hilary::after::new::child', function (container, options, 
   $(document).trigger('createdChildContainer');
 });
 ```
+
+##The singleton container, and constructors
+
+hilary exists on window, as a singleton, and you can use it directly.  Most of these examples assume that is your use case.  hilary also provides construction of new instances: parent containers, as well as child containers, for scoping.
+
+```JavaScript
+var container = hilary.createContainer();
+var child = container.createChildContainer();
+```
+
+The constructors accept a single argument that you may never need to use because most of hilary's dependencies are registered as modules: options. The options allow the caller to define handlers for features that need to be in place before the first registration occurs, such as exceptions (i.e. throw argumentException) and utilities (i.e. isFunction).
+
+```JavaScript
+var container = hilary.createContainer({
+  utils: myUtilityOverride,
+  exceptions: myExceptionsOverride
+});
+```
+
 
 
