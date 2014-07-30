@@ -1,4 +1,4 @@
-﻿// A simple Inversion of Control container
+// A simple Inversion of Control container
 // It's named after Hilary Page, who designed building blocks that later became known as Legos.
 var hilary = (function () {
     "use strict";
@@ -379,6 +379,16 @@ var hilary = (function () {
             }
 
             return parent.resolveOne(moduleName);
+        };
+        
+        $this.tryResolve = function (moduleNameOrDependencies, callback) {
+            try {
+                $this.resolve(moduleNameOrDependencies, callback);
+            } catch (e) {
+                if (console.log) {
+                    console.log(e);
+                }
+            }
         };
 
         // resolve one or more dependencies; find modules by name through the container hierarchy
