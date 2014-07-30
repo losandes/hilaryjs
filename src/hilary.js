@@ -383,7 +383,7 @@ var hilary = (function () {
         
         $this.tryResolve = function (moduleNameOrDependencies, callback) {
             try {
-                $this.resolve(moduleNameOrDependencies, callback);
+                return $this.resolve(moduleNameOrDependencies, callback);
             } catch (e) {
                 if (console.log) {
                     console.log(e);
