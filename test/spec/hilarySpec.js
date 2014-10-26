@@ -1,6 +1,5 @@
 /*jslint plusplus: true, nomen: true */
 /*global describe,beforeEach,hilary,it,expect*/
-
 describe("hilary", function () {
     "use strict";
     
