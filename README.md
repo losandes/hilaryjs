@@ -80,7 +80,7 @@ hilary.register('saySomething', function(echo, saySomething) {
 }); 
 ```
 
-When composing the application, you can register a factory that uses the other modules to expose a decoupled interface:
+When composing the application, you can register a factory that uses the other modules to expose a decoupled interface (note you should only resolve your dependencies in a composition root, otherwise you are using the service-location anti-pattern):
 
 ```JavaScript
 hilary.register('echoFactory', function(saySomething) {
@@ -93,8 +93,8 @@ hilary.register('echoFactory', function(saySomething) {
 Then, a module that depends on ``echoFactory`` can use the factory without knowing anything about the modules the factory depends on.
 
 ```JavaScript
-hilary.register('someModule', new HilaryModule(['echoFactory'], function(echoFactory) {
-    echoFactory('hello world!');
+hilary.register('someModule', new HilaryModule(['echoFactory'], function(echo) {
+    echo('hello world!');
 });
 ```
 
@@ -105,8 +105,8 @@ Resolving modules simply returns the registered function or object.  Invocation 
 Resolving is recursively hierarchical, so if you attempt to resolve a module in a child container, and the child container does not have a registration, but the parent container does, the module from the parent will be returned. Building on the registration example from above:
 
 ```JavaScript
-var myModule = container.resolve('myModule'),
-    myOtherModule = container.resolve('myOtherModule');
+var myModule = hilary.resolve('myModule'),
+    myOtherModule = hilary.resolve('myOtherModule');
 
 myModule();
 myOtherModule.message;
@@ -115,15 +115,15 @@ myOtherModule.message;
 Or simply:
 
 ```JavaScript
-var myHilaryModule = container.resolve('myHilaryModule');
+var myHilaryModule = hilary.resolve('myHilaryModule');
 myHilaryModule.go();
 ```
 
 If you need access to the container or its parent, when resolving many, there are key names for that:
 
 ```JavaScript
-var modules = container.resolve('hilary::container'),
-    parent = container.resolve('hilary::parent');
+var modules = hilary.resolve('hilary::container'),
+    parent = hilary.resolve('hilary::parent');
 ```
 
 ##The Pipeline
@@ -132,43 +132,41 @@ There are several before and after events that you can tie into, to extend hilar
 
 ###The before register event
 
-Before a module is registered, the "before::register" event is fired, if a function is registered. It accepts three arguments: 
+Before a module is registered, the "hilary::before::register" event is fired, if a function is registered. It accepts three arguments: 
 
 ```
 @param container: the current container
-@param moduleName (string or function): the name of the module or a function that accepts a single parameter: container
-@param moduleDefinition (object literal or function): the module definition
+@param moduleName (string): the name of the module
+@param moduleDefinition (object literal, function, or HilaryModule): the module definition
 ```
 
 ```JavaScript
-container.registerEvent('before::register', function(container, moduleNameOrFunc, moduleDefinition) {
-  $(document).trigger('registering::' + moduleNameOrFunc);
+hilary.registerEvent('hilary::before::register', function(container, moduleName, moduleDefinition) {
+    $(document).trigger('registering::' + moduleName);
 });
 ```
 
 ###The after register event
 
-After a module is registered, the "after::register" event is fired, if a funciton is registered. It accepts the same arguments as the "before::register" event.
+After a module is registered, the "hilary::after::register" event is fired, if a funciton is registered. It accepts the same arguments as the "hilary::before::register" event.
 ```JavaScript
-container.registerEvent('after::register', function(container, moduleNameOrFunc, moduleDefinition) {
-  $(document).trigger('registered::' + moduleNameOrFunc);
+hilary.registerEvent('hilary::after::register', function(container, moduleName, moduleDefinition) {
+  $(document).trigger('registered::' + moduleName);
 });
 ```
 
 ###The before resolve event
 
-Before a module is resolved, the "before::resolve" event is fired, if a function is registered. This module accepts three arguments:
+Before a module is resolved, the "hilary::before::resolve" event is fired, if a function is registered. This module accepts three arguments:
 
 ```
 @param container: the current container
-@param moduleName (string or array of string): the qualified name that the module can be located by in the container or an array of qualified names that the modules can be located by in the container
-@param callback (function): if the first argument is an array, then the resolved dependencies will be passed into the callback function in the order that they exist in the array
+@param moduleName (string): the qualified name that the module can be located by in the container
 ```
 
 ```JavaScript
-container.registerEvent('before::resolve', function(container, moduleNameOrDependencies, callback) {
-  if (typeof(moduleNameOrDependencies) === 'string')
-    $(document).trigger('resolving::' + moduleNameOrDependencies);
+hilary.registerEvent('hilary::before::resolve', function(container, moduleName) {
+    $(document).trigger('resolving::' + moduleName);
 });
 ```
 
@@ -177,9 +175,8 @@ container.registerEvent('before::resolve', function(container, moduleNameOrDepen
 After the module(s) are resolved, the "hilary::after::resolve" event is fired, if a function is registered. It accepts the same arguments as the "hilary::before::resolve" event.
 
 ```JavaScript
-hilary.registerEvent('hilary::after::resolve', function(container, moduleNameOrDependencies, callback) {
-    if (typeof(moduleNameOrDependencies) === 'string')
-      $(document).trigger('resolved:' + moduleNameOrDependencies);
+hilary.registerEvent('hilary::after::resolve', function(container, moduleName) {
+    $(document).trigger('resolved::' + moduleName);
 });
 ```
 ###The before new child event
@@ -209,6 +206,6 @@ After a new child container is created, the "hilary::after::new::child" event is
 
 ```JavaScript
 hilary.registerEvent('hilary::after::new::child', function (container, options, child) {
-  $(document).trigger('createdChildContainer');
+    $(document).trigger('createdChildContainer');
 });
 ```
