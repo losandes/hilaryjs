@@ -16,14 +16,14 @@ hilary does not depend on other libraries. All you need to do to use it in a web
 We create containers to compartmentalize our modules. it is normal to have a single container for an app, but you can also create as many containers as needed. Creating a container is simple:
 
 ```JavaScript
-var container = new Hilary(),
-    container2 = new Hilary();
+var hilary = new Hilary(),
+    hilary2 = new Hilary();
 ```
 
 The constructors accept a single argument, ``options``. You may never need to use this because most of hilary's dependencies are registered as modules. The options allow the caller to define handlers for features that need to be in place before the first registration occurs, such as exceptions (i.e. throw argumentException) and utilities (i.e. isFunction). Overrides must match the signature of the module they are overriding.
 
 ```JavaScript
-var container = new Hilary({
+var hilary = new Hilary({
   utils: myUtilityOverride,
   exceptions: myExceptionsOverride
 });
@@ -33,7 +33,7 @@ var container = new Hilary({
 Containers may also have child containers, for scoping.
 
 ```JavaScript
-var container = new Hilary(),
+var hilary = new Hilary(),
     child = container.createChildContainer();
 ```
 
@@ -42,17 +42,22 @@ var container = new Hilary(),
 We register single modules by name:
 
 ```JavaScript
-container.register('myModule', function() {
+hilary.register('myModule', function() {
     return 'hello world!';
 });
 
-container.register('myOtherModule', {
+hilary.register('myOtherModule', {
     message: 'do something!';
 });
 
-container.register('myModule', new HilaryModule(['myModule', 'myOtherModule'], function (myModule, myOtherModule) {
-    myModule();             // prints 'hello world!'
-    myOtherModule.message;  // prints 'do something!'
+hilary.register('myHilaryModule', new HilaryModule(['myModule', 'myOtherModule'], 
+    function (myModule, myOtherModule) {
+        return {
+            go: function () {
+                myModule();             // prints 'hello world!'
+                myOtherModule.message;  // prints 'do something!'            
+            }
+        };
 }));
 ```
 
@@ -64,56 +69,61 @@ HilaryModules accept two arguments: a dependency array, and a module definition.
 
 You can register factories too.  If you have modules with arguments that should be new instances every time, factories can be used to keep all of the container logic in one module: your composition root.
 
+Let's say you register the following modules.
 ```JavaScript
-container.register('echo', function() {
+hilary.register('echo', function() {
   return 'echo: ';
 });
 
-container.register('saySomething', function(echo, saySomething) {
+hilary.register('saySomething', function(echo, saySomething) {
   return echo() + saySomething;
-});      
-
-container.register('echoFactory', function(saySomething) {
-  var _echo = container.resolve('echo');
-  var _saySomething = container.resolve('saySomething');
-  return _saySomething(_echo, saySomething);
-});
-
-// the single _echoFactory could be passed as an argument to another module
-var _echoFactory = container.resolve('echoFactory');
-
-// ... inside that module
-// should output 'echo: hello world!'
-_echoFactory('hello world!');
+}); 
 ```
 
+When composing the application, you can register a factory that uses the other modules to expose a decoupled interface:
+
+```JavaScript
+hilary.register('echoFactory', function(saySomething) {
+  var _echo = hilary.resolve('echo');
+  var _saySomething = hilary.resolve('saySomething');
+  return _saySomething(_echo, saySomething);
+});
+```
+
+Then, a module that depends on ``echoFactory`` can use the factory without knowing anything about the modules the factory depends on.
+
+```JavaScript
+hilary.register('someModule', new HilaryModule(['echoFactory'], function(echoFactory) {
+    echoFactory('hello world!');
+});
+```
 
 ##Resolving modules
 
 Resolving modules simply returns the registered function or object.  Invocation is in the scope of the caller.  We recommend doing all resolving in a single module (i.e. compositionRoot.js).
 
-Resolving is recursively hierarchical, so if you attempt to resolve a module in a child container, and the child container does not have a registration, but the parent container does, the module from the parent will be returned.
+Resolving is recursively hierarchical, so if you attempt to resolve a module in a child container, and the child container does not have a registration, but the parent container does, the module from the parent will be returned. Building on the registration example from above:
 
 ```JavaScript
-var myModule = hilary.resolve('myModule'),
-    myOtherModule = hilary.resolve('myOtherModule');
+var myModule = container.resolve('myModule'),
+    myOtherModule = container.resolve('myOtherModule');
 
-myOtherModule(myModule);
+myModule();
+myOtherModule.message;
 ```
 
-Or, if you prefer to resolve many at once:
+Or simply:
 
 ```JavaScript
-hilary.resolve(['myModule', 'myOtherModule'], function (myModule, MyOtherModule) {
-  myOtherModule(myModule);
-});
+var myHilaryModule = container.resolve('myHilaryModule');
+myHilaryModule.go();
 ```
+
 If you need access to the container or its parent, when resolving many, there are key names for that:
 
 ```JavaScript
-hilary.resolve(['hilary::container', 'hilary::parent'], function (container, parent) {
-  // ...
-});
+var modules = container.resolve('hilary::container'),
+    parent = container.resolve('hilary::parent');
 ```
 
 ##The Pipeline
@@ -122,7 +132,7 @@ There are several before and after events that you can tie into, to extend hilar
 
 ###The before register event
 
-Before a module is registered, the "hilary::before::register" event is fired, if a function is registered. It accepts three arguments: 
+Before a module is registered, the "before::register" event is fired, if a function is registered. It accepts three arguments: 
 
 ```
 @param container: the current container
@@ -131,49 +141,34 @@ Before a module is registered, the "hilary::before::register" event is fired, if
 ```
 
 ```JavaScript
-hilary.registerEvent('hilary::before::register', function(container, moduleNameOrFunc, moduleDefinition) {
-  $(document).trigger('registering:' + moduleNameOrFunc);
+container.registerEvent('before::register', function(container, moduleNameOrFunc, moduleDefinition) {
+  $(document).trigger('registering::' + moduleNameOrFunc);
 });
 ```
 
 ###The after register event
 
-After a module is registered, the "hilary::after::register" event is fired, if a funciton is registered. It accepts the same arguments as the "hilary::before::register" event.
+After a module is registered, the "after::register" event is fired, if a funciton is registered. It accepts the same arguments as the "before::register" event.
 ```JavaScript
-hilary.registerEvent('hilary::after::register', function(container, moduleNameOrFunc, moduleDefinition) {
-  $(document).trigger('registered:' + moduleNameOrFunc);
-});
-```
-
-###The before resolveOne event
-
-Before each dependency is resolved, the "hilary::before::resolve::one" event is fired, if a function is registered. It accepts two arguments:
-
-```
-@param container: the current container
-@param moduleName (string): the qualified name that the module can be located by in the container
-```
-
-```JavaScript
-hilary.registerEvent('hilary::before::resolve::one', function(container, moduleName) {
-  $(document).trigger('resolving:' + moduleName);
+container.registerEvent('after::register', function(container, moduleNameOrFunc, moduleDefinition) {
+  $(document).trigger('registered::' + moduleNameOrFunc);
 });
 ```
 
 ###The before resolve event
 
-Before any dependencies are resolved, the "hilary::before::resolve" event is fired, if a function is registered. If you also register the "hilary::before::resolve::one" event, both events will fire.  This module accepts three arguments:
+Before a module is resolved, the "before::resolve" event is fired, if a function is registered. This module accepts three arguments:
 
 ```
 @param container: the current container
-@param moduleNameOrDependencies (string or array of string): the qualified name that the module can be located by in the container or an array of qualified names that the modules can be located by in the container
+@param moduleName (string or array of string): the qualified name that the module can be located by in the container or an array of qualified names that the modules can be located by in the container
 @param callback (function): if the first argument is an array, then the resolved dependencies will be passed into the callback function in the order that they exist in the array
 ```
 
 ```JavaScript
-hilary.registerEvent('hilary::before::resolve', function(container, moduleNameOrDependencies, callback) {
+container.registerEvent('before::resolve', function(container, moduleNameOrDependencies, callback) {
   if (typeof(moduleNameOrDependencies) === 'string')
-    $(document).trigger('resolving:' + moduleNameOrDependencies);
+    $(document).trigger('resolving::' + moduleNameOrDependencies);
 });
 ```
 
