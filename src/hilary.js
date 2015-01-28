@@ -463,4 +463,4 @@
     exports.Hilary = Hilary;
     exports.HilaryModule = HilaryModule;
     
-}((typeof module !== 'undefined' && typeof module.exports !== 'undefined') ? module.exports : window));
+}((typeof module !== 'undefined' && module.exports) ? module.exports : window));
