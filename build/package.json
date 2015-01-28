@@ -1,0 +1,35 @@
+{
+    "name": "hilary.js",
+    "version": "1.0.0",
+    "description": "An Inversion of Control Container for JavaScript",
+    "main": "build.js",
+    "scripts": {
+        "test": "test",
+        "build": "build.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Acatar/hilaryjs"
+    },
+    "dependencies": {
+        "grunt": "0.4.x",
+        "grunt-contrib-uglify": "0.7.x",
+        "grunt-contrib-jasmine": "0.8.x"
+    },
+    "keywords": [
+        "DI",
+        "Dependency",
+        "Injection",
+        "Inversion",
+        "of",
+        "Control",
+        "IoC",
+        "JavaScript"
+    ],
+    "author": "Andy Wright",
+    "license": "Apache 2",
+    "bugs": {
+        "url": "https://github.com/Acatar/hilaryjs/issues"
+    },
+    "homepage": "https://acatar.github.io/"
+}
