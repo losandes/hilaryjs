@@ -23,12 +23,12 @@
         parentContainerRegistration: 'hilary::parent',
         notResolvable: 'hilary::handler::not::resolvable',
         pipeline: {
-            beforeRegister: 'before::register',
-            afterRegister: 'after::register',
-            beforeResolve: 'before::resolve',
-            afterResolve: 'after::resolve',
-            beforeNewChild: 'before::new::child',
-            afterNewChild: 'after::new::child'
+            beforeRegister: 'hilary::before::register',
+            afterRegister: 'hilary::after::register',
+            beforeResolve: 'hilary::before::resolve',
+            afterResolve: 'hilary::after::resolve',
+            beforeNewChild: 'hilary::before::new::child',
+            afterNewChild: 'hilary::after::new::child'
         }
     };
     
@@ -232,20 +232,20 @@
             }
         };
 
-        beforeRegister = function (moduleNameOrFunc, moduleDefinition) {
-            executeEvent(this.events.beforeRegisterEvents, [container, moduleNameOrFunc, moduleDefinition]);
+        beforeRegister = function (moduleName, moduleDefinition) {
+            executeEvent(this.events.beforeRegisterEvents, [container, moduleName, moduleDefinition]);
         };
 
-        afterRegister = function (moduleNameOrFunc, moduleDefinition) {
-            executeEvent(this.events.afterRegisterEvents, [container, moduleNameOrFunc, moduleDefinition]);
+        afterRegister = function (moduleName, moduleDefinition) {
+            executeEvent(this.events.afterRegisterEvents, [container, moduleName, moduleDefinition]);
         };
 
-        beforeResolve = function (moduleName, callback) {
-            executeEvent(this.events.beforeResolveEvents, [container, moduleName, callback]);
+        beforeResolve = function (moduleName) {
+            executeEvent(this.events.beforeResolveEvents, [container, moduleName]);
         };
 
-        afterResolve = function (moduleName, callback) {
-            executeEvent(this.events.afterResolveEvents, [container, moduleName, callback]);
+        afterResolve = function (moduleName) {
+            executeEvent(this.events.afterResolveEvents, [container, moduleName]);
         };
 
         beforeNewChild = function (options) {
