@@ -3,9 +3,6 @@ hilary.js
 
 hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-ceremony dependency injection, to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
-Most of the basics are covered here. For a deeper understanding of how to use hilary to compose your app, check out 
-our [getting started](http://acatar.github.io/hilary/gettingStarted/) example or our [getting started with AMD](http://acatar.github.io/hilary/gettingStartedWithRequire/) example.
-
 ##Including hilary in your web app
 hilary does not depend on other libraries. All you need to do to use it in a web app is include it in a script tag.
 ```
