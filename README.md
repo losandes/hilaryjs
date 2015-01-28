@@ -116,7 +116,7 @@ var myHilaryModule = hilary.resolve('myHilaryModule');
 myHilaryModule.go();
 ```
 
-If you need access to the container or its parent, when resolving many, there are key names for that:
+If you need access to the container or its parent, there are key names for that:
 
 ```JavaScript
 var modules = hilary.resolve('hilary::container'),
