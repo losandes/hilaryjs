@@ -3,10 +3,9 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         jasmine: {
             pivotal: {
-                src: '../src/**/*.js',
+                src: ['../src/hilary.js', '../src/hilary.amd.js'], //'../src/**/*.js',
                 options: {
-                    specs: '../test/specs/*Fixture.js',
-                    helpers: '../test/specs/*Helper.js'
+                    specs: '../test/specs/*Fixture.js'
                 }
             }
         },
@@ -16,7 +15,8 @@ module.exports = function (grunt) {
             },
             my_target: {
                 files: {
-                    '../release/hilary.min.js': ['../src/hilary.js']
+                    '../release/hilary.min.js': ['../src/hilary.js'],
+                    '../release/hilaryWithAMD.min.js': ['../src/hilary.js', '../src/hilary.amd.js']
                 }
             }
         }

@@ -13,6 +13,7 @@
         PipelineEvents,
         Pipeline,
         constants,
+        extensions = [],
         Utils,
         Exceptions,
         utl,
@@ -299,7 +300,12 @@
             createChildContainer,
             register,
             resolve,
-            make;
+            make,
+            getReservedModule,
+            getContainer,
+            getParentContainer,
+            extCount,
+            extension;
         
         createChildContainer = function (options) {
             options = options || {};
@@ -358,18 +364,33 @@
             }
         };
         
+        getReservedModule = function (moduleName) {
+//            if (typeof config.getReservedModule === 'function') {
+//                var output = config.getReservedModule(moduleName);
+//                
+//                if (output) {
+//                    return output;
+//                }
+//            }
+            
+            if (moduleName === constants.containerRegistration) {
+                return getContainer();
+            } else if (moduleName === constants.parentContainerRegistration) {
+                return getParentContainer();
+            }
+        };
+        
         resolve = function (moduleName) {
             var mdl,
                 output;
             
             pipeline.beforeResolve(moduleName);
             
-            // If the module being requested is a reserved registration, return the internal object
-            if (moduleName === constants.containerRegistration) {
-                output = this.getContainer();
-            } else if (moduleName === constants.parentContainerRegistration) {
-                output = this.getParentContainer();
-            } else {
+            // If the module being requested is a reserved registration, get the internal object
+            output = getReservedModule(moduleName);
+            
+            // otherwise, try to resolve the module by name
+            if (!output) { //(output !== null) {
                 mdl = container[moduleName];
 
                 // if the module was found, resolve it's dependencies and return it
@@ -395,6 +416,18 @@
             return parent.resolve(moduleName);
         };
         
+        getContainer = function () {
+            return container;
+        };
+        
+        getParentContainer = function () {
+            if (parent !== undefined) {
+                return parent.getContainer();
+            } else {
+                return null;
+            }
+        };
+        
         /*
         // exposes the constructor for hilary so you can create child contexts
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
@@ -405,20 +438,12 @@
         /*
         // access to the container
         */
-        this.getContainer = function () {
-            return container;
-        };
+        this.getContainer = getContainer;
 
         /*
         // access to the parent container
         */
-        this.getParentContainer = function () {
-            if (parent !== undefined) {
-                return parent.getContainer();
-            } else {
-                return null;
-            }
-        };
+        this.getParentContainer = getParentContainer;
         
         /*
         // register a module by name
@@ -458,6 +483,38 @@
         this.getConstants = function () {
             return constants;
         };
+        
+        /*
+        // Provides access to the utils module, so extensions can take advantage
+        */
+        this.getUtils = function () {
+            return utils;
+        };
+        
+        /*
+        // Provides access to the exceptions module, so extensions can take advantage
+        */
+        this.getExceptionHandlers = function () {
+            return exceptions;
+        };
+        
+        // add extensions to this
+        for (extCount = 0; extCount < extensions.length; extCount++) {
+            extension = extensions[extCount];
+            this[extension.name] = extension.factory(this);
+        }
+    };
+    
+    /*
+    // a function for extending Hilary. The scope (this) is passed to the factory;
+    */
+    Hilary.extend = function (name, factory) {
+        extensions.push({
+            name: name,
+            factory: factory
+        });
+        
+        return true;
     };
     
     exports.Hilary = Hilary;
