@@ -42,27 +42,23 @@ var container = new Hilary(),
 We register single modules by name:
 
 ```JavaScript
-hilary.register('myModule', function() {
-  return 'hello world!';
+container.register('myModule', function() {
+    return 'hello world!';
 });
 
-hilary.register('myOtherModule', function(myModule) {
-  return myModule();
+container.register('myOtherModule', {
+    message: 'do something!';
 });
+
+container.register('myModule', new HilaryModule(['myModule', 'myOtherModule'], function (myModule, myOtherModule) {
+    myModule();             // prints 'hello world!'
+    myOtherModule.message;  // prints 'do something!'
+}));
 ```
 
-If you have more complex needs, want to register something other than a function, such as an object literal, or you just want to write pure JavaScript, you can register modules directly against the conatainer.  This feature can easily be misused (i.e. using the container for Service Location).  We recommend keeping it simple, and only use the container for registration.
+Notice that several options exist when registering modules. If the module has no dependencies, or if you intend to resolve the dependencies manually, you can register the module definition as a function or object literal. If you want hilary to auto-resolve a modules dependencies, and cascade through the dependency graph, then you have to register the module as in instance of HilaryModule.
 
-```JavaScript
-hilary.register(function(container) {
-  container.moduleWithInnerRegistration = function() {
-    var complex = doSomeReallyComplexStuff();
-    container.getComplex = function() {
-      return complex;
-    };
-  };
-});
-```
+HilaryModules accept two arguments: a dependency array, and a module definition. The dependency array should include the name of the modules that the current module depends on. The module definition should accept the resolved modules as arguments, in the same order that they are listed in the dependency array.
 
 ###Registering factories
 
