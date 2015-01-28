@@ -6,6 +6,37 @@ hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-
 Most of the basics are covered here. For a deeper understanding of how to use hilary to compose your app, check out 
 our [getting started](http://acatar.github.io/hilary/gettingStarted/) example or our [getting started with AMD](http://acatar.github.io/hilary/gettingStartedWithRequire/) example.
 
+##Including hilary in your web app
+hilary does not depend on other libraries. All you need to do to use it in a web app is include it in a script tag.
+```
+<script type="text/javascript" src="hilary.min.js"></script>
+```
+
+##Creating containers
+We create containers to compartmentalize our modules. it is normal to have a single container for an app, but you can also create as many containers as needed. Creating a container is simple:
+
+```JavaScript
+var container = new Hilary(),
+    container2 = new Hilary();
+```
+
+The constructors accept a single argument, ``options``. You may never need to use this because most of hilary's dependencies are registered as modules. The options allow the caller to define handlers for features that need to be in place before the first registration occurs, such as exceptions (i.e. throw argumentException) and utilities (i.e. isFunction). Overrides must match the signature of the module they are overriding.
+
+```JavaScript
+var container = new Hilary({
+  utils: myUtilityOverride,
+  exceptions: myExceptionsOverride
+});
+```
+
+###Creating child containers
+Containers may also have child containers, for scoping.
+
+```JavaScript
+var container = new Hilary(),
+    child = container.createChildContainer();
+```
+
 ##Registering modules
 
 We register single modules by name:
@@ -190,24 +221,3 @@ hilary.registerEvent('hilary::after::new::child', function (container, options, 
   $(document).trigger('createdChildContainer');
 });
 ```
-
-##The singleton container, and constructors
-
-hilary exists on window, as a singleton, and you can use it directly.  Most of these examples assume that is your use case.  hilary also provides construction of new instances: parent containers, as well as child containers, for scoping.
-
-```JavaScript
-var container = hilary.createContainer();
-var child = container.createChildContainer();
-```
-
-The constructors accept a single argument that you may never need to use because most of hilary's dependencies are registered as modules: options. The options allow the caller to define handlers for features that need to be in place before the first registration occurs, such as exceptions (i.e. throw argumentException) and utilities (i.e. isFunction).
-
-```JavaScript
-var container = hilary.createContainer({
-  utils: myUtilityOverride,
-  exceptions: myExceptionsOverride
-});
-```
-
-
-
