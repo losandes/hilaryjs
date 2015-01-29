@@ -358,14 +358,22 @@
                 var i,
                     dependencies = [];
                 
-                if (utils.isArray(mdl.dependencies)) {
+                if (utils.isArray(mdl.dependencies) && mdl.dependencies.length > 0) {
+                    // the module has dependencies, let's get them
                     for (i = 0; i < mdl.dependencies.length; i++) {
                         dependencies.push(resolve(mdl.dependencies[i]));
                     }
+
+                    return mdl.ctor.apply(null, dependencies);
                 }
                 
-                return mdl.ctor.apply(null, dependencies);
-                
+                if (mdl.ctor.length === 0) {
+                    // the module takes no arguments, return the result of executing it
+                    return mdl.ctor.apply(null, dependencies);
+                } else {
+                    // the module takes arguments and has no dependencies, this must be a factory
+                    return mdl.ctor;
+                }
             } else {
                 return mdl;
             }

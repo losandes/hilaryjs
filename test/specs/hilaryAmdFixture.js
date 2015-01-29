@@ -98,11 +98,36 @@ describe("Hilary AMD", function () {
     }); // /define
     
     describe('require, when requiring modules', function () {
-        it('should be able to require modules by name', function (done) {
+        it('should be able to require an array of modules by name', function (done) {
             global.require([testModuleDefinitions.emptyToo.name], function (result) {
                 expect(result.depOut).toBe(testModuleDefinitions.empty.output);
                 expect(result.thisOut).toBe(testModuleDefinitions.emptyToo.output);
                 
+                done();
+            });
+        });
+        
+        it('should be able to require single modules by name', function () {
+            var result = global.require(testModuleDefinitions.emptyToo.name);
+            
+            expect(result.depOut).toBe(testModuleDefinitions.empty.output);
+            expect(result.thisOut).toBe(testModuleDefinitions.emptyToo.output);
+        });
+        
+        // if the second argument of define is a factory that accepts arguments, but 
+        // there are no dependencies, then it should not be executed when being resolved
+        // we assume it is a factory
+        it('should be able to require factories by name', function (done) {
+            var expected = 'hello world!';
+            
+            container.define('messenger', function (msg) {
+                return msg;
+            });
+
+            container.require(function (require, exports, module) {
+                var messenger = require('messenger');
+
+                expect(messenger(expected)).toBe(expected);
                 done();
             });
         });

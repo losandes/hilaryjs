@@ -52,7 +52,7 @@ describe("Hilary Dependency Injection", function () {
     
     describe('hilary.register, when registering HilaryModules', function () {
         it('should be able to resolve the expected module with that name', function () {
-            container.register(testModuleDefinitions.empty.name, new HilaryModule([], function () {
+            container.register(testModuleDefinitions.empty.name, new HilaryModule(function () {
                 return testModuleDefinitions.empty.output;
             }));
 
