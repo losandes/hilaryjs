@@ -85,6 +85,14 @@
         this.notFunction = function (obj) {
             return this.type(obj) !== 'function';
         };
+        
+        this.isObject = function (obj) {
+            return this.type(obj) === 'object';
+        };
+        
+        this.notObject = function (obj) {
+            return this.type(obj) !== 'object';
+        };
 
         this.isArray = function (obj) {
             return this.type(obj) === 'array';
@@ -288,6 +296,10 @@
         
         if (utl.isFunction(dependencies)) {
             this.ctor = dependencies;
+        } else if (utl.isObject(dependencies)) {
+            this.ctor = function () {
+                return dependencies;
+            };
         } else if (utl.isFunction(ctor)) {
             this.ctor = ctor;
         } else {
@@ -363,13 +375,14 @@
                     for (i = 0; i < mdl.dependencies.length; i++) {
                         dependencies.push(resolve(mdl.dependencies[i]));
                     }
-
+                    
+                    // and apply them
                     return mdl.ctor.apply(null, dependencies);
                 }
                 
                 if (mdl.ctor.length === 0) {
                     // the module takes no arguments, return the result of executing it
-                    return mdl.ctor.apply(null, dependencies);
+                    return mdl.ctor.call();
                 } else {
                     // the module takes arguments and has no dependencies, this must be a factory
                     return mdl.ctor;
