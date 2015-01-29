@@ -213,4 +213,29 @@ describe("The Hilary Pipeline", function () {
             expect(container.resolve(sutModuleName2).name).toBe(testModuleDefinitions.empty.name);
         });
     });
+    
+    describe('when a pipeline event has the once property', function () {
+        it('should only execute one time', function () {
+            var eventHandler,
+                sutModuleName = 'one_event',
+                count = 0;
+            
+            eventHandler = function () {
+                count++;
+            };
+            eventHandler.once = true;
+            
+            container.registerEvent(container.getConstants().pipeline.beforeRegister, eventHandler);
+            
+            container.register(testModuleDefinitions.empty.name, function () {
+                return testModuleDefinitions.empty.output;
+            });
+            
+            container.register(testModuleDefinitions.emptyToo.name, function () {
+                return testModuleDefinitions.emptyToo.output;
+            });
+            
+            expect(count).toBe(1);
+        });
+    });
 });

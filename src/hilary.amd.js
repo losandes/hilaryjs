@@ -3,7 +3,7 @@
 (function (exports) {
     "use strict";
     
-    var amdContainer;
+    var AMDContainer;
     
     Hilary.extend('define', function (scope) {
         var result = function (moduleName, dependencies, factory) {
@@ -62,9 +62,11 @@
         };
     });
     
-    amdContainer = new Hilary();
+    AMDContainer = new Hilary();
     
-    exports.define = amdContainer.define;
-    exports.require = amdContainer.require;
+    // export the main container and make define and require globals
+    exports.AMDContainer = AMDContainer;
+    exports.define = AMDContainer.define;
+    exports.require = AMDContainer.require;
 
 }((typeof module !== 'undefined' && module.exports) ? module.exports : window));

@@ -21,6 +21,12 @@ describe("Hilary AMD", function () {
         container = new Hilary();
     });
 
+    describe('AMDContainer', function () {
+        it('should exist in window', function () {
+            expect(global.AMDContainer).toBeDefined();
+        });
+    });
+    
     describe('define', function () {
         it('should exist in window', function () {
             expect(global.define).toBeDefined();
@@ -102,7 +108,7 @@ describe("Hilary AMD", function () {
         });
         
         it('should be able to require modules inline', function (done) {
-            global.require(function (require, exports) {
+            global.require(function (require, exports, module) {
                 var result = require(testModuleDefinitions.emptyToo.name);
                 
                 expect(result.depOut).toBe(testModuleDefinitions.empty.output);
@@ -113,7 +119,7 @@ describe("Hilary AMD", function () {
         });
         
         it('should grant the factory access to the inner container', function (done) {
-            global.require(function (require, exports) {
+            global.require(function (require, exports, module) {
                 var actual,
                     expected = 'lala';
                 

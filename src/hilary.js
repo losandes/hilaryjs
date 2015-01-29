@@ -14,6 +14,7 @@
         Pipeline,
         constants,
         extensions = [],
+        initializers = [],
         Utils,
         Exceptions,
         utl,
@@ -226,7 +227,11 @@
             
             for (i = 0; i < eventArray.length; i++) {
                 event = eventArray[i];
-
+                
+                if (event.once) {
+                    eventArray.splice(i, 1);
+                }
+                
                 if (utils.isFunction(event)) {
                     event.apply(null, argumentArray);
                 }
@@ -305,7 +310,9 @@
             getContainer,
             getParentContainer,
             extCount,
-            extension;
+            extension,
+            initCount,
+            initializer;
         
         createChildContainer = function (options) {
             options = options || {};
@@ -501,7 +508,20 @@
         // add extensions to this
         for (extCount = 0; extCount < extensions.length; extCount++) {
             extension = extensions[extCount];
-            this[extension.name] = extension.factory(this);
+            
+            if (utils.isFunction(extension.factory)) {
+                this[extension.name] = extension.factory(this);
+            } else if (utils.isDefined(extension.factory)) {
+                this[extension.name] = extension.factory;
+            }
+        }
+        
+        for (initCount = 0; initCount < initializers.length; initCount++) {
+            initializer = initializers[initCount];
+            
+            if (utils.isFunction(initializer)) {
+                initializer(this, config);
+            }
         }
     };
     
@@ -513,6 +533,15 @@
             name: name,
             factory: factory
         });
+        
+        return true;
+    };
+    
+    /*
+    // a function for extending Hilary. The scope (this), and constructor options are passed to the factory;
+    */
+    Hilary.onInit = function (factory) {
+        initializers.push(factory);
         
         return true;
     };
