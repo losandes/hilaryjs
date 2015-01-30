@@ -1,4 +1,7 @@
+/*globals module*/
 module.exports = function (grunt) {
+    "use strict";
+    
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         jasmine: {
@@ -29,6 +32,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jasmine');
 
     // Default task(s).
-    grunt.registerTask('default', ['jasmine', 'uglify']);
+    grunt.registerTask('default', ['uglify', 'jasmine']);
 
 };
