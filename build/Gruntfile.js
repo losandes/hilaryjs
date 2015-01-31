@@ -20,15 +20,15 @@ module.exports = function (grunt) {
                 files: {
                     '../release/hilary.min.js': ['../src/hilary.js'],
                     '../release/hilaryWithAMD.min.js': ['../src/hilary.js', '../src/hilary.amd.js'],
-//                    '../release/hilaryWithAMDAndLoader.min.js': ['../src/hilary.js', '../src/hilary.amd.js', '../src/hilary.loader.js'],
-//                    '../release/hilaryWithLoader.min.js': ['../src/hilary.js', '../src/hilary.loader.js']
+                    '../release/hilaryWithAMDAndLoader.min.js': ['../src/hilary.js', '../src/hilary.amd.js', '../src/hilary.loader.js'],
+                    '../release/hilaryWithLoader.min.js': ['../src/hilary.js', '../src/hilary.loader.js']
                 }
             }
         },
         copy: {
             main: {
                 files: [
-                    {src: ['../release/hilaryWithAMDAndLoader.min.js'], dest: '../examples/nodeweb/public/scripts/hilaryWithAMDAndLoader.min.js', filter: 'isFile'}
+                    {src: ['../src/*'], dest: '../examples/nodeweb/public/scripts/', filter: 'isFile'}
                 ]
             }
         }
@@ -40,6 +40,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify', 'jasmine']);
+    grunt.registerTask('default', ['uglify', 'jasmine', 'copy']);
 
 };

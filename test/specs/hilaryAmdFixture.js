@@ -95,6 +95,19 @@ describe("Hilary AMD", function () {
                 done();
             });
         });
+        
+        it('should be able to define as an object literal, by name', function (done) {
+            var expected = 'anonymous literal';
+            
+            global.define('aLiteral', {
+                aLiteral: expected
+            });
+            
+            global.require(['aLiteral'], function (actual) {
+                expect(actual.aLiteral).toBe(expected);
+                done();
+            });
+        });
     }); // /define
     
     describe('require, when requiring modules', function () {
