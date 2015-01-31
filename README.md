@@ -44,15 +44,15 @@ hilary.register('myModule', function() {
 });
 
 hilary.register('myOtherModule', {
-    message: 'do something!';
+    message: 'do something!'
 });
 
 hilary.register('myHilaryModule', new HilaryModule(['myModule', 'myOtherModule'], 
     function (myModule, myOtherModule) {
         return {
             go: function () {
-                myModule();             // prints 'hello world!'
-                myOtherModule.message;  // prints 'do something!'            
+                console.log(myModule());                // prints 'hello world!'
+                console.log(myOtherModule.message);     // prints 'do something!'
             }
         };
 }));
@@ -105,8 +105,8 @@ Resolving is recursively hierarchical, so if you attempt to resolve a module in 
 var myModule = hilary.resolve('myModule'),
     myOtherModule = hilary.resolve('myOtherModule');
 
-myModule();
-myOtherModule.message;
+console.log(myModule());
+console.log(myOtherModule.message);
 ```
 
 Or simply:
@@ -121,6 +121,74 @@ If you need access to the container or its parent, there are key names for that:
 ```JavaScript
 var modules = hilary.resolve('hilary::container'),
     parent = hilary.resolve('hilary::parent');
+```
+
+##AMD
+
+The AMD extension adds Asynchronous Module Definition specification conventions to Hilary. If you choose to use that extenion, five variables will be added as globals: ``define``, ``require``, ``AMDContainer``, ``Hilary``, and ``HilaryModule``. In order to meet the spec by introducing a global container, the ``AMDContainer`` instance can be accessed if you want to take advantage of non-AMD Hilary features. ``define`` and ``require`` exist on each container, so you can use the AMD conventions with scope, too.
+
+###Define
+
+With AMD, registrations look like this:
+
+```
+// with AMD, functions are executed when they are resolved
+define('myModule', function() {
+    return {
+        message: 'hello world!'
+    };
+});
+
+// unless the function accepts an argument without declaring dependencies
+define('myFactory', function(arg) {
+    console.log(arg);
+});
+
+// you can define object literals in multiple ways
+define('myOtherModule', {
+    message: 'do something!'
+});
+
+define({ 
+    myLiteral: {
+        message: 'literally!'
+    }
+});
+
+// and you can require dependencies by passing an array argument
+define('myHilaryModule', ['myModule', 'myOtherModule', 'myFactory', 'myLiteral'], 
+    function (myModule, myOtherModule, myFactory, myLiteral) {
+        return {
+            go: function () {
+                console.log(myModule.message);          // prints 'hello world!'
+                console.log(myOtherModule.message);     // prints 'do something!'
+                myFactory('say something!');            // prints 'say something!'
+                console.log(myLiteral.message);         // prints 'literally!'
+            }
+        };
+});
+```
+
+###Require
+
+Resolving with require:
+
+```JavaScript
+require(function (require, exports, module) {
+    var myModule = require('myModule'),
+        myOtherModule = require('myOtherModule');
+    
+    console.log(myModule.message);
+    console.log(myOtherModule.message);
+});
+```
+
+Or:
+
+```JavaScript
+require(['myHilaryModule'], function (myHilaryModule) {
+    myHilaryModule.go();
+});
 ```
 
 ##The Pipeline
