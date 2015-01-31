@@ -148,7 +148,7 @@ hilary.registerEvent('hilary::before::register', function(container, moduleName,
 After a module is registered, the "hilary::after::register" event is fired, if a funciton is registered. It accepts the same arguments as the "hilary::before::register" event.
 ```JavaScript
 hilary.registerEvent('hilary::after::register', function(container, moduleName, moduleDefinition) {
-  $(document).trigger('registered::' + moduleName);
+    $(document).trigger('registered::' + moduleName);
 });
 ```
 
@@ -187,7 +187,7 @@ Before a new child container is created, the "hilary::before::new::child" event 
 
 ```JavaScript
 hilary.registerEvent('hilary::before::new::child', function (container, options) {
-  $(document).trigger('creatingChildContainer');
+    $(document).trigger('creatingChildContainer');
 });
 ```
 
@@ -205,4 +205,19 @@ After a new child container is created, the "hilary::after::new::child" event is
 hilary.registerEvent('hilary::after::new::child', function (container, options, child) {
     $(document).trigger('createdChildContainer');
 });
+```
+
+###Limiting an event to one execution
+
+Sometimes we only want an eventHandler to be executed once. All event handlers that are registered in Hilary can be configured to behave this way by adding a ``once`` property to the eventHandler.
+
+```JavaScript
+var eventHandler = function(container, moduleName) {
+    if (moduleName === 'someAsyncModule') {
+        // do something
+    }
+};
+eventHandler.once = true;
+
+hilary.registerEvent('hilary::after::resolve', eventHandler);
 ```

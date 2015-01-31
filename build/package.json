@@ -14,7 +14,8 @@
     "dependencies": {
         "grunt": "0.4.x",
         "grunt-contrib-uglify": "0.7.x",
-        "grunt-contrib-jasmine": "0.8.x"
+        "grunt-contrib-jasmine": "0.8.x",
+        "grunt-contrib-copy": "0.4.x"
     },
     "keywords": [
         "DI",

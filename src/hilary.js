@@ -14,6 +14,7 @@
         Pipeline,
         constants,
         extensions = [],
+        initializers = [],
         Utils,
         Exceptions,
         utl,
@@ -83,6 +84,14 @@
 
         this.notFunction = function (obj) {
             return this.type(obj) !== 'function';
+        };
+        
+        this.isObject = function (obj) {
+            return this.type(obj) === 'object';
+        };
+        
+        this.notObject = function (obj) {
+            return this.type(obj) !== 'object';
         };
 
         this.isArray = function (obj) {
@@ -226,7 +235,11 @@
             
             for (i = 0; i < eventArray.length; i++) {
                 event = eventArray[i];
-
+                
+                if (event.once) {
+                    eventArray.splice(i, 1);
+                }
+                
                 if (utils.isFunction(event)) {
                     event.apply(null, argumentArray);
                 }
@@ -245,8 +258,8 @@
             executeEvent(this.events.beforeResolveEvents, [container, moduleName]);
         };
 
-        afterResolve = function (moduleName) {
-            executeEvent(this.events.afterResolveEvents, [container, moduleName]);
+        afterResolve = function (moduleName, output) {
+            executeEvent(this.events.afterResolveEvents, [container, moduleName, output]);
         };
 
         beforeNewChild = function (options) {
@@ -283,6 +296,10 @@
         
         if (utl.isFunction(dependencies)) {
             this.ctor = dependencies;
+        } else if (utl.isObject(dependencies)) {
+            this.ctor = function () {
+                return dependencies;
+            };
         } else if (utl.isFunction(ctor)) {
             this.ctor = ctor;
         } else {
@@ -291,12 +308,13 @@
     };
     
     Hilary = function (options) {
-        var config = options || {},
+        var $this = this,
+            config = options || {},
             container = {},
             parent = config.parentContainer,
             utils = config.utils || new Utils(),
             exceptions = config.exceptions || new Exceptions(utils),
-            pipeline = config.pipeline || new Pipeline(this, utils),
+            pipeline = config.pipeline || new Pipeline($this, utils),
             createChildContainer,
             register,
             resolve,
@@ -305,14 +323,16 @@
             getContainer,
             getParentContainer,
             extCount,
-            extension;
+            extension,
+            initCount,
+            initializer;
         
         createChildContainer = function (options) {
             options = options || {};
             var opts, child;
             
             opts = {
-                parentContainer: this,
+                parentContainer: $this,
                 utils: options.utils || utils,
                 exceptions: options.exceptions || exceptions
             };
@@ -343,7 +363,7 @@
 
             pipeline.afterRegister(moduleName, moduleDefinition);
 
-            return this;
+            return $this;
         };
         
         make = function (mdl) {
@@ -351,14 +371,23 @@
                 var i,
                     dependencies = [];
                 
-                if (utils.isArray(mdl.dependencies)) {
+                if (utils.isArray(mdl.dependencies) && mdl.dependencies.length > 0) {
+                    // the module has dependencies, let's get them
                     for (i = 0; i < mdl.dependencies.length; i++) {
                         dependencies.push(resolve(mdl.dependencies[i]));
                     }
+                    
+                    // and apply them
+                    return mdl.ctor.apply(null, dependencies);
                 }
                 
-                return mdl.ctor.apply(null, dependencies);
-                
+                if (mdl.ctor.length === 0) {
+                    // the module takes no arguments, return the result of executing it
+                    return mdl.ctor.call();
+                } else {
+                    // the module takes arguments and has no dependencies, this must be a factory
+                    return mdl.ctor;
+                }
             } else {
                 return mdl;
             }
@@ -400,20 +429,26 @@
             }
             
             if (output !== undefined) {
-                pipeline.afterResolve(moduleName);
+                pipeline.afterResolve(moduleName, output);
                 return output;
             }
             
-            if (parent === undefined && utils.isFunction(container[constants.notResolvable])) {
+            if (parent !== undefined) {
+                // attempt to resolve from the parent container
+                return parent.resolve(moduleName);
+//            } else if (utils.isFunction($this.loadDependency)) {
+//                $this.loadDependency(moduleName, function () {
+//                    pipeline.afterResolve(moduleName, output);
+//                    return output;
+//                });
+            } else if (utils.isFunction(container[constants.notResolvable])) {
+                // if we got this far, we're going to throw
                 // if a notResolvableException override is registered, execute it
                 container[constants.notResolvable](moduleName);
-            } else if (parent === undefined) {
+            } else {
                 // otherwise, throw the default notResolvableException
                 throw exceptions.notResolvableException(moduleName);
             }
-            
-            // attempt to resolve from the parent container
-            return parent.resolve(moduleName);
         };
         
         getContainer = function () {
@@ -433,36 +468,36 @@
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
         // @param options.exceptions (object): exception handling
         */
-        this.createChildContainer = createChildContainer;
+        $this.createChildContainer = createChildContainer;
         
         /*
         // access to the container
         */
-        this.getContainer = getContainer;
+        $this.getContainer = getContainer;
 
         /*
         // access to the parent container
         */
-        this.getParentContainer = getParentContainer;
+        $this.getParentContainer = getParentContainer;
         
         /*
         // register a module by name
         // @param moduleName (string): the name of the module
         // @param moduleDefinition (object literal, function or HilaryModule): the module definition
         */
-        this.register = register;
+        $this.register = register;
         
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         */
-        this.resolve = resolve;
+        $this.resolve = resolve;
         
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         */
-        this.tryResolve = function (moduleName) {
+        $this.tryResolve = function (moduleName) {
             try {
                 return resolve(moduleName);
             } catch (e) {
@@ -473,35 +508,48 @@
         /*
         // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
         */
-        this.registerEvent = function (eventName, callback) {
+        $this.registerEvent = function (eventName, callback) {
             return pipeline.registerEvent(eventName, callback);
         };
         
         /*
         // Provides access to the constants for things like reserved module names and pipeline events.
         */
-        this.getConstants = function () {
+        $this.getConstants = function () {
             return constants;
         };
         
         /*
         // Provides access to the utils module, so extensions can take advantage
         */
-        this.getUtils = function () {
+        $this.getUtils = function () {
             return utils;
         };
         
         /*
         // Provides access to the exceptions module, so extensions can take advantage
         */
-        this.getExceptionHandlers = function () {
+        $this.getExceptionHandlers = function () {
             return exceptions;
         };
         
         // add extensions to this
         for (extCount = 0; extCount < extensions.length; extCount++) {
             extension = extensions[extCount];
-            this[extension.name] = extension.factory(this);
+            
+            if (utils.isFunction(extension.factory)) {
+                $this[extension.name] = extension.factory($this);
+            } else if (utils.isDefined(extension.factory)) {
+                $this[extension.name] = extension.factory;
+            }
+        }
+        
+        for (initCount = 0; initCount < initializers.length; initCount++) {
+            initializer = initializers[initCount];
+            
+            if (utils.isFunction(initializer)) {
+                initializer($this, config);
+            }
         }
     };
     
@@ -513,6 +561,15 @@
             name: name,
             factory: factory
         });
+        
+        return true;
+    };
+    
+    /*
+    // a function for extending Hilary. The scope (this), and constructor options are passed to the factory;
+    */
+    Hilary.onInit = function (factory) {
+        initializers.push(factory);
         
         return true;
     };

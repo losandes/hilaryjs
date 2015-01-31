@@ -3,7 +3,7 @@
 (function (exports) {
     "use strict";
     
-    var amdContainer;
+    var AMDContainer;
     
     Hilary.extend('define', function (scope) {
         var result = function (moduleName, dependencies, factory) {
@@ -16,7 +16,7 @@
             } else if (utils.isString(moduleName) && utils.isFunction(dependencies)) {
                 // the factory was passed in as the second argument - no dependencies exist
                 // moduleName == moduleName and dependencies == factory
-                return scope.register(moduleName, new HilaryModule([], dependencies));
+                return scope.register(moduleName, new HilaryModule(dependencies));
             } else if (utils.isArray(moduleName) && utils.isFunction(dependencies)) {
                 // anonymous definition: the factory was passed in as the second argument - dependencies exist
                 // moduleName == dependencies and dependencies == factory
@@ -48,8 +48,13 @@
     Hilary.extend('require', function (scope) {
         return function (dependencies, factory) {
             if (typeof dependencies === 'function') {
+                // The first argument is the factory
                 return dependencies(scope.resolve, scope.getContainer(), typeof module !== 'undefined' ? module : exports);
+            } else if (typeof dependencies === 'string') {
+                // A single module is being required
+                return scope.resolve(dependencies);
             } else {
+                // An array of dependencies are being required for the factory
                 var i,
                     resolved = [];
 
@@ -62,9 +67,11 @@
         };
     });
     
-    amdContainer = new Hilary();
+    AMDContainer = new Hilary();
     
-    exports.define = amdContainer.define;
-    exports.require = amdContainer.require;
+    // export the main container and make define and require globals
+    exports.AMDContainer = AMDContainer;
+    exports.define = AMDContainer.define;
+    exports.require = AMDContainer.require;
 
 }((typeof module !== 'undefined' && module.exports) ? module.exports : window));

@@ -1,9 +1,12 @@
+/*globals module*/
 module.exports = function (grunt) {
+    "use strict";
+    
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         jasmine: {
             pivotal: {
-                src: ['../src/hilary.js', '../src/hilary.amd.js'], //'../src/**/*.js',
+                src: ['../release/hilaryWithAMD.min.js'], //'../src/**/*.js',
                 options: {
                     specs: '../test/specs/*Fixture.js'
                 }
@@ -16,8 +19,17 @@ module.exports = function (grunt) {
             my_target: {
                 files: {
                     '../release/hilary.min.js': ['../src/hilary.js'],
-                    '../release/hilaryWithAMD.min.js': ['../src/hilary.js', '../src/hilary.amd.js']
+                    '../release/hilaryWithAMD.min.js': ['../src/hilary.js', '../src/hilary.amd.js'],
+//                    '../release/hilaryWithAMDAndLoader.min.js': ['../src/hilary.js', '../src/hilary.amd.js', '../src/hilary.loader.js'],
+//                    '../release/hilaryWithLoader.min.js': ['../src/hilary.js', '../src/hilary.loader.js']
                 }
+            }
+        },
+        copy: {
+            main: {
+                files: [
+                    {src: ['../release/hilaryWithAMDAndLoader.min.js'], dest: '../examples/nodeweb/public/scripts/hilaryWithAMDAndLoader.min.js', filter: 'isFile'}
+                ]
             }
         }
     });
@@ -25,8 +37,9 @@ module.exports = function (grunt) {
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
-    grunt.registerTask('default', ['jasmine', 'uglify']);
+    grunt.registerTask('default', ['uglify', 'jasmine']);
 
 };

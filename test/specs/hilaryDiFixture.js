@@ -51,22 +51,48 @@ describe("Hilary Dependency Injection", function () {
     });
     
     describe('hilary.register, when registering HilaryModules', function () {
+        it('should be able to register factories', function () {
+            var expected = 'test',
+                actual;
+            
+            container.register(testModuleDefinitions.empty.name, new HilaryModule(function (message) {
+                return message;
+            }));
+            
+            actual = container.resolve(testModuleDefinitions.empty.name)(expected);
+            
+            expect(actual).toBe(expected);
+        });
+        
+        it('should be able to register objects', function () {
+            var expected = 'test',
+                actual;
+            
+            container.register(testModuleDefinitions.empty.name, new HilaryModule({
+                message: expected
+            }));
+            
+            actual = container.resolve(testModuleDefinitions.empty.name).message;
+            
+            expect(actual).toBe(expected);
+        });
+        
         it('should be able to resolve the expected module with that name', function () {
-            container.register(testModuleDefinitions.empty.name, new HilaryModule([], function () {
+            container.register(testModuleDefinitions.empty.name, new HilaryModule(function () {
                 return testModuleDefinitions.empty.output;
             }));
 
             expect(container.resolve(testModuleDefinitions.empty.name)).toBe(testModuleDefinitions.empty.output);
         });
         
-        it('should be able to auto-resolve the modules dependencies, if they exist', function () {
+        it('should be able to auto-resolve the module\'s dependencies, if they exist', function () {
             container.register('dep1', {
                 test: 'success1'
             });
             
             container.register('dep2', {
                 test: 'success2'
-            });            
+            });
             
             container.register(testModuleDefinitions.empty.name, new HilaryModule(['dep1', 'dep2'], function (dep1, dep2) {
                 return {
