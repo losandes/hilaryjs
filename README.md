@@ -30,8 +30,8 @@ var hilary = new Hilary({
 Containers may also have child containers, for scoping.
 
 ```JavaScript
-var container = new Hilary(),
-    child = container.createChildContainer();
+var hilary = new Hilary(),
+    child = hilary.createChildContainer();
 ```
 
 ##Registering modules
