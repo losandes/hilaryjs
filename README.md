@@ -125,7 +125,19 @@ var modules = hilary.resolve('hilary::container'),
 
 ##AMD
 
-The AMD extension adds Asynchronous Module Definition specification conventions to Hilary. If you choose to use that extenion, five variables will be added as globals: ``define``, ``require``, ``AMDContainer``, ``Hilary``, and ``HilaryModule``. In order to meet the spec by introducing a global container, the ``AMDContainer`` instance can be accessed if you want to take advantage of non-AMD Hilary features. ``define`` and ``require`` exist on each container, so you can use the AMD conventions with scope, too.
+The AMD extension adds Asynchronous Module Definition specification conventions to Hilary. If you choose to use that extenion, five variables will be added as globals: ``define``, ``require``, ``AMDContainer``, ``Hilary``, and ``HilaryModule``. In order to meet the spec, we had to introduce a global container, ``AMDContainer``. It is an instance of Hilary, so you can access it and take advantage of non-AMD Hilary features if needed. ``define`` and ``require`` exist on each container, so you can also use the AMD conventions with scope, too.
+
+```
+var hilary = new Hilary();
+
+hilary.define('myFactory', function(arg) {
+    console.log(arg);
+});
+
+hilary.require(['myFactory'], function (factory) {
+    factory('hello world!');
+});
+```
 
 ###Define
 
