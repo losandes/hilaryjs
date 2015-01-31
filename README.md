@@ -179,6 +179,19 @@ define('myHilaryModule', ['myModule', 'myOtherModule', 'myFactory', 'myLiteral']
             }
         };
 });
+
+// or by defining an anonymous function that accepts the require, exports and module arguments
+define(function (require, exports, module) {
+    var myModule = require('myModule'),
+        myFactory = require('myFactory');
+    
+    exports.myAnonModule = {
+        go: function () {
+            console.log(myModule.message);          // prints 'hello world!'
+            myFactory('say something!');            // prints 'say something!'
+        }
+    };
+});
 ```
 
 ###Require
