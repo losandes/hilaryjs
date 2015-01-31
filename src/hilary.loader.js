@@ -30,7 +30,8 @@
     };
     
     normalizeUrl = function (baseUrl, relativeUrl) {
-        
+        return enforceLeadingSlash(enforceTrailingSlash(baseUrl))
+            + removeLeadingSlash(relativeUrl);
     };
 
     // Watch scripts load in IE
@@ -70,7 +71,7 @@
     };
     
     Hilary.onInit(function (scope, options) {
-        scope.baseUrl = options.baseUrl || 'scripts';
+        scope.baseUrl = (options.baseUrl && enforceLeadingSlash(enforceTrailingSlash(options.baseUrl))) || '/scripts/';
         //scope.appendScriptsTo = options.appendScriptsTo || 'body';
     });
     
@@ -80,14 +81,16 @@
         return function (moduleName, callback) {
             var eventHandler = function (container, mod) {
                 if (mod === moduleName) {
-                    callback();
+                    callback(mod);
                 }
             };
             eventHandler.once = true;
             
-            scope.registerEvent(constants.pipeline.afterResolve, eventHandler);
+            scope.registerEvent(constants.pipeline.afterRegister, eventHandler);
             
-            appendScriptToDom(scope.baseUrl + moduleName);
+            appendScriptToDom(scope.baseUrl + removeLeadingSlash(moduleName) + '.js');
+            
+            return scope;
         };
     });
 

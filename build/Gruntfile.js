@@ -6,7 +6,7 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         jasmine: {
             pivotal: {
-                src: ['../release/hilaryWithAMDAndLoader.min.js'], //'../src/**/*.js',
+                src: ['../release/hilaryWithAMD.min.js'], //'../src/**/*.js',
                 options: {
                     specs: '../test/specs/*Fixture.js'
                 }
@@ -24,14 +24,22 @@ module.exports = function (grunt) {
                     '../release/hilaryWithLoader.min.js': ['../src/hilary.js', '../src/hilary.loader.js']
                 }
             }
+        },
+        copy: {
+            main: {
+                files: [
+                    {src: ['../release/hilaryWithAMDAndLoader.min.js'], dest: '../examples/nodeweb/public/scripts/hilaryWithAMDAndLoader.min.js', filter: 'isFile'}
+                ]
+            }
         }
     });
 
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify', 'jasmine']);
+    grunt.registerTask('default', ['uglify', 'jasmine', 'copy']);
 
 };

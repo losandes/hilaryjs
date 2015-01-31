@@ -258,8 +258,8 @@
             executeEvent(this.events.beforeResolveEvents, [container, moduleName]);
         };
 
-        afterResolve = function (moduleName) {
-            executeEvent(this.events.afterResolveEvents, [container, moduleName]);
+        afterResolve = function (moduleName, output) {
+            executeEvent(this.events.afterResolveEvents, [container, moduleName, output]);
         };
 
         beforeNewChild = function (options) {
@@ -308,12 +308,13 @@
     };
     
     Hilary = function (options) {
-        var config = options || {},
+        var $this = this,
+            config = options || {},
             container = {},
             parent = config.parentContainer,
             utils = config.utils || new Utils(),
             exceptions = config.exceptions || new Exceptions(utils),
-            pipeline = config.pipeline || new Pipeline(this, utils),
+            pipeline = config.pipeline || new Pipeline($this, utils),
             createChildContainer,
             register,
             resolve,
@@ -331,7 +332,7 @@
             var opts, child;
             
             opts = {
-                parentContainer: this,
+                parentContainer: $this,
                 utils: options.utils || utils,
                 exceptions: options.exceptions || exceptions
             };
@@ -362,7 +363,7 @@
 
             pipeline.afterRegister(moduleName, moduleDefinition);
 
-            return this;
+            return $this;
         };
         
         make = function (mdl) {
@@ -428,20 +429,26 @@
             }
             
             if (output !== undefined) {
-                pipeline.afterResolve(moduleName);
+                pipeline.afterResolve(moduleName, output);
                 return output;
             }
             
-            if (parent === undefined && utils.isFunction(container[constants.notResolvable])) {
+            if (parent !== undefined) {
+                // attempt to resolve from the parent container
+                return parent.resolve(moduleName);
+//            } else if (utils.isFunction($this.loadDependency)) {
+//                $this.loadDependency(moduleName, function () {
+//                    pipeline.afterResolve(moduleName, output);
+//                    return output;
+//                });
+            } else if (utils.isFunction(container[constants.notResolvable])) {
+                // if we got this far, we're going to throw
                 // if a notResolvableException override is registered, execute it
                 container[constants.notResolvable](moduleName);
-            } else if (parent === undefined) {
+            } else {
                 // otherwise, throw the default notResolvableException
                 throw exceptions.notResolvableException(moduleName);
             }
-            
-            // attempt to resolve from the parent container
-            return parent.resolve(moduleName);
         };
         
         getContainer = function () {
@@ -461,36 +468,36 @@
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
         // @param options.exceptions (object): exception handling
         */
-        this.createChildContainer = createChildContainer;
+        $this.createChildContainer = createChildContainer;
         
         /*
         // access to the container
         */
-        this.getContainer = getContainer;
+        $this.getContainer = getContainer;
 
         /*
         // access to the parent container
         */
-        this.getParentContainer = getParentContainer;
+        $this.getParentContainer = getParentContainer;
         
         /*
         // register a module by name
         // @param moduleName (string): the name of the module
         // @param moduleDefinition (object literal, function or HilaryModule): the module definition
         */
-        this.register = register;
+        $this.register = register;
         
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         */
-        this.resolve = resolve;
+        $this.resolve = resolve;
         
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         */
-        this.tryResolve = function (moduleName) {
+        $this.tryResolve = function (moduleName) {
             try {
                 return resolve(moduleName);
             } catch (e) {
@@ -501,28 +508,28 @@
         /*
         // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
         */
-        this.registerEvent = function (eventName, callback) {
+        $this.registerEvent = function (eventName, callback) {
             return pipeline.registerEvent(eventName, callback);
         };
         
         /*
         // Provides access to the constants for things like reserved module names and pipeline events.
         */
-        this.getConstants = function () {
+        $this.getConstants = function () {
             return constants;
         };
         
         /*
         // Provides access to the utils module, so extensions can take advantage
         */
-        this.getUtils = function () {
+        $this.getUtils = function () {
             return utils;
         };
         
         /*
         // Provides access to the exceptions module, so extensions can take advantage
         */
-        this.getExceptionHandlers = function () {
+        $this.getExceptionHandlers = function () {
             return exceptions;
         };
         
@@ -531,9 +538,9 @@
             extension = extensions[extCount];
             
             if (utils.isFunction(extension.factory)) {
-                this[extension.name] = extension.factory(this);
+                $this[extension.name] = extension.factory($this);
             } else if (utils.isDefined(extension.factory)) {
-                this[extension.name] = extension.factory;
+                $this[extension.name] = extension.factory;
             }
         }
         
@@ -541,7 +548,7 @@
             initializer = initializers[initCount];
             
             if (utils.isFunction(initializer)) {
-                initializer(this, config);
+                initializer($this, config);
             }
         }
     };

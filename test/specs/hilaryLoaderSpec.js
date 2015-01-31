@@ -23,7 +23,7 @@ describe("Hilary Loader", function () {
 
     describe('baseUrl', function () {
         it('should exist in Hilary instances', function () {
-            expect(container.baseUrl).toBe('scripts');
+            expect(container.baseUrl).toBe('/scripts/');
         });
     });
 });
