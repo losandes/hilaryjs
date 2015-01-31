@@ -6,6 +6,6 @@ app.require(function (require, exports) {
     var module1 = require('module1'),
         module2 = require('module2');
     
-//    console.log('module1 loaded:', module1.isModule1);
-//    console.log('module2 loaded:', module2.isModule2);
+    console.log('module1 loaded:', module1.isModule1);
+    console.log('module2 loaded:', module2.isModule2);
 });
