@@ -1,6 +1,6 @@
 {
   "name": "hilary",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "description": "hilary is a simple JavaScript IoC container written for Node.js and the browser",
   "main": "index.js",
   "directories": {
