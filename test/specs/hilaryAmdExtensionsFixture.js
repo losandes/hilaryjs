@@ -1,7 +1,6 @@
-/*jslint plusplus: true */
 /*global describe,beforeEach,Hilary,it,expect*/
 
-describe("Hilary AMD", function () {
+describe("Hilary AMD Extensions", function () {
     "use strict";
     
     var container,
@@ -35,7 +34,6 @@ describe("Hilary AMD", function () {
         
         it('should exist in new Hilary instances', function () {
             expect(container.define).toBeDefined();
-            expect(container.define.amd).toBeDefined();
         });
     });
     
@@ -95,6 +93,19 @@ describe("Hilary AMD", function () {
                 done();
             });
         });
+        
+        it('should be able to define as an object literal, by name', function (done) {
+            var expected = 'anonymous literal';
+            
+            global.define('aLiteral', {
+                aLiteral: expected
+            });
+            
+            global.require(['aLiteral'], function (actual) {
+                expect(actual.aLiteral).toBe(expected);
+                done();
+            });
+        });
     }); // /define
     
     describe('require, when requiring modules', function () {
@@ -114,7 +125,7 @@ describe("Hilary AMD", function () {
             expect(result.thisOut).toBe(testModuleDefinitions.emptyToo.output);
         });
         
-        // if the second argument of define is a factory that accepts arguments, but 
+        // if the second argument of define is a factory that accepts arguments, but
         // there are no dependencies, then it should not be executed when being resolved
         // we assume it is a factory
         it('should be able to require factories by name', function (done) {
@@ -148,7 +159,7 @@ describe("Hilary AMD", function () {
                 var actual,
                     expected = 'lala';
                 
-                exports.lala = expected;
+                exports.lala = expected; // is the same as global.define('lala', function () { return epected; });
                 actual = require('lala');
                 
                 expect(actual).toBe(expected);

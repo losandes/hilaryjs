@@ -1,7 +1,7 @@
 /*jslint plusplus: true */
 /*global describe,beforeEach,Hilary, HilaryModule,it,expect*/
 
-describe("Hilary Dependency Injection", function () {
+describe("Hilary Less Magic Dependency Injection", function () {
     "use strict";
     
     var container,
@@ -17,21 +17,27 @@ describe("Hilary Dependency Injection", function () {
         };
 
     beforeEach(function () {
-        container = new Hilary();
+        container = new Hilary({ lessMagic: true });
     });
     
-    describe('hilary.register, when registering single modules by name', function () {
+    describe('hilary.ioc.register, when registering single modules by name', function () {
         it('should be able to resolve the expected module with that name', function () {
+            // given
             container.register(testModuleDefinitions.empty.name, function () {
                 return testModuleDefinitions.empty.output;
             });
+            
+            // when
+            var actual = container.resolve(testModuleDefinitions.empty.name)();
 
-            expect(container.resolve(testModuleDefinitions.empty.name)()).toBe(testModuleDefinitions.empty.output);
+            // then
+            expect(actual).toBe(testModuleDefinitions.empty.output);
         });
     });
     
-    describe('hilary.register, when registering functions (i.e. factories/constructors)', function () {
+    describe('hilary.ioc.register, when registering functions (i.e. factories/constructors)', function () {
         it('should be able to execute those functions, upon resolving them', function () {
+            // given
             container.register(testModuleDefinitions.empty.name, function () {
                 return testModuleDefinitions.empty.output;
             });
@@ -46,21 +52,28 @@ describe("Hilary Dependency Injection", function () {
                 return test(foo, saySomething);
             });
 
-            expect(container.resolve('factory')(' hello world!')).toBe(testModuleDefinitions.empty.output + ' hello world!');
+            // when
+            var actual = container.resolve('factory')(' hello world!');
+            
+            // then
+            expect(actual).toBe(testModuleDefinitions.empty.output + ' hello world!');
         });
     });
     
-    describe('hilary.register, when registering HilaryModules', function () {
+    describe('hilary.ioc.register, when registering HilaryModules', function () {
         it('should be able to register factories', function () {
             var expected = 'test',
                 actual;
             
+            // given
             container.register(testModuleDefinitions.empty.name, new HilaryModule(function (message) {
                 return message;
             }));
             
+            // when
             actual = container.resolve(testModuleDefinitions.empty.name)(expected);
             
+            // then
             expect(actual).toBe(expected);
         });
         
@@ -68,24 +81,33 @@ describe("Hilary Dependency Injection", function () {
             var expected = 'test',
                 actual;
             
+            // given
             container.register(testModuleDefinitions.empty.name, new HilaryModule({
                 message: expected
             }));
             
+            // when
             actual = container.resolve(testModuleDefinitions.empty.name).message;
             
+            // then
             expect(actual).toBe(expected);
         });
         
         it('should be able to resolve the expected module with that name', function () {
+            // given
             container.register(testModuleDefinitions.empty.name, new HilaryModule(function () {
                 return testModuleDefinitions.empty.output;
             }));
+            
+            // when
+            var actual = container.resolve(testModuleDefinitions.empty.name);
 
-            expect(container.resolve(testModuleDefinitions.empty.name)).toBe(testModuleDefinitions.empty.output);
+            // then
+            expect(actual).toBe(testModuleDefinitions.empty.output);
         });
         
         it('should be able to auto-resolve the module\'s dependencies, if they exist', function () {
+            // given
             container.register('dep1', {
                 test: 'success1'
             });
@@ -101,16 +123,21 @@ describe("Hilary Dependency Injection", function () {
                 };
             }));
             
+            // when
             var result = container.resolve(testModuleDefinitions.empty.name);
+            
+            // then
             expect(result.dep1.test).toBe('success1');
             expect(result.dep2.test).toBe('success2');
         });
     });
     
-    describe('hilary.resolve, when resolving reserved module: "hilary::container"', function () {
+    describe('hilary.ioc.resolve, when resolving reserved module: "hilary::container"', function () {
         it('should resolve the container, if it exists', function () {
+            // when
             var ctnr = container.resolve(container.getConstants().containerRegistration);
             
+            // then
             // the ctnr should be resolved
             expect(ctnr).not.toBe(null);
             // and have the Hilary signature
@@ -118,11 +145,13 @@ describe("Hilary Dependency Injection", function () {
         });
     });
     
-    describe('hilary.resolve, when resolving reserved module: "hilary::parent"', function () {
+    describe('hilary.ioc.resolve, when resolving reserved module: "hilary::parent"', function () {
         it('should resolve the parent container, if it exists', function () {
+            // when
             var child = container.createChildContainer(),
                 parent = child.resolve(container.getConstants().parentContainerRegistration);
             
+            // then
             // the parent container should be resolved
             expect(parent).not.toBe(null);
             // and have the Hilary signature
@@ -130,11 +159,14 @@ describe("Hilary Dependency Injection", function () {
         });
     });
     
-    describe('hilary.resolve, when resolving modules that are registered in ancestor containers (parent, grandparent, etc.)', function () {
+    describe('hilary.ioc.resolve, when resolving modules that are registered in ancestor containers (parent, grandparent, etc.)', function () {
         it('should resolve modules that exist in the container ancestry', function () {
             var child = container.createChildContainer(),
-                grandChild = child.createChildContainer();
+                grandChild = child.createChildContainer(),
+                actual1,
+                actual2;
 
+            // given
             container.register(testModuleDefinitions.empty.name, function () {
                 return testModuleDefinitions.empty.output;
             });
@@ -142,18 +174,25 @@ describe("Hilary Dependency Injection", function () {
             child.register(testModuleDefinitions.emptyToo.name, function () {
                 return testModuleDefinitions.emptyToo.output;
             });
-
-            expect(grandChild.resolve(testModuleDefinitions.empty.name)()).toBe(testModuleDefinitions.empty.output);
-            expect(grandChild.resolve(testModuleDefinitions.emptyToo.name)()).toBe(testModuleDefinitions.emptyToo.output);
+            
+            // when
+            actual1 = grandChild.resolve(testModuleDefinitions.empty.name)();
+            actual2 = grandChild.resolve(testModuleDefinitions.emptyToo.name)();
+            
+            // then
+            expect(actual1).toBe(testModuleDefinitions.empty.output);
+            expect(actual2).toBe(testModuleDefinitions.emptyToo.output);
         });
     });
     
     describe('hilary.tryResolve, when attempting to resolve a missing module', function () {
         it('should not throw an error', function () {
+            // when
             var actual = function () {
                 return container.tryResolve('doesntexist');
             };
 
+            // then
             expect(actual).not.toThrow();
         });
     });
