@@ -1,7 +1,7 @@
 hilary.js
 ========
 
-hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-ceremony dependency injection, to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
+hilary.js is a simple JavaScript IoC container written for Node.js and the browser.  hilary's aim is to deliver low-ceremony dependency injection, to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
 ##Including hilary in your web app
 hilary does not depend on other libraries. All you need to do to use it in a web app is include it in a script tag.
@@ -40,7 +40,7 @@ Containers may also have child containers, for scoping.
 
 ```JavaScript
 var hilary = new Hilary(),
-    child = container.createChildContainer();
+    child = hilary.createChildContainer();
 ```
 
 ##Registering modules
@@ -93,6 +93,24 @@ hilary.register('myHilaryModule', ['myModule', 'myFactory', 'myOtherModule'],
 );
 ```
 
+If the dependency array syntax doesn't work for you, you can resolve inline, however this takes the Async out of AMD: it's executed immediately so the dependencies are expected to already be loaded on the container.
+
+```JavaScript
+hilary.register(function (resolve, exports, module) {
+    var myModule = resolve('myModule'),
+        myFactory = resolve('myFactory'),
+        myOtherModule = resolve('myOtherModule');
+    
+    exports.myAnonModule = {
+        go: function () {
+            console.log(myModule);                       // prints 'do something!'
+            console.log(myFactory('expect something!')); // prints 'expect something!'
+            console.log(myOtherModule.message);          // prints 'say something!'
+        }
+    };
+});
+```
+
 Now - to put it all together:
 
 ```JavaScript
@@ -130,13 +148,13 @@ hilary.resolve('myHilaryModule').go();
 Resolving modules simply returns the registered function or object.  Invocation is in the scope of the caller.  We recommend doing all resolving in a single module (i.e. compositionRoot.js). Building on the registration example from above:
 
 ```JavaScript
-var myModule = hilary.resolve('myModule'),
-    myFactory = hilary.resolve('myFactory'),
-    myOtherModule = hilary.resolve('myOtherModule');
-
-console.log(myModule);                       // prints 'do something!'
-console.log(myFactory('expect something!')); // prints 'expect something!'
-console.log(myOtherModule.message);          // prints 'say something!'
+hilary.resolve(['myModule', 'myFactory', 'myOtherModule'],
+    function (myModule, myFactory, myOtherModule) {
+        console.log(myModule);                       // prints 'do something!'
+        console.log(myFactory('expect something!')); // prints 'expect something!'
+        console.log(myOtherModule.message);          // prints 'say something!'
+    }
+);
 ```
 
 If you need access to the container or its parent, there are key names for that:
@@ -334,4 +352,97 @@ var myModule = hilary.resolve('myModule'),
 console.log(myModule());                     // prints 'do something!'
 console.log(myFactory('expect something!')); // prints 'expect something!'
 console.log(myOtherModule.message);          // prints 'say something!'
+```
+
+##AMD
+
+The AMD extension adds Asynchronous Module Definition specification conventions to Hilary. If you choose to use that extenion, five variables will be added as globals: ``define``, ``require``, ``AMDContainer``, ``Hilary``, and ``HilaryModule``. In order to meet the spec, we had to introduce a global container, ``AMDContainer``. It is an instance of Hilary, so you can access it and take advantage of non-AMD Hilary features if needed. ``define`` and ``require`` exist on each container, so you can also use the AMD conventions with scope, too.
+
+```JavaScript
+var hilary = new Hilary();
+
+hilary.define('myFactory', function(arg) {
+    console.log(arg);
+});
+
+hilary.require(['myFactory'], function (factory) {
+    factory('hello world!');
+});
+```
+
+###Define
+
+With AMD, registrations look like this:
+
+```JavaScript
+// with AMD, functions are executed when they are resolved
+define('myModule', function() {
+    return {
+        message: 'hello world!'
+    };
+});
+
+// unless the function accepts an argument without declaring dependencies
+define('myFactory', function(arg) {
+    console.log(arg);
+});
+
+// you can define object literals in multiple ways
+define('myOtherModule', {
+    message: 'do something!'
+});
+
+define({
+    myLiteral: {
+        message: 'literally!'
+    }
+});
+
+// and you can require dependencies by passing an array argument
+define('myHilaryModule', ['myModule', 'myOtherModule', 'myFactory', 'myLiteral'],
+    function (myModule, myOtherModule, myFactory, myLiteral) {
+        return {
+            go: function () {
+                console.log(myModule.message);          // prints 'hello world!'
+                console.log(myOtherModule.message);     // prints 'do something!'
+                myFactory('say something!');            // prints 'say something!'
+                console.log(myLiteral.message);         // prints 'literally!'
+            }
+        };
+});
+
+// or by defining an anonymous function that accepts the require, exports and module arguments
+define(function (require, exports, module) {
+    var myModule = require('myModule'),
+        myFactory = require('myFactory');
+    
+    exports.myAnonModule = {
+        go: function () {
+            console.log(myModule.message);          // prints 'hello world!'
+            myFactory('say something!');            // prints 'say something!'
+        }
+    };
+});
+```
+
+###Require
+
+Resolving with require:
+
+```JavaScript
+require(function (require, exports, module) {
+    var myModule = require('myModule'),
+        myOtherModule = require('myOtherModule');
+    
+    console.log(myModule.message);
+    console.log(myOtherModule.message);
+});
+```
+
+Or:
+
+```JavaScript
+require(['myHilaryModule'], function (myHilaryModule) {
+    myHilaryModule.go();
+});
 ```
