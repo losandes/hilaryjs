@@ -166,7 +166,7 @@
         };
 
         this.dependencyException = function (message, dependencyName, data) {
-            var msg = utils.notDefined(dependencyName) ? message : message + ' (dependency: ' + dependencyName + ')';
+            var msg = utils.notDefined(dependencyName) ? message : message + ' (dependency: ' + dependencyName + '). If the module exists, does it return a value?';
             return makeException('DependencyException', msg, data);
         };
 
@@ -318,6 +318,8 @@
             createChildContainer,
             register,
             resolve,
+            amdRegister,
+            amdResolve,
             make,
             getReservedModule,
             getContainer,
@@ -334,7 +336,8 @@
             opts = {
                 parentContainer: $this,
                 utils: options.utils || utils,
-                exceptions: options.exceptions || exceptions
+                exceptions: options.exceptions || exceptions,
+                lessMagic: options.lessMagic || config.lessMagic
             };
 
             pipeline.beforeNewChild(opts);
@@ -364,6 +367,43 @@
             pipeline.afterRegister(moduleName, moduleDefinition);
 
             return $this;
+        };
+        
+        amdRegister = function (moduleName, dependencies, factory) {
+            if (utils.isFunction(factory)) {
+                // all 3 arguments are present
+                return register(moduleName, new HilaryModule(dependencies, factory));
+            } else if (utils.isString(moduleName) && utils.isFunction(dependencies)) {
+                // the factory was passed in as the second argument - no dependencies exist
+                // moduleName == moduleName and dependencies == factory
+                return register(moduleName, new HilaryModule(dependencies));
+            } else if (utils.isArray(moduleName) && utils.isFunction(dependencies)) {
+                // anonymous definition: the factory was passed in as the second argument - dependencies exist
+                // moduleName == dependencies and dependencies == factory
+                return amdResolve(moduleName, dependencies);
+            } else if (utils.isFunction(moduleName)) {
+                // anonymous definition: the factory was passed in as the first argument
+                return amdResolve(moduleName);
+            } else if (utils.isObject(moduleName)) {
+                // anonymous definition: an object literal was passed in as the first argument
+                return amdResolve(function (require, exports, module) {
+                    var prop;
+                    
+                    for (prop in moduleName) {
+                        if (moduleName.hasOwnProperty(prop)) {
+                            exports[prop] = moduleName[prop];
+                        }
+                    }
+                });
+            } else if (utils.isString(moduleName) && utils.isObject(dependencies)) {
+                // the factory in an object literal and was passed in as the second argument - no dependencies exist
+                // moduleName == moduleName and dependencies == object literal
+                return amdResolve(function (require, exports, module) {
+                    exports[moduleName] = dependencies;
+                });
+            } else {
+                throw exceptions.argumentException('A factory function was not found to define this module', 'factory');
+            }
         };
         
         make = function (mdl) {
@@ -396,7 +436,7 @@
         getReservedModule = function (moduleName) {
 //            if (typeof config.getReservedModule === 'function') {
 //                var output = config.getReservedModule(moduleName);
-//                
+//
 //                if (output) {
 //                    return output;
 //                }
@@ -451,6 +491,26 @@
             }
         };
         
+        amdResolve = function (dependencies, factory) {
+            if (typeof dependencies === 'function') {
+                // The first argument is the factory
+                return dependencies(resolve, getContainer(), typeof module !== 'undefined' ? module : exports);
+            } else if (typeof dependencies === 'string') {
+                // A single module is being required
+                return resolve(dependencies);
+            } else {
+                // An array of dependencies are being required for the factory
+                var i,
+                    resolved = [];
+
+                for (i = 0; i < dependencies.length; i++) {
+                    resolved.push(resolve(dependencies[i]));
+                }
+
+                return factory.apply(null, resolved);
+            }
+        };
+        
         getContainer = function () {
             return container;
         };
@@ -485,13 +545,30 @@
         // @param moduleName (string): the name of the module
         // @param moduleDefinition (object literal, function or HilaryModule): the module definition
         */
-        $this.register = register;
+        $this.register = config.lessMagic ? register : amdRegister;
         
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         */
-        $this.resolve = resolve;
+        $this.resolve = config.lessMagic ? resolve : amdResolve;
+        
+        /*
+        // AMD style functions for registering and resolving modules. Note that you need to include
+        // hilary.amd to get the AMD syntax (define and require).
+        */
+        $this.amd = {
+            register: amdRegister,
+            resolve: amdResolve
+        };
+        
+        /*
+        // IoC style functions for registering and resolving modules.
+        */
+        $this.ioc = {
+            register: register,
+            resolve: resolve
+        };
         
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
@@ -499,7 +576,7 @@
         */
         $this.tryResolve = function (moduleName) {
             try {
-                return resolve(moduleName);
+                return $this.resolve(moduleName);
             } catch (e) {
                 console.log(e);
             }

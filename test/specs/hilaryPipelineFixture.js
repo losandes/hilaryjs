@@ -17,7 +17,7 @@ describe("The Hilary Pipeline", function () {
         };
 
     beforeEach(function () {
-        container = new Hilary();
+        container = new Hilary({ lessMagic: true });
     });
     
     describe('when a "before::register" module is registered', function () {

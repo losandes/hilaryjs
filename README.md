@@ -5,8 +5,16 @@ hilary.js is a simple JavaScript IoC container.  hilary's aim is to deliver low-
 
 ##Including hilary in your web app
 hilary does not depend on other libraries. All you need to do to use it in a web app is include it in a script tag.
+
 ```
 <script type="text/javascript" src="hilary.min.js"></script>
+```
+
+##The AMD extensions
+By default, hilary's ``register`` and ``resolve`` functions accept AMD style arguments. AMD syntax, ``define`` and ``register``, can be added with the AMD extension. Note that hilary AMD excludes module loading. We might add a loader extension for that in the future - let us know if that's important to you via Github issues.
+
+```
+<script type="text/javascript" src="hilary.amd.min.js"></script>
 ```
 
 ##Creating containers
@@ -22,7 +30,8 @@ The constructors accept a single argument, ``options``. You may never need to us
 ```JavaScript
 var hilary = new Hilary({
   utils: myUtilityOverride,
-  exceptions: myExceptionsOverride
+  exceptions: myExceptionsOverride,
+  lessMagic: true
 });
 ```
 
@@ -36,84 +45,98 @@ var hilary = new Hilary(),
 
 ##Registering modules
 
-We register single modules by name:
+We register single modules by name. There are several options for registering modules. This first example has no dependencies and will be executed upon being resolved.
 
 ```JavaScript
 hilary.register('myModule', function() {
-    return 'hello world!';
+    return 'do something!';
+});
+```
+
+The next example is much like the first, but it accepts and argument without declaring its dependencies. Hilary will return the function as-is, since it has no information to satisfy the arguments. This is useful for creating factories and registering functions directly.
+
+```JavaScript
+hilary.register('myFactory', function(expectation) {
+    return expectation;
+});
+```
+
+You can register object literals:
+
+```JavaScript
+hilary.register('myOtherModule', {
+    message: 'say something!'
+});
+
+// is the same as
+
+hilary.register({
+    myOtherModule: {
+        message: 'say something!'
+    }
+});
+```
+
+This example registers a module that declares its dependencies. When the module is resolved, Hilary will resolve the dependencies, cascade through the dependency graph, and pass the resolved dependencies into the factory as arguments.
+
+```JavaScript
+hilary.register('myHilaryModule', ['myModule', 'myFactory', 'myOtherModule'],
+    function (myModule, myFactory, myOtherModule) {
+        return {
+            go: function () {
+                console.log(myModule);                       // prints 'do something!'
+                console.log(myFactory('expect something!')); // prints 'expect something!'
+                console.log(myOtherModule.message);          // prints 'say something!'
+            }
+        };
+    }
+);
+```
+
+Now - to put it all together:
+
+```JavaScript
+var hilary = new Hilary();
+
+hilary.register('myModule', function() {
+    return 'do something!';
+});
+
+hilary.register('myFactory', function(expectation) {
+    return expectation;
 });
 
 hilary.register('myOtherModule', {
-    message: 'do something!';
+    message: 'say something!'
 });
 
-hilary.register('myHilaryModule', new HilaryModule(['myModule', 'myOtherModule'], 
-    function (myModule, myOtherModule) {
+hilary.register('myHilaryModule', ['myModule', 'myFactory', 'myOtherModule'],
+    function (myModule, myFactory, myOtherModule) {
         return {
             go: function () {
-                myModule();             // prints 'hello world!'
-                myOtherModule.message;  // prints 'do something!'            
+                console.log(myModule);                       // prints 'do something!'
+                console.log(myFactory('expect something!')); // prints 'expect something!'
+                console.log(myOtherModule.message);          // prints 'say something!'
             }
         };
-}));
-```
+    }
+);
 
-Notice that several options exist when registering modules. If the module has no dependencies, or if you intend to resolve the dependencies manually, you can register the module definition as a function or object literal. If you want hilary to auto-resolve a modules dependencies, and cascade through the dependency graph, then you have to register the module as in instance of HilaryModule.
-
-HilaryModules accept two arguments: a dependency array, and a module definition. The dependency array should include the name of the modules that the current module depends on. The module definition should accept the resolved modules as arguments, in the same order that they are listed in the dependency array.
-
-###Registering factories
-
-You can register factories too.  If you have modules with arguments that should be new instances every time, factories can be used to keep all of the container logic in one module: your composition root.
-
-Let's say you register the following modules.
-```JavaScript
-hilary.register('echo', function() {
-  return 'echo: ';
-});
-
-hilary.register('saySomething', function(echo, saySomething) {
-  return echo() + saySomething;
-}); 
-```
-
-When composing the application, you can register a factory that uses the other modules to expose a decoupled interface (note you should only resolve your dependencies in a composition root, otherwise you are using the service-location anti-pattern):
-
-```JavaScript
-hilary.register('echoFactory', function(saySomething) {
-  var _echo = hilary.resolve('echo');
-  var _saySomething = hilary.resolve('saySomething');
-  return _saySomething(_echo, saySomething);
-});
-```
-
-Then, a module that depends on ``echoFactory`` can use the factory without knowing anything about the modules the factory depends on.
-
-```JavaScript
-hilary.register('someModule', new HilaryModule(['echoFactory'], function(echo) {
-    echo('hello world!');
-});
+hilary.resolve('myHilaryModule').go();
 ```
 
 ##Resolving modules
 
-Resolving modules simply returns the registered function or object.  Invocation is in the scope of the caller.  We recommend doing all resolving in a single module (i.e. compositionRoot.js).
-
-Resolving is recursively hierarchical, so if you attempt to resolve a module in a child container, and the child container does not have a registration, but the parent container does, the module from the parent will be returned. Building on the registration example from above:
+Resolving modules simply returns the registered function or object.  Invocation is in the scope of the caller.  We recommend doing all resolving in a single module (i.e. compositionRoot.js). Building on the registration example from above:
 
 ```JavaScript
 var myModule = hilary.resolve('myModule'),
+    myFactory = hilary.resolve('myFactory'),
     myOtherModule = hilary.resolve('myOtherModule');
 
-myModule();
-myOtherModule.message;
-```
-
-Or simply:
-
-```JavaScript
-var myHilaryModule = hilary.resolve('myHilaryModule');
-myHilaryModule.go();
+console.log(myModule);                       // prints 'do something!'
+console.log(myFactory('expect something!')); // prints 'expect something!'
+console.log(myOtherModule.message);          // prints 'say something!'
 ```
 
 If you need access to the container or its parent, there are key names for that:
@@ -123,13 +146,48 @@ var modules = hilary.resolve('hilary::container'),
     parent = hilary.resolve('hilary::parent');
 ```
 
+Resolving is recursively hierarchical, so if you attempt to resolve a module in a child container, and the child container does not have a registration, but the parent container does, the module from the parent will be returned.
+
+```JavaScript
+var parentScope = new Hilary(),
+    childScope = parentScope.createChildContainer();
+
+parentScope.register('myModule', function() {
+    return 'do something!';
+});
+
+parentScope.register('myFactory', function(expectation) {
+    return expectation;
+});
+
+parentScope.register('myOtherModule', {
+    message: 'say something!'
+});
+
+// modules on the child scope can depend on modules in both the parent and child scopes
+// modules in the parent scope do know about the child scope
+childScope.register('myHilaryModule', ['myModule', 'myFactory', 'myOtherModule'],
+    function (myModule, myFactory, myOtherModule) {
+        return {
+            go: function () {
+                console.log(myModule);                       // prints 'do something!'
+                console.log(myFactory('expect something!')); // prints 'expect something!'
+                console.log(myOtherModule.message);          // prints 'say something!'
+            }
+        };
+    }
+);
+
+childScope.resolve('myHilaryModule').go();
+```
+
 ##The Pipeline
 
 There are several before and after events that you can tie into, to extend hilary.  All of these events can be leveraged by registering a function with the appropriate key name.
 
 ###The before register event
 
-Before a module is registered, the "hilary::before::register" event is fired, if a function is registered. It accepts three arguments: 
+Before a module is registered, the "hilary::before::register" event is fired, if a function is registered. It accepts three arguments:
 
 ```
 @param container: the current container
@@ -220,4 +278,60 @@ var eventHandler = function(container, moduleName) {
 eventHandler.once = true;
 
 hilary.registerEvent('hilary::after::resolve', eventHandler);
+```
+
+##Registering modules :: Less Magic
+
+If you want more control over the Dependency Inversion, we recommend using the ``lessMagic`` argument. This replaces the ``register`` and ``resolve`` arguments with simpler counterparts, and gives you more control over auto-resolution.
+
+```JavaScript
+var hilary = new Hilary({ lessMagic: true });
+
+hilary.register('myModule', function() {
+    return 'hello world!';
+});
+
+hilary.register('myFactory', function(expectation) {
+    return expectation;
+});
+
+hilary.register('myOtherModule', {
+    message: 'do something!'
+});
+```
+
+Notice these three examples match the AMD style examples above, however there is a significant difference with resolution. The ``myModule`` registration with the parameterless factory will NOT be executed upon resolution. The function itself will be returned.
+
+You can still take advantage of auto-resolution if you want to: by registering a HilaryModule. HilaryModules accept two arguments: a dependency array, and a module definition. The dependency array should include the name of the modules that the current module depends on. The module definition should accept the resolved modules as arguments, in the same order that they are listed in the dependency array.
+
+```JavaScript
+hilary.register('myHilaryModule', new HilaryModule(['myModule', 'myFactory', 'myOtherModule'],
+    function (myModule, myFactory, myOtherModule) {
+        return {
+            go: function () {
+                console.log(myModule);                       // prints 'do something!'
+                console.log(myFactory('expect something!')); // prints 'expect something!'
+                console.log(myOtherModule.message);          // prints 'say something!'
+            }
+        };
+    }
+));
+```
+
+You can also mix and match syntax styles by using the AMD versions of register and resolve (``hilary.amd.register`` and ``hilary.amd.resolve``) on a lessMagic container, but we recommend picking one and sticking with it.
+
+##Resolving modules :: Less Magic
+
+Resolving modules on a lessMagic container simply returns the registered function or object.
+
+Invocation, scope, and container hierarchies are the same as with the AMD containers.
+
+```JavaScript
+var myModule = hilary.resolve('myModule'),
+    myFactory = hilary.resolve('myFactory'),
+    myOtherModule = hilary.resolve('myOtherModule');
+
+console.log(myModule());                     // prints 'do something!'
+console.log(myFactory('expect something!')); // prints 'expect something!'
+console.log(myOtherModule.message);          // prints 'say something!'
 ```
