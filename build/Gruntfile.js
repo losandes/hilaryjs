@@ -21,8 +21,8 @@ module.exports = function (grunt) {
                     '../release/hilary.min.js': ['../src/hilary.js'],
                     '../release/hilary.amd.min.js': ['../src/hilary.amd.js'],
                     '../release/hilaryWithAMD.min.js': ['../src/hilary.js', '../src/hilary.amd.js'],
-                    //'../release/hilaryWithAMDAndLoader.min.js': ['../src/hilary.js', '../src/hilary.amd.js', '../src/hilary.loader.js'],
-                    //'../release/hilaryWithLoader.min.js': ['../src/hilary.js', '../src/hilary.loader.js']
+                    '../release/hilaryWithAMDAndLoader.min.js': ['../src/hilary.js', '../src/hilary.amd.js', '../src/hilary.loader.js'],
+                    '../release/hilaryWithLoader.min.js': ['../src/hilary.js', '../src/hilary.loader.js']
                 }
             }
         },
