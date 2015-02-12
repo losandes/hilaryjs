@@ -10,6 +10,11 @@ var users = require('./routes/users');
 
 var app = express();
 
+var Hilary = require('hilary');
+
+var scope = new Hilary();
+var mod = new Hilary.HilaryModule(['foo'], function (foo) {});
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
