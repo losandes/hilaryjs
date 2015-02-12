@@ -3,6 +3,20 @@ hilary.js
 
 hilary.js is a simple JavaScript IoC container written for Node.js and the browser.  hilary's aim is to deliver low-ceremony dependency injection, to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
+##Installing hilary in Node
+```
+npm install hilary
+```
+
+Then in your node module:
+
+```
+var Hilary = require('hilary');
+
+var scope = new Hilary();
+var hilaryModule = new Hilary.HilaryModule(['foo'], function (foo) { /*[CODE]*/ });
+```
+
 ##Including hilary in your web app
 hilary does not depend on other libraries. All you need to do to use it in a web app is include it in a script tag.
 
