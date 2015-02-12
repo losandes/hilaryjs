@@ -13,6 +13,7 @@
     "serve-favicon": "~2.2.0",
     "debug": "~2.1.1",
     "hbs": "~2.8.0",
-    "less-middleware": "1.0.x"
+    "less-middleware": "1.0.x",
+    "hilary": "1.1.x"
   }
 }

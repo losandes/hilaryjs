@@ -1,2 +1,2 @@
 /*jslint node: true*/
-require('./hilary.js');
+require('./src/hilary.js');
