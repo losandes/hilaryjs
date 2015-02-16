@@ -24,7 +24,7 @@ var Hilary = require('hilary'),
 
 compose = function (container) {
     container.register('http', require('http'));
-    container.register('server', require('./server.js'));
+    container.autoRegister(require('./server.js'));
 };
 
 start = function () {
