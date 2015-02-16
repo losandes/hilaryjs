@@ -404,7 +404,7 @@
                     exports[moduleName] = dependencies;
                 });
             } else {
-                throw exceptions.argumentException('A factory function was not found to define this module', 'factory');
+                throw exceptions.argumentException('A factory function was not found to define ' + moduleName, 'factory');
             }
         };
         
@@ -412,7 +412,9 @@
             var key,
                 i;
             
-            if (utils.isObject(index)) {
+            if (utils.isObject(index) && (index.name || index.dependencies || index.factory)) {
+                autoRegisterOne(index);
+            } else if (utils.isObject(index)) {
 
                 for (key in index) {
                     if (index.hasOwnProperty(key)) {
