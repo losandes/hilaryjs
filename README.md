@@ -73,7 +73,7 @@ Then define your scope, then your modules and finally compose your app:
 
 ```JavaScript
 // myModule.js
-spa.register('myModule', ['myFactory'], function (myFactory) {
+spa.register('myRouteEngine', ['myFactory'], function (myFactory) {
     "use strict";
     
     // [CODE]
@@ -98,7 +98,7 @@ spa.resolve(function (resolve, exports, window) {
     
     start = function () {
         compose(spa);
-        resolve('myModule');
+        resolve('myRouteEngine');
     };
     
     start();
