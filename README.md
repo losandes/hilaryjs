@@ -23,11 +23,15 @@ var Hilary = require('hilary'),
     start;
 
 compose = function (container) {
+    "use strict";
+    
     container.register('http', require('http'));
     container.autoRegister(require('./server.js'));
 };
 
 start = function () {
+    "use strict";
+    
     compose(container);
     container.resolve('server');
 };
@@ -40,12 +44,16 @@ start();
 module.exports.name = 'server';
 module.exports.dependencies = ['http'];
 module.exports.factory = function (http) {
+    "use strict";
+    
     http.createServer(function (req, res) {
         res.writeHead(200, {'Content-Type': 'text/plain'});
         res.end('Hello World\n');
     }).listen(1337, '127.0.0.1');
 
     console.log('Server running at http://127.0.0.1:1337/');
+    
+    return http;
 };
 ```
 
