@@ -5,7 +5,7 @@ Hilary is a simple JavaScript IoC container written for Node.js and the browser.
 
 You can find documentation and examples on our [wiki] (https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
 
-For Node
+Creating your First Node App with Hilary
 ========
 Install Hilary:
 
@@ -51,7 +51,7 @@ module.exports.factory = function (http) {
 };
 ```
 
-For the Browser
+Creating your First Browser App with Hilary
 ========
 
 Add a script reference to Hilary before you load your modules:
