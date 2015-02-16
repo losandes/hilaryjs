@@ -5,7 +5,8 @@ Hilary is a simple JavaScript IoC container written for Node.js and the browser.
 
 You can find documentation and examples on our [wiki] (https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
 
-## For Node
+For Node
+========
 Install Hilary:
 
 ```
@@ -48,6 +49,60 @@ module.exports.factory = function (http) {
 
     console.log('Server running at http://127.0.0.1:1337/');
 };
+```
+
+For the Browser
+========
+
+Add a script reference to Hilary before you load your modules:
+
+```HTML
+<script src="hilary.min.js"></script>
+```
+
+Then define your scope, then your modules and finally compose your app:
+
+```JavaScript
+// spa.js
+(function (exports, Hilary) {
+    "use strict";
+    
+    exports.spa = new Hilary();
+} (window, Hilary));
+```
+
+```JavaScript
+// myModule.js
+spa.register('myModule', ['myFactory'], function (myFactory) {
+    "use strict";
+    
+    // [CODE]
+});
+```
+
+```JavaScript
+// bootstrapper.js
+spa.resolve(function (resolve, exports, window) {
+    "use strict";
+    
+    var compose,
+        start;
+    
+    compose = function (container) {
+        container.register('myFactory', function () {
+            "use strict";
+            
+            // [CODE]
+        });        
+    };
+    
+    start = function () {
+        compose(spa);
+        resolve('myModule');
+    };
+    
+    start();
+});
 ```
 
 
