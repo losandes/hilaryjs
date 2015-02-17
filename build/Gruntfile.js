@@ -8,7 +8,7 @@ module.exports = function (grunt) {
             pivotal: {
                 src: ['../release/hilaryWithAMD.min.js'], //'../src/**/*.js',
                 options: {
-                    specs: '../test/specs/*Fixture.js'
+                    specs: '../test/browser/specs/*Fixture.js'
                 }
             }
         },

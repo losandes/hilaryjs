@@ -99,7 +99,7 @@ spa.resolve(function (resolve, exports, window) {
             "use strict";
             
             // [CODE]
-        });        
+        });
     };
     
     start = function () {
@@ -110,5 +110,3 @@ spa.resolve(function (resolve, exports, window) {
     start();
 });
 ```
-
-

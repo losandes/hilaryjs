@@ -1,19 +1,21 @@
 {
-  "name": "expressdefault",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "start": "nodemon www.js"
-  },
-  "dependencies": {
-    "express": "~4.10.6",
-    "body-parser": "~1.10.1",
-    "cookie-parser": "~1.3.3",
-    "morgan": "~1.5.1",
-    "serve-favicon": "~2.2.0",
-    "debug": "~2.1.1",
-    "hbs": "~2.8.0",
-    "less-middleware": "1.0.x",
-    "hilary": "1.1.x"
-  }
+    "name": "expressdefault",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "nodemon app.js",
+        "test": "node --debug app.js"
+    },
+    "dependencies": {
+        "express": "~4.10.6",
+        "body-parser": "~1.10.1",
+        "cookie-parser": "~1.3.3",
+        "morgan": "~1.5.1",
+        "serve-favicon": "~2.2.0",
+        "debug": "~2.1.1",
+        "hbs": "~2.8.0",
+        "less-middleware": "1.0.x",
+        "serve-static": "1.8.x",
+        "hilary": "1.1.x"
+    }
 }

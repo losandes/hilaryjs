@@ -1,2 +1,7 @@
 /*globals Hilary*/
-var app = new Hilary();
+(function (exports, Hilary) {
+    "use strict";
+    
+    exports.spa = new Hilary();
+    
+}(window, Hilary));

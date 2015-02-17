@@ -320,6 +320,8 @@
             resolve,
             amdRegister,
             amdResolve,
+            autoRegister,
+            autoRegisterOne,
             make,
             getReservedModule,
             getContainer,
@@ -402,7 +404,44 @@
                     exports[moduleName] = dependencies;
                 });
             } else {
-                throw exceptions.argumentException('A factory function was not found to define this module', 'factory');
+                throw exceptions.argumentException('A factory function was not found to define ' + moduleName, 'factory');
+            }
+        };
+        
+        autoRegister = function (index) {
+            var key,
+                i;
+            
+            if (utils.isObject(index) && (index.name || index.dependencies || index.factory)) {
+                autoRegisterOne(index);
+            } else if (utils.isObject(index)) {
+
+                for (key in index) {
+                    if (index.hasOwnProperty(key)) {
+                        autoRegisterOne(index[key]);
+                    }
+                }
+                
+            } else if (utils.isArray(index)) {
+
+                for (i = 0; i < index.length; i += 1) {
+                    autoRegisterOne(index[i]);
+                }
+                
+            } else {
+                throw exceptions.argumentException('A index must be defined and must be a typeof object or array', 'index');
+            }
+        };
+        
+        autoRegisterOne = function (registration) {
+            if (registration.name && registration.dependencies && registration.factory) {
+                $this.register(registration.name, registration.dependencies, registration.factory);
+            } else if (registration.name && registration.factory) {
+                $this.register(registration.name, registration.factory);
+            } else if (registration.dependencies && registration.factory) {
+                $this.resolve(registration.dependencies, registration.factory);
+            } else if (registration.factory) {
+                $this.register(registration.factory);
             }
         };
         
@@ -546,6 +585,21 @@
         // @param moduleDefinition (object literal, function or HilaryModule): the module definition
         */
         $this.register = config.lessMagic ? register : amdRegister;
+        
+        /*
+        // auto-register or resolve an index of objects
+        // @param index (object or array): the index of objects to be registered or resolved.
+        //      NOTE: if a name is not provided for the object, it is resolved, otherwise it is registered.
+        //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
+        //            Using it in the browser would likely result in your objects being on a global, which is not desireable.
+        //
+        // i.e.
+        //      hilary.autoRegister({
+        //          myModule: { name: 'myModule', dependencies: ['foo'], factory: function (foo) { console.log(foo); } },
+        //          myOtherModule: ...
+        //      });
+        */
+        $this.autoRegister = autoRegister;
         
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
