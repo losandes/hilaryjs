@@ -5,7 +5,8 @@ var Hilary  = require('../../index.js'),
     spec = {
         describe: describe,
         it: it,
-        expect: require('chai').expect
+        expect: require('chai').expect,
+        should: require('chai').should()
     };
 
 require('./hilaryIoCFixture').test(Hilary, spec);
