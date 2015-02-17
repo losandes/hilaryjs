@@ -1,6 +1,6 @@
 /*jslint plusplus: true*/
-/*globals module*/
-(function (exports, Hilary, HilaryModule) {
+/*globals module, require*/
+(function (exports, Hilary) {
     "use strict";
     
     var AMDContainer;
@@ -23,6 +23,5 @@
 
 }(
     (typeof module !== 'undefined' && module.exports) ? module.exports : window,
-    (typeof module !== 'undefined' && module.exports) ? module.exports.Hilary : window.Hilary,
-    (typeof module !== 'undefined' && module.exports) ? module.exports.HilaryModule : window.HilaryModule
+    (typeof module !== 'undefined' && module.exports) ? require('hilary') : window.Hilary
 ));

@@ -17,12 +17,15 @@
   "keywords": [
     "dependency",
     "injection",
+    "injector",
     "inversion",
     "control",
     "IoC",
     "DI",
     "node",
     "javascript",
+    "autowire",
+    "configuration",
     "low",
     "ceremony"
   ],

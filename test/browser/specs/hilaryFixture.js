@@ -92,5 +92,100 @@ require(['describe', 'beforeEach', 'Hilary', 'it', 'expect'], function (describe
                 expect(shouldThrow).toThrow();
             });
         });
+        
+        describe('dispose', function () {
+            describe('when a single moduleName is passed as an argument', function () {
+                it('should delete that module from the container', function () {
+                    var actual1,
+                        actual2;
+                    
+                    container.register(testModuleDefinitions.empty.name, function () {
+                        return testModuleDefinitions.empty.output;
+                    });
+                    
+                    actual1 = container.resolve(testModuleDefinitions.empty.name);
+                    
+                    container.dispose(testModuleDefinitions.empty.name);
+                    
+                    actual2 = function () {
+                        container.resolve(testModuleDefinitions.empty.name);
+                    };
+                    
+                    expect(actual1).toBe(testModuleDefinitions.empty.output);
+                    expect(actual2).toThrow();
+                });
+            });
+                
+            describe('when an array of moduleNames is passed as an argument', function () {
+                it('should delete those modules from the container', function () {
+                    var actual1,
+                        actual2,
+                        actual3,
+                        actual4;
+                    
+                    container.register(testModuleDefinitions.empty.name, function () {
+                        return testModuleDefinitions.empty.output;
+                    });
+                    
+                    container.register(testModuleDefinitions.emptyToo.name, function () {
+                        return testModuleDefinitions.emptyToo.output;
+                    });
+                    
+                    actual1 = container.resolve(testModuleDefinitions.empty.name);
+                    actual2 = container.resolve(testModuleDefinitions.emptyToo.name);
+                    
+                    container.dispose([testModuleDefinitions.empty.name, testModuleDefinitions.emptyToo.name]);
+                    
+                    actual3 = function () {
+                        container.resolve(testModuleDefinitions.empty.name);
+                    };
+                    
+                    actual4 = function () {
+                        container.resolve(testModuleDefinitions.emptyToo.name);
+                    };
+                    
+                    expect(actual1).toBe(testModuleDefinitions.empty.output);
+                    expect(actual2).toBe(testModuleDefinitions.emptyToo.output);
+                    expect(actual3).toThrow();
+                    expect(actual4).toThrow();
+                });
+            });
+                
+            describe('when no argument is passed', function () {
+                it('should delete all modules from the container', function () {
+                    var actual1,
+                        actual2,
+                        actual3,
+                        actual4;
+                    
+                    container.register(testModuleDefinitions.empty.name, function () {
+                        return testModuleDefinitions.empty.output;
+                    });
+                    
+                    container.register(testModuleDefinitions.emptyToo.name, function () {
+                        return testModuleDefinitions.emptyToo.output;
+                    });
+                    
+                    actual1 = container.resolve(testModuleDefinitions.empty.name);
+                    actual2 = container.resolve(testModuleDefinitions.emptyToo.name);
+                    
+                    container.dispose();
+                    
+                    actual3 = function () {
+                        container.resolve(testModuleDefinitions.empty.name);
+                    };
+                    
+                    actual4 = function () {
+                        container.resolve(testModuleDefinitions.emptyToo.name);
+                    };
+                    
+                    expect(actual1).toBe(testModuleDefinitions.empty.output);
+                    expect(actual2).toBe(testModuleDefinitions.emptyToo.output);
+                    expect(actual3).toThrow();
+                    expect(actual4).toThrow();
+                });
+            });
+        });
+        
     });
 });

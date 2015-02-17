@@ -14,17 +14,19 @@ compose = function (container) {
     container.register('express', express);                         // lib
     container.register('expressSingleton', expressSingleton);       // single instance used for app
     container.register('router', router);                           // route engine
-    container.register('path', require('path'));
     container.register('favicon', require('serve-favicon'));
     container.register('logger', require('morgan'));
     container.register('cookieParser', require('cookie-parser'));
     container.register('bodyParser', require('body-parser'));
-    container.register('serveStatic', require('serve-static'));
     container.register('less', require('less-middleware'));
+    container.register('serve-static', require('serve-static'));
     container.register('debug', function () {
         return require('debug')('expressdefault:server');
     });
-    container.register('http', require('http'));
+    
+    // the following registrations will fallback to Node's require if they are commented out
+    //container.register('http', require('http'));
+    //container.register('path', require('path'));
     
     
     container.autoRegister(require('./expressApp.js'));             // configures middleware and controllers

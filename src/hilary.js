@@ -35,7 +35,8 @@
     };
     
     Utils = function () {
-        var objProto = Object.prototype,
+        var $this = {},
+            objProto = Object.prototype,
             objProtoToStringFunc = objProto.toString,
             objProtoHasOwnFunc = objProto.hasOwnProperty,
             class2Types = {},
@@ -48,7 +49,7 @@
             class2Types["[object " + name + "]"] = name.toLowerCase();
         }
 
-        this.type = function (obj) {
+        $this.type = function (obj) {
             if (typeof obj === "undefined") {
                 return "undefined";
             }
@@ -62,7 +63,7 @@
                     typeof obj;
         };
 
-        this.notDefined = function (obj) {
+        $this.notDefined = function (obj) {
             try {
                 return this.type(obj) === 'undefined';
             } catch (e) {
@@ -70,7 +71,7 @@
             }
         };
 
-        this.isDefined = function (obj) {
+        $this.isDefined = function (obj) {
             try {
                 return this.type(obj) !== 'undefined';
             } catch (e) {
@@ -78,47 +79,47 @@
             }
         };
 
-        this.isFunction = function (obj) {
+        $this.isFunction = function (obj) {
             return this.type(obj) === 'function';
         };
 
-        this.notFunction = function (obj) {
+        $this.notFunction = function (obj) {
             return this.type(obj) !== 'function';
         };
         
-        this.isObject = function (obj) {
+        $this.isObject = function (obj) {
             return this.type(obj) === 'object';
         };
         
-        this.notObject = function (obj) {
+        $this.notObject = function (obj) {
             return this.type(obj) !== 'object';
         };
 
-        this.isArray = function (obj) {
+        $this.isArray = function (obj) {
             return this.type(obj) === 'array';
         };
 
-        this.notArray = function (obj) {
+        $this.notArray = function (obj) {
             return this.type(obj) !== 'array';
         };
 
-        this.isString = function (obj) {
+        $this.isString = function (obj) {
             return this.type(obj) === 'string';
         };
 
-        this.notString = function (obj) {
+        $this.notString = function (obj) {
             return this.type(obj) !== 'string';
         };
 
-        this.isBoolean = function (obj) {
+        $this.isBoolean = function (obj) {
             return this.type(obj) === 'boolean';
         };
 
-        this.notBoolean = function (obj) {
+        $this.notBoolean = function (obj) {
             return this.type(obj) !== 'boolean';
         };
 
-        this.notNullOrWhitespace = function (str) {
+        $this.notNullOrWhitespace = function (str) {
             if (!str) {
                 return false;
             }
@@ -133,9 +134,11 @@
             return (/([^\s])/).test(str);
         };
 
-        this.isNullOrWhitespace = function (str) {
+        $this.isNullOrWhitespace = function (str) {
             return this.notNullOrWhitespace(str) === false;
         };
+        
+        return $this;
     };
     
     utl = new Utils();
@@ -322,6 +325,7 @@
             amdResolve,
             autoRegister,
             autoRegisterOne,
+            dispose,
             make,
             getReservedModule,
             getContainer,
@@ -555,6 +559,24 @@
             }
         };
         
+        dispose = function (moduleName) {
+            var key, i;
+            
+            if (utils.isString(moduleName)) {
+                delete container[moduleName];
+            } else if (utils.isArray(moduleName)) {
+                for (i = 0; i < moduleName.length; i += 1) {
+                    delete container[moduleName[i]];
+                }
+            } else {
+                for (key in container) {
+                    if (container.hasOwnProperty(key)) {
+                        delete container[key];
+                    }
+                }
+            }
+        };
+        
         getContainer = function () {
             return container;
         };
@@ -640,6 +662,13 @@
                 console.log(e);
             }
         };
+        
+        /*
+        // Disposes a module, or all modules. When a moduleName is not passed
+        // as an argument, the entire container is disposed.
+        // @param moduleName (string): The name of the module to dispose
+        */
+        $this.dispose = dispose;
         
         /*
         // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
