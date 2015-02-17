@@ -74,7 +74,7 @@ Then define your scope, then your modules and finally compose your app:
     "use strict";
     
     exports.spa = new Hilary();
-} (window, Hilary));
+}(window, Hilary));
 ```
 
 ```JavaScript
