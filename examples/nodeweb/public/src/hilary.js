@@ -1,11 +1,11 @@
 /*jslint plusplus: true, regexp: true*/
-/*globals module, console, Window*/
+/*globals module, console, Window, require*/
 
 /*
 // A simple Inversion of Control container
 // It's named after Hilary Page, who designed building blocks that later became known as Legos.
 */
-(function (exports) {
+(function (exports, nodeRequire) {
     "use strict";
     
     var Hilary,
@@ -404,7 +404,7 @@
                     exports[moduleName] = dependencies;
                 });
             } else {
-                throw exceptions.argumentException('A factory function was not found to define this module', 'factory');
+                throw exceptions.argumentException('A factory function was not found to define ' + moduleName, 'factory');
             }
         };
         
@@ -412,7 +412,9 @@
             var key,
                 i;
             
-            if (utils.isObject(index)) {
+            if (utils.isObject(index) && (index.name || index.dependencies || index.factory)) {
+                autoRegisterOne(index);
+            } else if (utils.isObject(index)) {
 
                 for (key in index) {
                     if (index.hasOwnProperty(key)) {
@@ -487,37 +489,42 @@
         };
         
         resolve = function (moduleName) {
-            var mdl,
+            var mdul,
                 output;
             
             pipeline.beforeResolve(moduleName);
             
-            // If the module being requested is a reserved registration, get the internal object
+            // otherwise, try to resolve the module by name
+            mdul = container[moduleName];
+
+            // if the module was found, resolve it's dependencies and return it
+            if (mdul !== undefined) {
+                output = make(mdul);
+                pipeline.afterResolve(moduleName, output);
+                return output;
+            }
+            
+            // Check to see if the module being requested is a reserved module
             output = getReservedModule(moduleName);
             
-            // otherwise, try to resolve the module by name
-            if (!output) { //(output !== null) {
-                mdl = container[moduleName];
-
-                // if the module was found, resolve it's dependencies and return it
-                if (mdl !== undefined) {
-                    output = make(mdl);
-                }
+            // If the module being requested is a reserved registration, return it
+            if (output !== undefined) {
+                pipeline.afterResolve(moduleName, output);
+                return output;
+            } else if (parent !== undefined) {
+                // attempt to resolve from the parent container
+                return parent.resolve(moduleName);
+            } else if (nodeRequire) {
+                // attempt to resolve from node's require
+                output = nodeRequire(moduleName);
+            } else if (window) {
+                // attempt to resolve from Window
+                output = exports[moduleName];
             }
             
             if (output !== undefined) {
                 pipeline.afterResolve(moduleName, output);
                 return output;
-            }
-            
-            if (parent !== undefined) {
-                // attempt to resolve from the parent container
-                return parent.resolve(moduleName);
-//            } else if (utils.isFunction($this.loadDependency)) {
-//                $this.loadDependency(moduleName, function () {
-//                    pipeline.afterResolve(moduleName, output);
-//                    return output;
-//                });
             } else if (utils.isFunction(container[constants.notResolvable])) {
                 // if we got this far, we're going to throw
                 // if a notResolvableException override is registered, execute it
@@ -706,4 +713,7 @@
     exports.Hilary = Hilary;
     exports.HilaryModule = HilaryModule;
     
-}((typeof module !== 'undefined' && module.exports) ? module.exports : window));
+}(
+    (typeof module !== 'undefined' && module.exports) ? module.exports : window,    // node or browser
+    (typeof module !== 'undefined' && module.exports) ? require : undefined         // node's require or undefined
+));

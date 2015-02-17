@@ -1,5 +1,5 @@
 /*jslint node: true*/
-var Hilary = require('../../index.js'),
+var Hilary = require('../../index.js'), //require('hilary'),
     compose,
     start,
     container = new Hilary();
