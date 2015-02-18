@@ -1,4 +1,4 @@
-/*jslint plusplus: true, regexp: true*/
+/*jslint plusplus: true, regexp: true, nomen: true*/
 /*globals module, console, Window, require*/
 
 /*
@@ -23,6 +23,7 @@
     constants = {
         containerRegistration: 'hilary::container',
         parentContainerRegistration: 'hilary::parent',
+        singletons: '__singletons',
         notResolvable: 'hilary::handler::not::resolvable',
         pipeline: {
             beforeRegister: 'hilary::before::register',
@@ -292,6 +293,7 @@
     HilaryModule = function (dependencies, ctor) {
         this.dependencies = undefined;
         this.ctor = undefined;
+        this.singleton = false;
         
         if (utl.isArray(dependencies)) {
             this.dependencies = dependencies;
@@ -308,12 +310,16 @@
         } else {
             throw err.argumentException('A constructor of type function is required', 'ctor (or dependencies)', name);
         }
+        
+        if (utl.isBoolean(this.ctor.singleton)) {
+            this.singleton = true;
+        }
     };
     
     Hilary = function (options) {
         var $this = this,
             config = options || {},
-            container = {},
+            container = { __singletons: {} },
             parent = config.parentContainer,
             utils = config.utils || new Utils(),
             exceptions = config.exceptions || new Exceptions(utils),
@@ -327,6 +333,8 @@
             autoRegisterOne,
             dispose,
             make,
+            makeHilaryModule,
+            makeOutputHelper,
             getReservedModule,
             getContainer,
             getParentContainer,
@@ -361,6 +369,8 @@
             } else if (moduleName === constants.containerRegistration) {
                 throw exceptions.argumentException('The name you are trying to register is reserved', 'moduleName', moduleName);
             } else if (moduleName === constants.parentContainerRegistration) {
+                throw exceptions.argumentException('The name you are trying to register is reserved', 'moduleName', moduleName);
+            } else if (moduleName === constants.singletons) {
                 throw exceptions.argumentException('The name you are trying to register is reserved', 'moduleName', moduleName);
             }
 
@@ -450,30 +460,54 @@
         };
         
         make = function (mdl) {
+            var output;
+            
+            if (mdl instanceof HilaryModule && mdl.singleton) {
+                // if the module is registered as a singleton, and the singleton exists, return it, otherwise keep processing
+                output = container.__singletons[mdl.name];
+                
+                if (output) {
+                    return output;
+                }
+            }
+            
             if (mdl instanceof HilaryModule) {
-                var i,
-                    dependencies = [];
-                
-                if (utils.isArray(mdl.dependencies) && mdl.dependencies.length > 0) {
-                    // the module has dependencies, let's get them
-                    for (i = 0; i < mdl.dependencies.length; i++) {
-                        dependencies.push(resolve(mdl.dependencies[i]));
-                    }
-                    
-                    // and apply them
-                    return mdl.ctor.apply(null, dependencies);
-                }
-                
-                if (mdl.ctor.length === 0) {
-                    // the module takes no arguments, return the result of executing it
-                    return mdl.ctor.call();
-                } else {
-                    // the module takes arguments and has no dependencies, this must be a factory
-                    return mdl.ctor;
-                }
+                // resolve it's dependencies and execute the factory
+                return makeHilaryModule(mdl);
             } else {
+                // return the module
                 return mdl;
             }
+        };
+        
+        makeHilaryModule = function (mdl) {
+            var i, dependencies = [];
+            
+            if (utils.isArray(mdl.dependencies) && mdl.dependencies.length > 0) {
+                // the module has dependencies, let's get them
+                for (i = 0; i < mdl.dependencies.length; i++) {
+                    dependencies.push(resolve(mdl.dependencies[i]));
+                }
+
+                // and apply them
+                return makeOutputHelper(mdl, mdl.ctor.apply(null, dependencies));
+            }
+
+            if (mdl.ctor.length === 0) {
+                // the module takes no arguments, return the result of executing it
+                return makeOutputHelper(mdl, mdl.ctor.call());
+            } else {
+                // the module takes arguments and has no dependencies, this must be a factory
+                return mdl.ctor;
+            }
+        };
+        
+        makeOutputHelper = function (mdl, output) {
+            if (mdl.singleton) {
+                container.__singletons[mdl.name] = output;
+            }
+            // and apply them
+            return output;
         };
         
         getReservedModule = function (moduleName) {
@@ -564,9 +598,11 @@
             
             if (utils.isString(moduleName)) {
                 delete container[moduleName];
+                delete container.__singletons[moduleName];
             } else if (utils.isArray(moduleName)) {
                 for (i = 0; i < moduleName.length; i += 1) {
                     delete container[moduleName[i]];
+                    delete container.__singletons[moduleName[i]];
                 }
             } else {
                 for (key in container) {

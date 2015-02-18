@@ -13,6 +13,7 @@ module.exports.test = function (Hilary, spec) {
                 // when
                 var http = scope.resolve('http');
                 
+                // then
                 http.should.not.be.undefined;
                 http.createServer.should.not.be.undefined;
 

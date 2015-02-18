@@ -9,4 +9,5 @@ var Hilary  = require('../../index.js'),
         should: require('chai').should()
     };
 
-require('./hilaryIoCFixture').test(Hilary, spec);
+require('./hilaryIoCFixture.js').test(Hilary, spec);
+require('./hilarySingletonsFixture.js').test(Hilary, spec);
