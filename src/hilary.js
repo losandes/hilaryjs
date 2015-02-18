@@ -1,4 +1,4 @@
-/*jslint plusplus: true, regexp: true, nomen: true*/
+/*jslint plusplus: true, regexp: true*/
 /*globals module, console, Window, require*/
 
 /*
@@ -310,16 +310,12 @@
         } else {
             throw err.argumentException('A constructor of type function is required', 'ctor (or dependencies)', name);
         }
-        
-        if (utl.isBoolean(this.ctor.singleton)) {
-            this.singleton = true;
-        }
     };
     
     Hilary = function (options) {
         var $this = this,
             config = options || {},
-            container = { __singletons: {} },
+            container = { },
             parent = config.parentContainer,
             utils = config.utils || new Utils(),
             exceptions = config.exceptions || new Exceptions(utils),
@@ -334,7 +330,6 @@
             dispose,
             make,
             makeHilaryModule,
-            makeOutputHelper,
             getReservedModule,
             getContainer,
             getParentContainer,
@@ -460,17 +455,6 @@
         };
         
         make = function (mdl) {
-            var output;
-            
-            if (mdl instanceof HilaryModule && mdl.singleton) {
-                // if the module is registered as a singleton, and the singleton exists, return it, otherwise keep processing
-                output = container.__singletons[mdl.name];
-                
-                if (output) {
-                    return output;
-                }
-            }
-            
             if (mdl instanceof HilaryModule) {
                 // resolve it's dependencies and execute the factory
                 return makeHilaryModule(mdl);
@@ -490,24 +474,16 @@
                 }
 
                 // and apply them
-                return makeOutputHelper(mdl, mdl.ctor.apply(null, dependencies));
+                return mdl.ctor.apply(null, dependencies);
             }
 
             if (mdl.ctor.length === 0) {
                 // the module takes no arguments, return the result of executing it
-                return makeOutputHelper(mdl, mdl.ctor.call());
+                return mdl.ctor.call();
             } else {
                 // the module takes arguments and has no dependencies, this must be a factory
                 return mdl.ctor;
             }
-        };
-        
-        makeOutputHelper = function (mdl, output) {
-            if (mdl.singleton) {
-                container.__singletons[mdl.name] = output;
-            }
-            // and apply them
-            return output;
         };
         
         getReservedModule = function (moduleName) {
@@ -598,17 +574,14 @@
             
             if (utils.isString(moduleName)) {
                 delete container[moduleName];
-                delete container.__singletons[moduleName];
             } else if (utils.isArray(moduleName)) {
                 for (i = 0; i < moduleName.length; i += 1) {
                     delete container[moduleName[i]];
-                    delete container.__singletons[moduleName[i]];
                 }
             } else {
                 for (key in container) {
                     if (container.hasOwnProperty(key)) {
                         delete container[key];
-                        container.__singletons = {};
                     }
                 }
             }

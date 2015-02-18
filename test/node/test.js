@@ -10,4 +10,3 @@ var Hilary  = require('../../index.js'),
     };
 
 require('./hilaryIoCFixture.js').test(Hilary, spec);
-require('./hilarySingletonsFixture.js').test(Hilary, spec);
