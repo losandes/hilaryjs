@@ -12,13 +12,14 @@ module.exports = function (grunt) {
                 files: {
                     '../release/hilary.min.js': ['../src/hilary.js'],
                     '../release/hilary.amd.min.js': ['../src/hilary.amd.js'],
-                    '../release/hilaryWithAMD.min.js': ['../src/hilary.js', '../src/hilary.amd.js']
+                    '../release/hilaryWithAMD.min.js': ['../src/hilary.js', '../src/hilary.amd.js'],
+                    '../release/hilary.jQueryEventEmitter.min.js': ['../src/hilary.jQueryEventEmitter.js']
                 }
             }
         },
         jasmine: {
             pivotal: {
-                src: ['../release/hilaryWithAMD.min.js'], //'../src/**/*.js',
+                src: ['../test/browser/lib/jquery.js', '../release/hilaryWithAMD.min.js', '../release/hilary.jQueryEventEmitter.min.js'], //'../src/**/*.js',
                 options: {
                     specs: '../test/browser/specs/*Fixture.js'
                 }
