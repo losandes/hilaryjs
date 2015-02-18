@@ -196,7 +196,7 @@
         this.afterNewChildEvents = [];
     };
     
-    Pipeline = function (container, utils) {
+    Pipeline = function (scope, utils) {
         var registerEvent,
             executeEvent,
             pipelineEvents = new PipelineEvents(),
@@ -251,27 +251,27 @@
         };
 
         beforeRegister = function (moduleName, moduleDefinition) {
-            executeEvent(this.events.beforeRegisterEvents, [container, moduleName, moduleDefinition]);
+            executeEvent(this.events.beforeRegisterEvents, [scope, moduleName, moduleDefinition]);
         };
 
         afterRegister = function (moduleName, moduleDefinition) {
-            executeEvent(this.events.afterRegisterEvents, [container, moduleName, moduleDefinition]);
+            executeEvent(this.events.afterRegisterEvents, [scope, moduleName, moduleDefinition]);
         };
 
         beforeResolve = function (moduleName) {
-            executeEvent(this.events.beforeResolveEvents, [container, moduleName]);
+            executeEvent(this.events.beforeResolveEvents, [scope, moduleName]);
         };
 
-        afterResolve = function (moduleName, output) {
-            executeEvent(this.events.afterResolveEvents, [container, moduleName, output]);
+        afterResolve = function (moduleName, result) {
+            executeEvent(this.events.afterResolveEvents, [scope, moduleName, result]);
         };
 
         beforeNewChild = function (options) {
-            executeEvent(this.events.beforeNewChildEvents, [container, options]);
+            executeEvent(this.events.beforeNewChildEvents, [scope, options]);
         };
         
         afterNewChild = function (options, child) {
-            executeEvent(this.events.afterNewChildEvents, [container, options, child]);
+            executeEvent(this.events.afterNewChildEvents, [scope, options, child]);
         };
         
         // EVENTS
