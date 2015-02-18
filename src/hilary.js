@@ -608,6 +608,7 @@
                 for (key in container) {
                     if (container.hasOwnProperty(key)) {
                         delete container[key];
+                        container.__singletons = {};
                     }
                 }
             }
