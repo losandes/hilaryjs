@@ -17,8 +17,8 @@
         });
     </script>
     
-    <script src="../../release/hilary.min.js"></script>
-<!--    <script src="../../src/hilary.js"></script>-->
+<!--    <script src="../../release/hilary.min.js"></script>-->
+    <script src="../../src/hilary.js"></script>
     
     <script src="../mockData.js"></script>
     <script src="../hilary.fixture.js"></script>
@@ -26,6 +26,7 @@
     <script src="../hilary.di.fixture.js"></script>
     <script src="../hilary.di.async.fixture.js"></script>
     <script src="../hilary.singletons.fixture.js"></script>
+    <script src="../hilary.pipeline.fixture.js"></script>
     
     <!-- run mocha after all test are loaded -->
     <script type="text/javascript" charset="utf-8">
@@ -48,6 +49,7 @@
         window['hilary.di.fixture'](Hilary, spec, createGuid, makeMockData);
         window['hilary.di.async.fixture'](Hilary, spec, createGuid, makeMockData, async);
         window['hilary.singletons.fixture'](Hilary, spec);
+        window['hilary.pipeline.fixture'](Hilary, spec, createGuid, makeMockData, async);
         
       // Only tests run in real browser, injected script run if options.run == true
       if (navigator.userAgent.indexOf('PhantomJS') < 0) {
