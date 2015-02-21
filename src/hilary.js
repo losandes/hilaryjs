@@ -980,7 +980,8 @@
             return {
                 container: container,
                 parent: parent,
-                prive: prive,
+                HilaryModule: prive.HilaryModule,
+                register: prive.register,
                 constants: constants,
                 utils: utils,
                 exceptionHandlers: err

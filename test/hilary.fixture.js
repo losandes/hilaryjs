@@ -81,10 +81,18 @@
                 var moduleName = generateId(),
                     expected = generateId(),
                     factory,
-                    next;
+                    next,
+                    shouldNotThrow;
 
                 factory = function () {
                     return expected;
+                };
+                
+                shouldNotThrow = function () {
+                    scope.register({
+                        name: moduleName,
+                        factory: factory
+                    });
                 };
 
                 // when
@@ -95,7 +103,11 @@
 
                 // then
                 scope.getContext().container = {};
+                scope.getContext().register = function () {
+                    throw new Error('hacked!');
+                };
                 scope.getContext().container[moduleName].should.not.equal(undefined);
+                expect(shouldNotThrow).to.not.Throw();
             });
         });
 
