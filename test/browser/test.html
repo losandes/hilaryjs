@@ -1,6 +1,7 @@
 <html>
 <head>
     <title>Hilary Tests</title>
+    <link type="text/css" rel="stylesheet" href="bower_components/mocha/mocha.css" />
 </head>
 <body>
     <div id="mocha"></div>
@@ -9,13 +10,19 @@
     <script src="bower_components/async/lib/async.js"></script>
     <script src="bower_components/chai/chai.js"></script>
     <script src="bower_components/mocha/mocha.js"></script>
-    <script>mocha.setup('bdd')</script>
+    <script>
+        mocha.setup({
+            ui: 'bdd',
+            
+        });
+    </script>
     
     <script src="../../release/hilary.min.js"></script>
 <!--    <script src="../../src/hilary.js"></script>-->
     
     <script src="../mockData.js"></script>
     <script src="../hilary.fixture.js"></script>
+    <script src="hilary.browser.fixture.js"></script>
     <script src="../hilary.di.fixture.js"></script>
     <script src="../hilary.di.async.fixture.js"></script>
     <script src="../hilary.singletons.fixture.js"></script>
@@ -37,6 +44,7 @@
         }
         
         window['hilary.fixture'](Hilary, spec, createGuid, makeMockData);
+        window['hilary.browser.fixture']();
         window['hilary.di.fixture'](Hilary, spec, createGuid, makeMockData);
         window['hilary.di.async.fixture'](Hilary, spec, createGuid, makeMockData, async);
         window['hilary.singletons.fixture'](Hilary, spec);

@@ -43,7 +43,7 @@ module.exports = function (grunt) {
         mocha: {
             test: {
                 options: {
-                    reporter: 'Nyan', //Spec
+                    reporter: 'Spec', //Spec //Nyan
                     run: true
                 },
                 src: ['../test/browser/test.html']

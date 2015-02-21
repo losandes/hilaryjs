@@ -225,25 +225,25 @@
             switch (name) {
             case constants.pipeline.beforeRegister:
                 pipelineEvents.beforeRegisterEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.afterRegister:
                 pipelineEvents.afterRegisterEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.beforeResolve:
                 pipelineEvents.beforeResolveEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.afterResolve:
                 pipelineEvents.afterResolveEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.beforeNewChild:
                 pipelineEvents.beforeNewChildEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.afterNewChild:
                 pipelineEvents.afterNewChildEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.onError:
                 pipelineEvents.onError.push(callback);
-                break;
+                return scope;
             default:
                 throw err.notImplementedException('the pipeline event you are trying to register is not implemented (name: ' + name + ')');
             }
@@ -915,17 +915,26 @@
         // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
         // @param eventName (string): the name of the event to register the handler for
         // @param eventHandler (function): the callback function that will be called when the event is triggered
+        // @returns this (the Hilary scope)
         */
         $this.registerEvent = function (eventName, eventHandler) {
             return pipeline.registerEvent(eventName, eventHandler);
         };
         
+        /*
+        // Hilary has a built in extension for asynchronous operations. Unlike the sync operations,
+        // Hilary depends on a third-party library for async operations: async.js (https://github.com/caolan/async).
+        // So, to turn on async operations, you need to call useAsync(async), where the async argument is async.js
+        // @param async (object): async.js
+        // @returns this (the Hilary scope)
+        */
         $this.useAsync = function (async) {
             return useAsync(async, $this, container, pipeline, parent);
         };
         
         /*
-        // Exposes read access to private context for extensibility and debugging
+        // Exposes read access to private context for extensibility and debugging. this is not meant
+        // to be used in production application code, aside from Hilary extensions.
         */
         $this.getContext = function () {
             return {
