@@ -8,6 +8,8 @@
     },
     "dependencies": {
         "mocha": "*",
-        "chai": "*"
+        "chai": "*",
+        "shortid": "*",
+        "async": "*"
     }
 }

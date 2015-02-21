@@ -14,13 +14,19 @@ module.exports.test = function (Hilary, spec) {
                 var sut,
                     sut2;
                 
-                scope.register('sutCtor', function () {
-                    return {
-                        state: 'on'
-                    };
+                scope.register({
+                    name: 'sutCtor',
+                    factory: function () {
+                        return {
+                            state: 'on'
+                        };
+                    }
                 });
                 
-                scope.register('sut', scope.resolve('sutCtor'));
+                scope.register({
+                    name: 'sut',
+                    factory: scope.resolve('sutCtor')
+                });
                 
                 // when
                 sut = scope.resolve('sut');

@@ -168,6 +168,12 @@ require(['describe', 'beforeEach', 'Hilary', 'it', 'expect'], function (describe
                 expect(container.resolve(sutModuleName)()).toBe(output);
             });
         });
+        
+        describe('when a "hilary::error" module is registered', function () {
+            xit('should execute that module when an error occurs', function () {
+                // TODO
+            });
+        });
 
         describe('when a pipeline event has multiple registered handlers (i.e. an array of before register handlers)', function () {
             it('should execute each one of them', function () {
@@ -238,6 +244,7 @@ require(['describe', 'beforeEach', 'Hilary', 'it', 'expect'], function (describe
                 expect(count).toBe(1);
             });
         });
+        
     });
     
 });

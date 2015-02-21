@@ -48,6 +48,15 @@ module.exports = function (grunt) {
                 src: ['../test/node/test.js']
             }
         },
+        mocha: {
+            test: {
+                options: {
+                    reporter: 'Spec',
+                    run: true
+                },
+                src: ['../test/browser/test.html']
+            }
+        },
         copy: {
             main: {
                 files: [
@@ -61,9 +70,12 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
     grunt.loadNpmTasks('grunt-mocha-test');
+    grunt.loadNpmTasks('grunt-mocha');
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
     grunt.registerTask('default', ['uglify', 'jasmine', 'mochaTest', 'copy']);
+    grunt.registerTask('testnode', ['uglify', 'mochaTest']);
+    grunt.registerTask('testbrowser', ['uglify', 'mocha']);
 
 };
