@@ -74,7 +74,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify', 'jasmine', 'mochaTest', 'copy']);
+    grunt.registerTask('default', ['uglify', 'mocha', 'mochaTest', 'copy']);
     grunt.registerTask('testnode', ['uglify', 'mochaTest']);
     grunt.registerTask('testbrowser', ['uglify', 'mocha']);
 
