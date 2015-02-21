@@ -11,7 +11,7 @@
     var Hilary, HilaryModule, PipelineEvents, Pipeline, constants, extensions = [], initializers = [],
         Utils, utils, Exceptions, err, useAsync, asyncHandler, createChildContainer,
         register, resolve, resolveAsync, findResult, returnResult, invoke, invokeAsync,
-        applyDependencies, applyDependenciesAsync, makeAutoRegistrationTasks, async;
+        applyDependencies, applyDependenciesAsync, makeAutoRegistrationTasks, disposeOne, async;
     
     constants = {
         containerRegistration: 'hilary::container',
@@ -225,25 +225,25 @@
             switch (name) {
             case constants.pipeline.beforeRegister:
                 pipelineEvents.beforeRegisterEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.afterRegister:
                 pipelineEvents.afterRegisterEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.beforeResolve:
                 pipelineEvents.beforeResolveEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.afterResolve:
                 pipelineEvents.afterResolveEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.beforeNewChild:
                 pipelineEvents.beforeNewChildEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.afterNewChild:
                 pipelineEvents.afterNewChildEvents.push(callback);
-                break;
+                return scope;
             case constants.pipeline.onError:
                 pipelineEvents.onError.push(callback);
-                break;
+                return scope;
             default:
                 throw err.notImplementedException('the pipeline event you are trying to register is not implemented (name: ' + name + ')');
             }
@@ -586,6 +586,15 @@
         return tasks;
     };
     
+    disposeOne = function (container, moduleName) {
+        if (container[moduleName]) {
+            delete container[moduleName];
+            return true;
+        } else {
+            return false;
+        }
+    };
+    
     useAsync = function (_async, scope, container, pipeline, parent) {
         if (!_async || !_async.nextTick || !_async.waterfall || !_async.parallel) {
             throw err.argumentException('The async library is required (https://www.npmjs.com/package/async)', 'async');
@@ -597,7 +606,7 @@
         }
         
         /*
-        // register a module by name, asynchronously
+        // register a module by name (ASYNC)
         // @param definition (object): the module defintion: at least a name and factory are required
         // @param next (function): the callback function to be executed after the registration is complete
         */
@@ -608,7 +617,7 @@
         };
         
         /*
-        // auto-register an index of objects
+        // auto-register an index of objects (ASYNC)
         // @param index (object or array): the index of objects to be registered
         //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
         */
@@ -619,11 +628,7 @@
             
             makeTask = function (item) {
                 return function (callback) {
-                    if (item.name) {
-                        scope.registerAsync(item, callback);
-                    } else {
-                        scope.resolveAsync(item, callback);
-                    }
+                    scope.registerAsync(item, callback);
                 };
             };
             
@@ -631,7 +636,7 @@
         };
         
         /*
-        // attempt to resolve a dependency by name (supports parental hierarchy)
+        // attempt to resolve a dependency by name (supports parental hierarchy) (ASYNC)
         // @param moduleName (string): the qualified name that the module can be located by in the container
         */
         scope.resolveAsync = function (moduleName, next) {
@@ -639,7 +644,7 @@
         };
         
         /*
-        // attempt to resolve multiple dependencies by name (supports parental hierarchy)
+        // attempt to resolve multiple dependencies by name (supports parental hierarchy) (ASYNC)
         // @param moduleNameArray (array): a list of qualified names that the modules can be located by in the container
         // @param next (function): the function that will accept all of the dependency results as arguments (in order)
         */
@@ -673,19 +678,25 @@
         };
         
         /*
-        // auto-resolve an index of objects
+        // auto-resolve an index of objects (ASYNC)
         // @param index (object or array): the index of objects to be resolved.
         //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
+        // @param next (function): the callback that will be executed upon completion
+        // @returns: undefined
+        // @next (err): next recieves a single argument: err, which will be null when the process succeeded
         */
         scope.autoResolveAsync = function (index, next) {
             var makeTask,
-                results = {},
                 tasks,
                 i;
             
             makeTask = function (item) {
                 return function (callback) {
-                    results[item] = scope.resolveAsync(item, callback);
+                    if (utils.isArray(item.dependencies) && utils.isFunction(item.factory)) {
+                        scope.resolveManyAsync(item.dependencies, item.factory);
+                    } else if (utils.isFunction(item.factory) && item.factory.length === 0) {
+                        item.factory();
+                    }
                 };
             };
             
@@ -693,18 +704,21 @@
         };
         
         scope.disposeAsync = function (moduleName, next) {
-            var _next = next;
+            var _next = next,
+                _moduleName = moduleName;
+            
             if (utils.isFunction(moduleName)) {
                 _next = moduleName;
+                _moduleName = null;
             }
             
             asyncHandler(function () {
-                scope.dispose(moduleName);
+                return scope.dispose(_moduleName);
             }, _next);
         };
         
         /*
-        // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.), asynchronously
+        // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.) (ASYNC)
         // @param eventName (string): the name of the event to register the handler for
         // @param eventHandler (function): the callback function that will be called when the event is triggered
         // @param next (function): the callback function to be executed after the event registration is complete
@@ -733,14 +747,17 @@
         // exposes the constructor for hilary so you can create child contexts
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
         // @param options.exceptions (object): exception handling
+        //
+        // @returns new Hilary scope with parent set to this (the current Hilary scope)
         */
         $this.createChildContainer = function (options) {
-            createChildContainer($this, options, config, pipeline);
+            return createChildContainer($this, options, config, pipeline);
         };
         
         /*
         // register a module by name
-        // @param definition (object): the module defintion: at least a name and factory are required
+        // @param definition (object): the module defintion: at least the name and factory properties are required
+        // @returns this (the Hilary scope)
         */
         $this.register = function (definition) {
             register(new HilaryModule(definition), container, pipeline);
@@ -749,8 +766,12 @@
         
         /*
         // auto-register an index of objects
-        // @param index (object or array): the index of objects to be registered
+        // @param index (object or array): the index of objects to be registered.
+        //      NOTE: each object on the index must meet the requirements of Hilary's register function
         //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
+        // @param next (function): the callback that will be executed upon completion
+        // @returns: undefined
+        // @next (err): next recieves a single argument: err, which will be null when the process succeeded
         //
         // i.e.
         //      hilary.autoRegister({
@@ -765,11 +786,7 @@
             
             makeTask = function (item) {
                 return function () {
-                    if (item.name) {
-                        $this.register(item);
-                    } else {
-                        $this.resolve(item);
-                    }
+                    $this.register(item);
                 };
             };
             
@@ -791,6 +808,7 @@
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
+        // @returns the module that is being resolved
         */
         $this.resolve = function (moduleName) {
             return resolve(moduleName, container, pipeline, parent);
@@ -800,6 +818,7 @@
         // attempt to resolve multiple dependencies by name (supports parental hierarchy)
         // @param moduleNameArray (array): a list of qualified names that the modules can be located by in the container
         // @param next (function): the function that will accept all of the dependency results as arguments (in order)
+        // @returns the result of passing the dependencies as arguments to the next function
         */
         $this.resolveMany = function (moduleNameArray, next) {
             var modules = [],
@@ -824,16 +843,22 @@
         // auto-resolve an index of objects
         // @param index (object or array): the index of objects to be resolved.
         //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
+        // @param next (function): the callback that will be executed upon completion
+        // @returns: undefined
+        // @next (err): next recieves a single argument: err, which will be null when the process succeeded
         */
         $this.autoResolve = function (index, next) {
             var makeTask,
-                results = {},
                 tasks,
                 i;
             
             makeTask = function (item) {
                 return function () {
-                    results[item] = $this.resolve(item);
+                    if (utils.isArray(item.dependencies) && utils.isFunction(item.factory)) {
+                        $this.resolveMany(item.dependencies, item.factory);
+                    } else if (utils.isFunction(item.factory) && item.factory.length === 0) {
+                        item.factory();
+                    }
                 };
             };
             
@@ -845,7 +870,7 @@
                 }
 
                 if (utils.isFunction(next)) {
-                    next(null, results);
+                    next(null, null);
                 }
             } catch (e) {
                 next(e);
@@ -856,22 +881,33 @@
         // Disposes a module, or all modules. When a moduleName is not passed
         // as an argument, the entire container is disposed.
         // @param moduleName (string): The name of the module to dispose
+        // @returns boolean: true if the object(s) were disposed, otherwise false
         */
         $this.dispose = function (moduleName) {
-            var key, i;
+            var key, i, result;
             
             if (utils.isString(moduleName)) {
-                delete container[moduleName];
+                return disposeOne(container, moduleName);
             } else if (utils.isArray(moduleName)) {
+                result = true;
+                
                 for (i = 0; i < moduleName.length; i += 1) {
-                    delete container[moduleName[i]];
+                    result = result && disposeOne(container, moduleName[i]);
                 }
-            } else {
+                
+                return result;
+            } else if (!moduleName) {
+                result = true;
+                
                 for (key in container) {
                     if (container.hasOwnProperty(key)) {
-                        delete container[key];
+                        result = result && disposeOne(container, key);
                     }
                 }
+                
+                return result;
+            } else {
+                return false;
             }
         };
         
@@ -879,17 +915,26 @@
         // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
         // @param eventName (string): the name of the event to register the handler for
         // @param eventHandler (function): the callback function that will be called when the event is triggered
+        // @returns this (the Hilary scope)
         */
         $this.registerEvent = function (eventName, eventHandler) {
             return pipeline.registerEvent(eventName, eventHandler);
         };
         
+        /*
+        // Hilary has a built in extension for asynchronous operations. Unlike the sync operations,
+        // Hilary depends on a third-party library for async operations: async.js (https://github.com/caolan/async).
+        // So, to turn on async operations, you need to call useAsync(async), where the async argument is async.js
+        // @param async (object): async.js
+        // @returns this (the Hilary scope)
+        */
         $this.useAsync = function (async) {
             return useAsync(async, $this, container, pipeline, parent);
         };
         
         /*
-        // Exposes read access to private context for extensibility and debugging
+        // Exposes read access to private context for extensibility and debugging. this is not meant
+        // to be used in production application code, aside from Hilary extensions.
         */
         $this.getContext = function () {
             return {

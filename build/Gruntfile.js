@@ -17,18 +17,10 @@ module.exports = function (grunt) {
                 }
             }
         },
-        jasmine: {
-            pivotal: {
-                src: ['../test/browser/lib/jquery.js', '../release/hilaryWithAMD.min.js', '../release/hilary.jQueryEventEmitter.min.js'], //'../src/**/*.js',
-                options: {
-                    specs: '../test/browser/specs/*Fixture.js'
-                }
-            }
-        },
         mochaTest: {
             test: {
                 options: {
-                    reporter: 'spec', // 'spec', // 'min', // 'nyan', // 'xunit',
+                    reporter: 'nyan', // 'spec', // 'min', // 'nyan', // 'xunit',
                     //captureFile: 'results.txt', // Optionally capture the reporter output to a file
                     quiet: false, // Optionally suppress output to standard out (defaults to false)
                     //clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false)
@@ -51,7 +43,7 @@ module.exports = function (grunt) {
         mocha: {
             test: {
                 options: {
-                    reporter: 'Spec',
+                    reporter: 'Nyan', //Spec
                     run: true
                 },
                 src: ['../test/browser/test.html']
@@ -68,7 +60,6 @@ module.exports = function (grunt) {
 
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-jasmine');
     grunt.loadNpmTasks('grunt-mocha-test');
     grunt.loadNpmTasks('grunt-mocha');
     grunt.loadNpmTasks('grunt-contrib-copy');

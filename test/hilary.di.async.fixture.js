@@ -131,14 +131,7 @@
 
             spec.describe('when auto-registering modules', function () {
 
-                it('should be able to register an array of definitions', function (done) {
-                    var mock1 = testModules.module1.moduleDefinition,
-                        mock2 = testModules.module2.moduleDefinition,
-                        mock3 = testModules.module3.moduleDefinition,
-                        mock4 = testModules.module4.moduleDefinition,
-                        index = [mock1, mock2, mock3, mock4],
-                        newScope = new Hilary().useAsync(async);
-
+                var assert = function (newScope, index, done) {
                     newScope.autoRegisterAsync(index, function () {
                         // when
                         var result1 = scope.resolve(testModules.module1.name),
@@ -147,11 +140,18 @@
                         result1.should.equal(testModules.module1.expected);
                         result4.val.should.equal(testModules.module4.expected);
 
-
-
                         done();
                     });
+                };
+                
+                it('should be able to register an array of definitions', function (done) {
+                    var mock1 = testModules.module1.moduleDefinition,
+                        mock2 = testModules.module2.moduleDefinition,
+                        mock3 = testModules.module3.moduleDefinition,
+                        mock4 = testModules.module4.moduleDefinition,
+                        index = [mock1, mock2, mock3, mock4];
 
+                    assert(new Hilary().useAsync(async), index, done);
                 });
 
                 it('should be able to register an object of definitions', function (done) {
@@ -160,31 +160,82 @@
                             mock2: testModules.module2.moduleDefinition,
                             mock3: testModules.module3.moduleDefinition,
                             mock4: testModules.module4.moduleDefinition
-                        },
-                        newScope = new Hilary().useAsync(async);
-
-                    newScope.autoRegisterAsync(index, function () {
-                        // when
-                        var result1 = scope.resolve(testModules.module1.name),
-                            result4 = scope.resolve(testModules.module4.name);
-                        // then
-                        result1.should.equal(testModules.module1.expected);
-                        result4.val.should.equal(testModules.module4.expected);
-
-                        done();
-                    });
-
+                        };
+                    
+                    assert(new Hilary().useAsync(async), index, done);
                 });
-
-                it.skip('should be able to resolve an array of definitions', function (done) {});
-                it.skip('should be able to resolve an object of definitions', function (done) {});
 
             }); // /autoRegister
 
             spec.describe('when auto-resolving modules', function () {
+                
+                var mockIndex,
+                    assert;
+                
+                mockIndex = function (mockRegistrationName) {
+                    var mock1,
+                        mock2,
+                        mock3,
+                        index;
+                    
+                    mock1 = {
+                        dependencies: [testModules.module2.name, testModules.module3.name],
+                        factory: function (mod2, mod3) {
+                            scope.register({
+                                name: mockRegistrationName,
+                                factory: function () {
+                                    return {
+                                        mod2: mod2,
+                                        mod3: mod3
+                                    };
+                                }
+                            });
+                        }
+                    };
+                    
+                    mock2 = testModules.module2.moduleDefinition;
+                    delete mock2.name;
+                    mock3 = testModules.module3.moduleDefinition;
+                    delete mock3.name;
+                    
+                    return {
+                        mock1: mock1,
+                        mock2: mock2,
+                        mock3: mock3
+                    };
+                };
+                
+                assert = function (index, mockRegistrationName, done) {
+                    scope.autoResolve(index, function (err) {
+                        // when
+                        var result = scope.resolve(mockRegistrationName);
+                        
+                        // then
+                        expect(err).to.equal(null);
+                        
+                        expect(result.mod2).to.not.equal(undefined);
+                        expect(result.mod2.thisOut).to.equal(testModules.module2.expected);
+                        
+                        expect(result.mod3).to.not.equal(undefined);
+                        expect(result.mod3.thisOut).to.equal(testModules.module3.expected);
 
-                it.skip('should be able to resolve an array of definitions', function (done) {});
-                it.skip('should be able to resolve an object of definitions', function (done) {});
+                        done();
+                    });
+                };
+
+                it('should be able to resolve an array of definitions', function (done) {
+                    var mockRegistrationName = generateId(),
+                        idx = mockIndex(mockRegistrationName),
+                        index = [idx.mock3, idx.mock2, idx.mock1];
+                    
+                    assert(index, mockRegistrationName, done);
+                });
+                
+                it('should be able to resolve an object of definitions', function (done) {
+                    var mockRegistrationName = generateId();
+                    
+                    assert(mockIndex(mockRegistrationName), mockRegistrationName, done);
+                });
 
             }); // /autoResolve
 
@@ -204,9 +255,13 @@
 
                         expect(actual1).to.equal(sutModules.module1.expected);
                         expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                        expect(actual2).to.throw();
+                        expect(actual2).to.Throw();
                         done();
                     });
+                });
+                
+                it.skip('should return false, if it does not exist', function () {
+                    
                 });
             });
 
@@ -228,11 +283,16 @@
                         expect(actual1).to.equal(sutModules.module1.expected);
                         expect(actual2.thisOut).to.equal(sutModules.module2.expected);
                         expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                        expect(actual3).to.throw();
-                        expect(actual4).to.throw();
+                        expect(actual3).to.Throw();
+                        expect(actual4).to.Throw();
                         done();
                     });
                 });
+                
+                it.skip('should return false, if any do not exist', function () {
+                    
+                });
+                
             });
 
             spec.describe('when no argument is passed', function () {
@@ -253,10 +313,16 @@
                         expect(actual1).to.equal(sutModules.module1.expected);
                         expect(actual2.thisOut).to.equal(sutModules.module2.expected);
                         expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                        expect(actual3).to.throw();
-                        expect(actual4).to.throw();
+                        expect(actual3).to.Throw();
+                        expect(actual4).to.Throw();
                         done();
                     });
+                });
+            });
+            
+            spec.describe('when an argument that isn\'t supported is passed', function () {
+                it.skip('should return false', function () {
+                    
                 });
             });
 
