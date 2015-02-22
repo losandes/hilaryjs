@@ -5,7 +5,7 @@ window['hilary.browser.amd.fixture'] = function () {
     
     require(['window', 'Hilary', 'spec', 'makeMockData', 'createGuid'], function (global, Hilary, spec, makeMockData, generateId) {
     
-        var scope = new Hilary(),
+        var scope = new Hilary().useAMD(),
             it = spec.it,
             expect = spec.expect,
             testModules = makeMockData(scope, generateId);
@@ -24,8 +24,8 @@ window['hilary.browser.amd.fixture'] = function () {
                     expect(global.define.amd).to.be.a('object');
                 });
     
-                it('should exist in new Hilary instances', function () {
-                    expect(new Hilary().define).to.be.a('function');
+                it('should exist in new Hilary instances, when useAMD is called', function () {
+                    expect(new Hilary().useAMD().define).to.be.a('function');
                 });
             });
 
@@ -34,8 +34,8 @@ window['hilary.browser.amd.fixture'] = function () {
                     expect(global.require).to.be.a('function');
                 });
     
-                it('should exist in new Hilary instances', function () {
-                    expect(new Hilary().require).to.be.a('function');
+                it('should exist in new Hilary instances, when useAMD is called', function () {
+                    expect(new Hilary().useAMD().require).to.be.a('function');
                 });
             });
 
@@ -119,7 +119,7 @@ window['hilary.browser.amd.fixture'] = function () {
                 // we assume it is a factory
                 it('should be able to require factories by name', function (done) {
                     var expected = 'hello world!',
-                        specScope = new Hilary();
+                        specScope = new Hilary().useAMD();
 
                     specScope.define('messenger', function (msg) {
                         return msg;

@@ -5,7 +5,6 @@
     exports['hilary.fixture'] = function (Hilary, spec, generateId, makeMockData, async) {
 
         // SETUP
-
         var scope = new Hilary(),
             should = spec.should,
             expect = spec.expect,

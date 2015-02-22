@@ -4,6 +4,7 @@ module.exports.test = function (Hilary, spec, async) {
     
     var scope = new Hilary().useAsync(async),
         should = spec.should,
+        expect = spec.expect,
         it = spec.it;
     
     spec.describe('Hilary Dependency Injection (NODE)', function () {
@@ -28,6 +29,13 @@ module.exports.test = function (Hilary, spec, async) {
                     done();
                 });
             });
+        });
+        
+        it('should include useAMD extension', function () {
+            var specScope = new Hilary().useAMD();
+debugger;
+            expect(specScope.define).to.be.a('function');
+            expect(specScope.require).to.be.a('function');
         });
         
     }); // /Hilary DI

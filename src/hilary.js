@@ -752,7 +752,7 @@
                 for (i = 0; i < moduleName.length; i += 1) {
                     result = result && $this.disposeOne(moduleName[i]);
                 }
-                debugger;
+
                 return result;
             } else if (!moduleName) {
                 result = true;

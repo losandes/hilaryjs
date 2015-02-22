@@ -2,6 +2,6 @@
 var HilaryBase = require('./src/hilary.js'),
     Hilary = HilaryBase.Hilary;
 
-Hilary.HilaryModule = HilaryBase.HilaryModule;
+require('./src/hilary.amd.js').useAMD(Hilary);
 
 module.exports = Hilary;
