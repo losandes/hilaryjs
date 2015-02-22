@@ -2,20 +2,20 @@
     "use strict";
     
     Hilary.onInit(function (scope, config) {
-        scope.registerEvent('hilary::before::register', function (scope, moduleName, moduleDefinition) {
-            $(document).trigger('hilary::before::register', [{ scope: scope, moduleName: moduleName, moduleDefinition: moduleDefinition }]);
+        scope.registerEvent('hilary::before::register', function (scope, moduleInfo) {
+            $(document).trigger('hilary::before::register', [{ scope: scope, moduleInfo: moduleInfo }]);
         });
 
-        scope.registerEvent('hilary::after::register', function (scope, moduleName, moduleDefinition) {
-            $(document).trigger('hilary::after::register', [{ scope: scope, moduleName: moduleName, moduleDefinition: moduleDefinition }]);
+        scope.registerEvent('hilary::after::register', function (scope, moduleInfo) {
+            $(document).trigger('hilary::after::register', [{ scope: scope, moduleInfo: moduleInfo }]);
         });
         
         scope.registerEvent('hilary::before::resolve', function (scope, moduleName) {
             $(document).trigger('hilary::before::resolve', [{ scope: scope, moduleName: moduleName }]);
         });
         
-        scope.registerEvent('hilary::after::resolve', function (scope, moduleName, result) {
-            $(document).trigger('hilary::after::resolve', [{ scope: scope, moduleName: moduleName, result: result }]);
+        scope.registerEvent('hilary::after::resolve', function (scope, moduleInfo) {
+            $(document).trigger('hilary::after::resolve', [{ scope: scope, moduleInfo: moduleInfo }]);
         });
         
         scope.registerEvent('hilary::before::new::child', function (scope, options) {
@@ -24,6 +24,10 @@
         
         scope.registerEvent('hilary::after::new::child', function (scope, options, child) {
             $(document).trigger('hilary::after::new::child', [{ scope: scope, options: options, child: child }]);
+        });
+        
+        scope.registerEvent('hilary::error', function (err) {
+            $(document).trigger('hilary::error', [{ err: err }]);
         });
     });
 
