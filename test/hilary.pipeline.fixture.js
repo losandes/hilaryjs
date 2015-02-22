@@ -246,83 +246,66 @@
                     registerEvent(specScope, done);
                     
                     shouldThrow = function () {
-                        debugger;
                         specScope.register({});
                     };
                     
                     expect(shouldThrow).to.Throw();
                 });
             });
-//
-//            describe('when a pipeline event has multiple registered handlers (i.e. an array of before register handlers)', function () {
-//                it('should execute each one of them', function () {
-//                    var shouldThrow1,
-//                        shouldThrow2,
-//                        sutModuleName1 = 'event1',
-//                        sutModuleName2 = 'event2';
-//
-//                    container.registerEvent(constants.pipeline.beforeRegister, function (cntr, moduleName, moduleDefinition) {
-//                        if (moduleName === testModuleDefinitions.empty.name) {
-//                            cntr.register(sutModuleName1, {
-//                                name: moduleName,
-//                                definition: moduleDefinition
-//                            });
-//                        }
-//                    });
-//
-//                    container.registerEvent(constants.pipeline.beforeRegister, function (cntr, moduleName, moduleDefinition) {
-//                        if (moduleName === testModuleDefinitions.empty.name) {
-//                            cntr.register(sutModuleName2, {
-//                                name: moduleName,
-//                                definition: moduleDefinition
-//                            });
-//                        }
-//                    });
-//
-//                    shouldThrow1 = function () {
-//                        return container.resolve(sutModuleName1);
-//                    };
-//
-//                    shouldThrow2 = function () {
-//                        return container.resolve(sutModuleName2);
-//                    };
-//
-//                    expect(shouldThrow1).toThrow();
-//                    expect(shouldThrow2).toThrow();
-//
-//                    container.register(testModuleDefinitions.empty.name, function () {
-//                        return testModuleDefinitions.empty.output;
-//                    });
-//
-//                    expect(container.resolve(sutModuleName1).name).toBe(testModuleDefinitions.empty.name);
-//                    expect(container.resolve(sutModuleName2).name).toBe(testModuleDefinitions.empty.name);
-//                });
-//            });
-//
-//            describe('when a pipeline event has the once property', function () {
-//                it('should only execute one time', function () {
-//                    var eventHandler,
-//                        sutModuleName = 'one_event',
-//                        count = 0;
-//
-//                    eventHandler = function () {
-//                        count += 1;
-//                    };
-//                    eventHandler.once = true;
-//
-//                    container.registerEvent(constants.pipeline.beforeRegister, eventHandler);
-//
-//                    container.register(testModuleDefinitions.empty.name, function () {
-//                        return testModuleDefinitions.empty.output;
-//                    });
-//
-//                    container.register(testModuleDefinitions.emptyToo.name, function () {
-//                        return testModuleDefinitions.emptyToo.output;
-//                    });
-//
-//                    expect(count).toBe(1);
-//                });
-//            });
+
+            spec.describe('when a pipeline event has multiple registered handlers (i.e. an array of before register handlers)', function () {
+                var registerEvent = function (specScope, sutModuleName) {
+                    specScope.registerEvent(constants.pipeline.beforeRegister, function (scope, moduleInfo) {
+                        if (moduleInfo.name === testModules.module1.name) {
+                            // register something new
+                            var newModule = testModules.module2.moduleDefinition;
+                            newModule.name = sutModuleName;
+                            scope.register(newModule);
+                        }
+                    });
+                };
+                
+                it('should execute each one of them', function () {
+                    var specScope = new Hilary(),
+                        sutModuleName1 = generateId(),
+                        sutModuleName2 = generateId(),
+                        actual1,
+                        actual2;
+                    
+                    // given
+                    registerEvent(specScope, sutModuleName1);
+                    registerEvent(specScope, sutModuleName2);
+
+                    // when
+                    specScope.register(testModules.module1.moduleDefinition);
+                    actual1 = specScope.resolve(sutModuleName1);
+                    actual2 = specScope.resolve(sutModuleName2);
+
+                    // then
+                    expect(actual1.thisOut).to.equal(testModules.module2.expected);
+                    expect(actual2.thisOut).to.equal(testModules.module2.expected);
+                });
+            });
+
+            spec.describe('when a pipeline event has the once property', function () {
+                it('should only execute one time', function () {
+                    var eventHandler,
+                        sutModuleName = 'one_event',
+                        count = 0;
+
+                    eventHandler = function () {
+                        count += 1;
+                    };
+                    eventHandler.once = true;
+
+                    fixtureScope.registerEvent(constants.pipeline.beforeRegister, eventHandler);
+
+                    fixtureScope.register(testModules.module1.moduleDefinition);
+                    fixtureScope.register(testModules.module2.moduleDefinition);
+
+                    expect(count).to.equal(1);
+                });
+            });
         });
         
     }; // /eports

@@ -82,8 +82,12 @@
                     container[moduleName].factory.val.should.equal(expected);
                 });
                 
-                it.skip('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {
-                
+                it('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {
+                    var shouldThrow = function () {
+                        scope.register({});
+                    };
+                    
+                    expect(shouldThrow).to.Throw();
                 });
 
             }); // /registering
@@ -117,12 +121,42 @@
                     result.thisOut.should.equal(testModules.module3.expected);
                 });
                 
-                it.skip('should throw when attempting to resolve a module that doesn\'t exist', function () {
-                        
+                it('should throw when attempting to resolve a module that doesn\'t exist', function () {
+                    var shouldThrow1,
+                        shouldThrow2;
+                    
+                    shouldThrow1 = function () {
+                        var foo = scope.resolve('icanhascheeseburger');
+                    };
+                    
+                    shouldThrow2 = function () {
+                        var foo = scope.resolve(function () {});
+                    };
+                    
+                    expect(shouldThrow1).to.Throw();
+                    expect(shouldThrow2).to.Throw();
                 });
                 
-                it.skip('should throw when attempting to resolve a module that depends on modules that don\'t exist', function () {
-                        
+                it('should throw when attempting to resolve a module that depends on modules that don\'t exist', function () {
+                    // given
+                    var sutName = generateId(),
+                        missingDependency = generateId(),
+                        shouldTrow;
+                    
+                    scope.register({
+                        name: sutName,
+                        dependencies: [missingDependency],
+                        factory: function (dep) {}
+                    });
+                    
+                    // when
+                    shouldTrow = function () {
+                        scope.resolve(sutName);
+                    };
+                    
+                    // then
+                    expect(shouldTrow).to.Throw();
+                    
                 });
 
                 it('should be able to resolve multiple modules at the same time', function (done) {
@@ -136,8 +170,13 @@
                     });
                 });
                 
-                it.skip('should return an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
-                
+                it('should return an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
+                    var sutName1 = generateId();
+                    
+                    scope.resolveMany([testModules.module1.name, sutName1], function (dep1, dep2) {
+                        expect(dep2.name).to.equal('DependencyException');
+                        done();
+                    });
                 });
 
             }); // /resolving
@@ -178,8 +217,17 @@
                     assert(new Hilary(), index, done);
                 });
                 
-                it.skip('should return an error when any or all registrations failed', function (done) {
-                
+                it('should return an error when any or all registrations failed', function (done) {
+                    var mock1 = testModules.module1.moduleDefinition,
+                        mock2 = {},
+                        index = [mock1, mock2],
+                        newScope = new Hilary();
+
+                    newScope.autoRegister(index, function (err) {
+                        expect(err).to.be.a('object');
+
+                        done();
+                    });
                 });
 
             }); // /autoRegister
@@ -254,8 +302,19 @@
                     assert(mockIndex(mockRegistrationName), mockRegistrationName, done);
                 });
                 
-                it.skip('should return an error if some or all dependencies were not met', function (done) {
+                it('should return an error if some or all dependencies were not met', function (done) {
+                    var mockRegistrationName = generateId(),
+                        idx = mockIndex(mockRegistrationName),
+                        index;
                     
+                    delete idx.mock2.factory;
+                    index = [idx.mock3, idx.mock2, idx.mock1];
+                    
+                    scope.autoResolve(index, function (err) {
+                        expect(err).to.be.a('object');
+
+                        done();
+                    });
                 });
 
             }); // /autoResolve
@@ -279,8 +338,12 @@
                     expect(actual2).to.Throw();
                 });
                 
-                it.skip('should return false, if it does not exist', function () {
+                it('should return false, if it does not exist', function () {
+                    var sut = new Hilary(),
+                        sutModules = makeMockData(sut, generateId),
+                        actual = sut.dispose(generateId());
                     
+                    expect(actual).to.equal(false);
                 });
             });
 
@@ -306,8 +369,14 @@
                     expect(actual4).to.Throw();
                 });
                 
-                it.skip('should return false, if any do not exist', function () {
+                it('should return false, if any do not exist', function () {
+                    // given
+                    var sut = new Hilary(),
+                        sutModules = makeMockData(sut, generateId),
+                        actual;
                     
+                    actual = sut.dispose([sutModules.module1.name, generateId()]);
+                    expect(actual).to.equal(false);
                 });
             });
 
@@ -335,8 +404,9 @@
             });
             
             spec.describe('when an argument that isn\'t supported is passed', function () {
-                it.skip('should return false', function () {
-                    
+                it('should return false', function () {
+                    var actual = scope.dispose(function () {});
+                    expect(actual).to.equal(false);
                 });
             });
 

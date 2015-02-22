@@ -95,6 +95,34 @@
                         }
                     }, next);
                 });
+                
+                it('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {
+                    var shouldThrow = function () {
+                        scope.register({});
+                    };
+
+                    expect(shouldThrow).to.Throw();
+                });
+                
+                it('should throw when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
+                    // given
+                    var sutName = generateId(),
+                        missingDependency = generateId(),
+                        shouldTrow;
+                    
+                    scope.register({
+                        name: sutName,
+                        dependencies: [missingDependency],
+                        factory: function (dep) {}
+                    });
+                    
+                    // when
+                    scope.resolveAsync(sutName, function (err) {
+                        expect(err).to.be.a('object');
+                        done();
+                    });
+                    
+                });
 
             }); // /registering
 
@@ -112,7 +140,18 @@
                         done();
                     });
                 });
-
+                
+                it('should throw when attempting to resolve a module that doesn\'t exist', function (done) {
+                    scope.resolveAsync(function () {}, function (err) {
+                        expect(err).to.be.a('object');
+                        
+                        scope.resolveAsync('icanhascheeseburger', function (err) {
+                            expect(err).to.be.a('object');
+                            done();
+                        });
+                    });
+                });
+                
                 it('should be able to resolve multiple modules at the same time', function (done) {
                     // when
                     scope.resolveManyAsync([testModules.module1.name, testModules.module2.name], function (err, results) {
@@ -123,6 +162,15 @@
                         mod1.should.equal(testModules.module1.expected);
                         mod2.dep1Out.should.equal(testModules.module1.expected);
                         mod2.thisOut.should.equal(testModules.module2.expected);
+                        done();
+                    });
+                });
+                
+                it('should return an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
+                    var sutName1 = generateId();
+                    
+                    scope.resolveManyAsync([testModules.module1.name, sutName1], function (err, results) {
+                        expect(err).to.be.a('object');
                         done();
                     });
                 });
@@ -163,6 +211,19 @@
                         };
                     
                     assert(new Hilary().useAsync(async), index, done);
+                });
+                
+                it('should return an error when any or all registrations failed', function (done) {
+                    var mock1 = testModules.module1.moduleDefinition,
+                        mock2 = {},
+                        index = [mock1, mock2],
+                        newScope = new Hilary().useAsync(async);
+
+                    newScope.autoRegisterAsync(index, function (err) {
+                        expect(err).to.be.a('object');
+
+                        done();
+                    });
                 });
 
             }); // /autoRegister
@@ -237,6 +298,37 @@
                     assert(mockIndex(mockRegistrationName), mockRegistrationName, done);
                 });
 
+                it('should return an error if some or all dependencies were not met', function (done) {
+                    var mockRegistrationName = generateId(),
+                        idx = mockIndex(mockRegistrationName),
+                        index;
+                    
+                    delete idx.mock2.factory;
+                    index = [idx.mock3, idx.mock2, idx.mock1];
+                    
+                    scope.autoResolveAsync(index, function (err) {
+                        expect(err).to.be.a('object');
+
+                        done();
+                    });
+                });
+                
+                it('should return an error if some or all dependencies of an item in the index were not met', function (done) {
+                    var mockRegistrationName = generateId(),
+                        missingName = generateId(),
+                        idx = mockIndex(mockRegistrationName),
+                        index;
+                    
+                    idx.mock2.dependencies.push(missingName);
+                    index = [idx.mock3, idx.mock2, idx.mock1];
+                    
+                    scope.autoResolveAsync(index, function (err) {
+                        expect(err).to.be.a('object');
+
+                        done();
+                    });
+                });
+                
             }); // /autoResolve
 
         }); // /Hilary DI
@@ -260,8 +352,14 @@
                     });
                 });
                 
-                it.skip('should return false, if it does not exist', function () {
+                it('should return false, if it does not exist', function (done) {
+                    var sut = new Hilary().useAsync(async),
+                        sutModules = makeMockData(sut, generateId);
                     
+                    sut.disposeAsync(generateId(), function (err, actual) {
+                        expect(actual).to.equal(false);
+                        done();
+                    });
                 });
             });
 
@@ -289,8 +387,15 @@
                     });
                 });
                 
-                it.skip('should return false, if any do not exist', function () {
-                    
+                it('should return false, if any do not exist', function (done) {
+                    // given
+                    var sut = new Hilary().useAsync(async),
+                        sutModules = makeMockData(sut, generateId);
+
+                    sut.disposeAsync([sutModules.module1.name, generateId()], function (err, actual) {
+                        expect(actual).to.equal(false);
+                        done();
+                    });
                 });
                 
             });
@@ -320,9 +425,12 @@
                 });
             });
             
-            spec.describe('when an argument that isn\'t supported is passed', function () {
-                it.skip('should return false', function () {
-                    
+            spec.describe('when an argument that isn\'t supported is passed', function (done) {
+                it('should return false', function () {
+                    var actual = scope.dispose(function (err, result) {
+                        expect(actual).to.equal(false);
+                        done();
+                    });
                 });
             });
 
