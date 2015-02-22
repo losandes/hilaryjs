@@ -15,8 +15,8 @@ module.exports.test = function (Hilary, spec, async) {
                 var http = scope.resolve('http');
                 
                 // then
-                http.should.not.be.undefined;
-                http.createServer.should.not.be.undefined;
+                http.should.not.equal(undefined);
+                http.createServer.should.not.equal(undefined);
 
             });
             
@@ -24,8 +24,8 @@ module.exports.test = function (Hilary, spec, async) {
                 // when
                 scope.resolveAsync('http', function (err, http) {
                     // then
-                    http.should.not.be.undefined;
-                    http.createServer.should.not.be.undefined;
+                    http.should.not.equal(undefined);
+                    http.createServer.should.not.equal(undefined);
                     done();
                 });
             });
@@ -33,9 +33,17 @@ module.exports.test = function (Hilary, spec, async) {
         
         it('should include useAMD extension', function () {
             var specScope = new Hilary().useAMD();
-debugger;
+
             expect(specScope.define).to.be.a('function');
             expect(specScope.require).to.be.a('function');
+        });
+        
+        it('should add AMD to child containers of scopes that useAMD', function () {
+            var specScope = new Hilary().useAMD(),
+                child = specScope.createChildContainer();
+
+            expect(child.define).to.be.a('function');
+            expect(child.require).to.be.a('function');
         });
         
     }); // /Hilary DI

@@ -2,39 +2,39 @@
 var Hilary = require('../../index.js'), //require('hilary'),
     compose,
     start,
-    container = new Hilary();
+    scope = new Hilary().useAMD();
 
-compose = function (container) {
+compose = function (scope) {
     "use strict";
     
     var express = require('express'),
         expressSingleton = express(),
         router = express.Router();
     
-    container.register('express', express);                         // lib
-    container.register('expressSingleton', expressSingleton);       // single instance used for app
-    container.register('router', router);                           // route engine
-    container.register('favicon', require('serve-favicon'));
-    container.register('logger', require('morgan'));
-    container.register('cookieParser', require('cookie-parser'));
-    container.register('bodyParser', require('body-parser'));
-    container.register('less', require('less-middleware'));
-    container.register('serve-static', require('serve-static'));
-    container.register('debug', function () {
+    scope.define('express', express);                         // lib
+    scope.define('expressSingleton', expressSingleton);       // single instance used for app
+    scope.define('router', router);                           // route engine
+    scope.define('favicon', require('serve-favicon'));
+    scope.define('logger', require('morgan'));
+    scope.define('cookieParser', require('cookie-parser'));
+    scope.define('bodyParser', require('body-parser'));
+    scope.define('less', require('less-middleware'));
+    scope.define('serve-static', require('serve-static'));
+    scope.define('debug', function () {
         return require('debug')('expressdefault:server');
     });
     
     // the following registrations will fallback to Node's require if they are commented out
-    //container.register('http', require('http'));
-    //container.register('path', require('path'));
+    //scope.define('http', require('http'));
+    //scope.define('path', require('path'));
     
     
-    container.autoRegister(require('./expressApp.js'));             // configures middleware and controllers
-    container.autoRegister(require('./www.js'));                    // the HTTP server
+    scope.autoRegister(require('./expressApp.js'));             // configures middleware and controllers
+    scope.autoRegister(require('./www.js'));                    // the HTTP server
     
-    container.register('controllerFactory', function (expressApp, next) {
-        container.autoRegister(require('./controllers/'));              // the controllers
-        expressApp.use(container.resolve('router'));
+    scope.define('controllerFactory', function (expressApp, next) {
+        scope.autoResolve(require('./controllers/'));              // the controllers
+        expressApp.use(scope.resolve('router'));
 
         if (typeof next === 'function') {
             next();
@@ -48,11 +48,11 @@ start = function () {
     "use strict";
     console.log('startup::@' + new Date().toISOString());
     console.log('startup::composing application');
-    compose(container);
+    compose(scope);
     console.log('startup::starting server');
-    container.resolve('www');
-//    var app = container.resolve('expressApp');
-//    container.resolve('www').start(app);
+    scope.resolve('www');
+//    var app = scope.resolve('expressApp');
+//    scope.resolve('www').start(app);
 };
 
 start();
