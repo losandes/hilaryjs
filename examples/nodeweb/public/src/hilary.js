@@ -344,6 +344,7 @@
                     if (utils.isFunction(next)) {
                         next(err);
                     }
+                    return;
                 }
 
                 if (utils.isFunction(next)) {
@@ -430,7 +431,8 @@
         
         $this.resolveMany = function (moduleNameArray, next) {
             var modules = [],
-                i;
+                i,
+                current;
             
             if (utils.notArray(moduleNameArray)) {
                 throw err.argumentException('The moduleNameArray is required and must be an Array', 'moduleNameArray');
@@ -441,10 +443,48 @@
             }
             
             for (i = 0; i < moduleNameArray.length; i += 1) {
-                modules.push(scope.resolve(moduleNameArray[i]));
+                try {
+                    current = scope.resolve(moduleNameArray[i]);
+                    modules.push(current);
+                } catch (e) {
+                    modules.push(e);
+                }
             }
             
             return next.apply(null, modules);
+        };
+        
+        $this.resolveManyAsync = function (moduleNameArray, next) {
+            var moduleTasks = [],
+                modules = {},
+                i,
+                makeTask = function (moduleName) {
+                    return function (callback) {
+                        try {
+                            //scope.resolveAsync(moduleName, container, pipeline, parent, callback);
+                            modules[moduleName] = scope.resolve(moduleName);
+                            callback(null, null);
+                        } catch (e) {
+                            callback(e);
+                        }
+                    };
+                };
+
+            if (utils.notArray(moduleNameArray)) {
+                throw err.argumentException('The moduleNameArray is required and must be an Array', 'moduleNameArray');
+            }
+
+            if (utils.notFunction(next)) {
+                throw err.argumentException('The next argument is required and must be a Function', 'next');
+            }
+
+            for (i = 0; i < moduleNameArray.length; i += 1) {
+                moduleTasks.push(makeTask(moduleNameArray[i]));
+            }
+
+            async.parallel(moduleTasks, function (err, moduleResults) {
+                next(err, modules);
+            });
         };
 
         $this.resolveAsync = function (moduleName, next) {
@@ -512,7 +552,11 @@
                 return parent.resolve(moduleName);
             } else if (nodeRequire) {
                 // attempt to resolve from node's require
-                return nodeRequire(moduleName);
+                try {
+                    return nodeRequire(moduleName);
+                } catch (e) {
+                    return null;
+                }
             } else if (window) {
                 // attempt to resolve from Window
                 return exports[moduleName];
@@ -675,6 +719,28 @@
             }
         };
         
+        $this.autoResolveAsync = function (index, next) {
+            var makeTask,
+                tasks,
+                i;
+
+            makeTask = function (item) {
+                return function (callback) {
+                    if (utils.isArray(item.dependencies) && utils.isFunction(item.factory)) {
+                        scope.resolveManyAsync(item.dependencies, item.factory);
+                        callback(null, null);
+                    } else if (utils.isFunction(item.factory) && item.factory.length === 0) {
+                        item.factory();
+                        callback(null, null);
+                    } else {
+                        callback(err.argumentException('One or more of the items in this index do not meet the requirements for resolution.', 'index', item));
+                    }
+                };
+            };
+
+            async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
+        };
+
         $this.dispose = function (moduleName) {
             var key, i, result;
             
@@ -686,7 +752,7 @@
                 for (i = 0; i < moduleName.length; i += 1) {
                     result = result && $this.disposeOne(moduleName[i]);
                 }
-                
+                debugger;
                 return result;
             } else if (!moduleName) {
                 result = true;
@@ -731,6 +797,7 @@
                 $this.asyncHandler(function () {
                     return scope.register(definition);
                 }, next);
+                return scope;
             };
 
             /*
@@ -750,6 +817,7 @@
                 };
 
                 async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
+                return scope;
             };
 
             /*
@@ -757,7 +825,8 @@
             // @param moduleName (string): the qualified name that the module can be located by in the container
             */
             scope.resolveAsync = function (moduleName, next) {
-                return $this.resolveAsync(moduleName, next);
+                $this.resolveAsync(moduleName, next);
+                return scope;
             };
 
             /*
@@ -766,32 +835,8 @@
             // @param next (function): the function that will accept all of the dependency results as arguments (in order)
             */
             scope.resolveManyAsync = function (moduleNameArray, next) {
-                var moduleTasks = [],
-                    modules = {},
-                    i,
-                    makeTask = function (moduleName) {
-                        return function (callback) {
-                            //scope.resolveAsync(moduleName, container, pipeline, parent, callback);
-                            modules[moduleName] = scope.resolve(moduleName);
-                            callback(null, null);
-                        };
-                    };
-
-                if (utils.notArray(moduleNameArray)) {
-                    throw err.argumentException('The moduleNameArray is required and must be an Array', 'moduleNameArray');
-                }
-
-                if (utils.notFunction(next)) {
-                    throw err.argumentException('The next argument is required and must be a Function', 'next');
-                }
-
-                for (i = 0; i < moduleNameArray.length; i += 1) {
-                    moduleTasks.push(makeTask(moduleNameArray[i]));
-                }
-
-                async.parallel(moduleTasks, function (err, moduleResults) {
-                    next(null, modules);
-                });
+                $this.resolveManyAsync(moduleNameArray, next);
+                return scope;
             };
 
             /*
@@ -803,21 +848,8 @@
             // @next (err): next recieves a single argument: err, which will be null when the process succeeded
             */
             scope.autoResolveAsync = function (index, next) {
-                var makeTask,
-                    tasks,
-                    i;
-
-                makeTask = function (item) {
-                    return function (callback) {
-                        if (utils.isArray(item.dependencies) && utils.isFunction(item.factory)) {
-                            scope.resolveManyAsync(item.dependencies, item.factory);
-                        } else if (utils.isFunction(item.factory) && item.factory.length === 0) {
-                            item.factory();
-                        }
-                    };
-                };
-
-                async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
+                $this.autoResolveAsync(index, next);
+                return scope;
             };
 
             scope.disposeAsync = function (moduleName, next) {
@@ -832,6 +864,8 @@
                 $this.asyncHandler(function () {
                     return scope.dispose(_moduleName);
                 }, _next);
+                
+                return scope;
             };
 
             /*
@@ -844,6 +878,8 @@
                 $this.asyncHandler(function () {
                     return scope.registerEvent(eventName, eventHandler);
                 }, next);
+                
+                return scope;
             };
 
             return scope;
