@@ -22,7 +22,7 @@ module.exports = function (grunt) {
                 options: {
                     reporter: 'nyan', // 'spec', // 'min', // 'nyan', // 'xunit',
                     //captureFile: 'results.txt', // Optionally capture the reporter output to a file
-                    quiet: false, // Optionally suppress output to standard out (defaults to false)
+                    quiet: false // Optionally suppress output to standard out (defaults to false)
                     //clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false)
                 },
                 require: 'coverage/blanket',
@@ -60,13 +60,13 @@ module.exports = function (grunt) {
 
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-mocha-test');
-    grunt.loadNpmTasks('grunt-mocha');
+    grunt.loadNpmTasks('grunt-mocha-test'); // node
+    grunt.loadNpmTasks('grunt-mocha');      // browser
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
     grunt.registerTask('default', ['uglify', 'mocha', 'mochaTest', 'copy']);
-    grunt.registerTask('testnode', ['uglify', 'mochaTest']);
+    grunt.registerTask('testnode', ['mochaTest']);
     grunt.registerTask('testbrowser', ['uglify', 'mocha']);
 
 };

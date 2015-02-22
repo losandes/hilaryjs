@@ -1,0 +1,15 @@
+{
+    "name": "hilary-simple-http-example",
+    "version": "2.0.0",
+    "description": "A node.js HTTP server using Hilary and the composition root pattern",
+    "main": "startup.js",
+    "scripts": {
+        "start": "nodemon startup.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "httpsys": "*"
+    },
+    "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
+    "license": "Apache 2"
+}
