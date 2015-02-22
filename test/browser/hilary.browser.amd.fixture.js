@@ -159,8 +159,10 @@ window['hilary.browser.amd.fixture'] = function () {
                         done();
                     });
                 });
+                
             }); // /require
-        });
-    });
-};
+            
+        }); // /describe AMD
+    }); // /require
+}; // /window
 
