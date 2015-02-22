@@ -92,6 +92,17 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
                 
                 assert('hilary::after::new::child', whenChildContainer, then);
             });
+            
+            it('should trigger the hilary::error event on the DOM', function (done) {
+                var then = function (data) {
+                    expect(data.err).to.be.a('object');
+                    done();
+                };
+                
+                assert('hilary::error', function () {
+                    try { scope.register({}); } catch (e) { }
+                }, then);
+            });
         });
     });
 };
