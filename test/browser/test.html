@@ -44,7 +44,7 @@
             should: chai.should()
         }
         
-        window['hilary.fixture'](Hilary, spec, createGuid, makeMockData);
+        window['hilary.fixture'](Hilary, spec, createGuid, makeMockData, async);
         window['hilary.browser.fixture']();
         window['hilary.di.fixture'](Hilary, spec, createGuid, makeMockData);
         window['hilary.di.async.fixture'](Hilary, spec, createGuid, makeMockData, async);

@@ -371,7 +371,7 @@
             child = new Hilary(opts);
 
             if (scope.registerAsync) {
-                child = child.useAsync(async);
+                child.useAsync(async);
             }
 
             pipeline.afterNewChild(opts, child);

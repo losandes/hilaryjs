@@ -13,7 +13,7 @@ var Hilary  = require('../../index.js'),
     };
 
 
-require('../hilary.fixture.js')['hilary.fixture'](Hilary, spec, shortid.generate, mockData.makeMockData);
+require('../hilary.fixture.js')['hilary.fixture'](Hilary, spec, shortid.generate, mockData.makeMockData, async);
 require('../hilary.di.fixture.js')['hilary.di.fixture'](Hilary, spec, shortid.generate, mockData.makeMockData);
 require('./hilary.node.di.fixture.js').test(Hilary, spec, async);
 require('../hilary.di.async.fixture.js')['hilary.di.async.fixture'](Hilary, spec, shortid.generate, mockData.makeMockData, async);

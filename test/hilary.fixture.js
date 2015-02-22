@@ -2,7 +2,7 @@
 (function (exports) {
     "use strict";
     
-    exports['hilary.fixture'] = function (Hilary, spec, generateId, makeMockData) {
+    exports['hilary.fixture'] = function (Hilary, spec, generateId, makeMockData, async) {
 
         // SETUP
 
@@ -70,6 +70,13 @@
                     expect(actual2.thisOut).to.equal(testModules.module2.expected);
                     expect(actual3).to.equal(testModules.module1.expected);
                     expect(shouldThrow).to.Throw();
+                });
+                
+                it('should have useAsync if it\'s parent does', function () {
+                    var sut = new Hilary().useAsync(async),
+                        child = sut.createChildContainer();
+
+                    expect(child.registerAsync).to.be.a('function');
                 });
             });
 
