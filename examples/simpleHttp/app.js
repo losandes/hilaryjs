@@ -7,7 +7,7 @@ var Hilary = require('../../index.js'),
 compose = function (container) {
     "use strict";
     
-    container.register('http', require('http'));
+    container.register({ name: 'http', factory: require('http') });
     container.autoRegister(require('./server.js'));
 };
 

@@ -25,7 +25,7 @@ var Hilary = require('hilary'),
 compose = function (container) {
     "use strict";
     
-    container.register('http', require('http'));
+    container.register({ name: 'http', factory: require('http') });
     container.autoRegister(require('./server.js'));
 };
 
@@ -79,26 +79,33 @@ Then define your scope, then your modules and finally compose your app:
 
 ```JavaScript
 // myModule.js
-spa.register('myRouteEngine', ['myFactory'], function (myFactory) {
-    "use strict";
-    
-    // [CODE]
+spa.register({
+    name: 'myRouteEngine',
+    dependencies: ['myFactory'],
+    factory: function (myFactory) {
+        "use strict";
+
+        // [CODE]
+    }
 });
 ```
 
 ```JavaScript
 // bootstrapper.js
-spa.resolve(function (resolve, exports, window) {
+(function (spa) {
     "use strict";
     
     var compose,
         start;
     
-    compose = function (container) {
-        container.register('myFactory', function () {
-            "use strict";
-            
-            // [CODE]
+    compose = function (scope) {
+        scope.register({
+            name: 'myFactory',
+            factory: function () {
+                "use strict";
+
+                // [CODE]
+            }
         });
     };
     
@@ -108,5 +115,5 @@ spa.resolve(function (resolve, exports, window) {
     };
     
     start();
-});
+}(spa));
 ```
