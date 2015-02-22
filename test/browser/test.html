@@ -13,25 +13,8 @@
     <script>
         mocha.setup({
             ui: 'bdd',
-            
         });
-    </script>
-    
-    <script src="../../release/hilary.min.js"></script>
-<!--    <script src="../../src/hilary.js"></script>-->
-    <script src="../../release/hilary.jQueryEventEmitter.min.js"></script>
-    
-    <script src="../mockData.js"></script>
-    <script src="../hilary.fixture.js"></script>
-    <script src="hilary.browser.fixture.js"></script>
-    <script src="../hilary.di.fixture.js"></script>
-    <script src="../hilary.di.async.fixture.js"></script>
-    <script src="../hilary.singletons.fixture.js"></script>
-    <script src="../hilary.pipeline.fixture.js"></script>
-    <script src="hilary.browser.jQueryEventEmitter.fixture.js"></script>
-    
-    <!-- run mocha after all test are loaded -->
-    <script type="text/javascript" charset="utf-8">
+        
         var createGuid = function () {
             return "zxxxxxxxxxxx".replace(/[xy]/g, function (c) {
                 var r = Math.random() * 16 | 0, v = c === "x" ? r : r & 3 | 8;
@@ -45,7 +28,25 @@
             expect: chai.expect,
             should: chai.should()
         }
-        
+    </script>
+    
+    <script src="../../release/hilary.min.js"></script>
+<!--    <script src="../../src/hilary.js"></script>-->
+    <script src="../../release/hilary.jQueryEventEmitter.min.js"></script>
+    <script src="../../release/hilary.amd.min.js"></script>
+    
+    <script src="../mockData.js"></script>
+    <script src="../hilary.fixture.js"></script>
+    <script src="hilary.browser.fixture.js"></script>
+    <script src="../hilary.di.fixture.js"></script>
+    <script src="../hilary.di.async.fixture.js"></script>
+    <script src="../hilary.singletons.fixture.js"></script>
+    <script src="../hilary.pipeline.fixture.js"></script>
+    <script src="hilary.browser.jQueryEventEmitter.fixture.js"></script>
+    <script src="hilary.browser.amd.fixture.js"></script>
+    
+    <!-- run mocha after all test are loaded -->
+    <script type="text/javascript" charset="utf-8">
         window['hilary.fixture'](Hilary, spec, createGuid, makeMockData, async);
         window['hilary.browser.fixture']();
         window['hilary.di.fixture'](Hilary, spec, createGuid, makeMockData);
@@ -53,6 +54,7 @@
         window['hilary.singletons.fixture'](Hilary, spec);
         window['hilary.pipeline.fixture'](Hilary, spec, createGuid, makeMockData, async);
         window['hilary.browser.jQueryEventEmitter.fixture'](Hilary, spec, $);
+        window['hilary.browser.amd.fixture']();
         
       // Only tests run in real browser, injected script run if options.run == true
       if (navigator.userAgent.indexOf('PhantomJS') < 0) {
