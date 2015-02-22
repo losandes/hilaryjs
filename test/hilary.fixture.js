@@ -72,7 +72,7 @@
                     expect(shouldThrow).to.Throw();
                 });
                 
-                it('should have useAsync if it\'s parent does', function () {
+                it('should useAsync if it\'s parent does', function () {
                     var sut = new Hilary().useAsync(async),
                         child = sut.createChildContainer();
 
