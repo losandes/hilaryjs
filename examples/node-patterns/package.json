@@ -4,11 +4,10 @@
     "description": "Design patterns for node, using Hilary",
     "main": "compositionRoot.js",
     "scripts": {
-        "start": "nodemon startup.js",
+        "start": "node compositionRoot.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
-        "httpsys": "*",
         "hilary": "2.0.x"
     },
     "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
