@@ -17,20 +17,12 @@ module.exports = function (grunt) {
                 }
             }
         },
-        jasmine: {
-            pivotal: {
-                src: ['../test/browser/lib/jquery.js', '../release/hilaryWithAMD.min.js', '../release/hilary.jQueryEventEmitter.min.js'], //'../src/**/*.js',
-                options: {
-                    specs: '../test/browser/specs/*Fixture.js'
-                }
-            }
-        },
         mochaTest: {
             test: {
                 options: {
-                    reporter: 'spec', // 'spec', // 'min', // 'nyan', // 'xunit',
+                    reporter: 'nyan', // 'spec', // 'min', // 'nyan', // 'xunit',
                     //captureFile: 'results.txt', // Optionally capture the reporter output to a file
-                    quiet: false, // Optionally suppress output to standard out (defaults to false)
+                    quiet: false // Optionally suppress output to standard out (defaults to false)
                     //clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false)
                 },
                 require: 'coverage/blanket',
@@ -48,10 +40,27 @@ module.exports = function (grunt) {
                 src: ['../test/node/test.js']
             }
         },
+        mocha: {
+            test: {
+                options: {
+                    reporter: 'Nyan', //Spec //Nyan
+                    run: true
+                },
+                src: ['../test/browser/test.html']
+            }
+        },
         copy: {
             main: {
                 files: [
-                    {src: ['../src/*'], dest: '../examples/nodeweb/public/scripts/', filter: 'isFile'}
+                    { src: ['../release/hilary.min.js'], dest: '../examples/express/public/scripts/hilary.min.js', filter: 'isFile' },
+                    { src: ['../src/hilary.js'], dest: '../examples/express/public/scripts/hilary.js', filter: 'isFile' },
+                    { src: ['../release/hilary.amd.min.js'], dest: '../examples/express/public/scripts/hilary.amd.min.js', filter: 'isFile' },
+                    { src: ['../src/hilary.amd.js'], dest: '../examples/express/public/scripts/hilary.amd.js', filter: 'isFile' },
+                    { src: ['../release/hilary.jQueryEventEmitter.min.js'], dest: '../examples/express/public/scripts/hilary.jQueryEventEmitter.min.js', filter: 'isFile' },
+                    { src: ['../src/hilary.jQueryEventEmitter.js'], dest: '../examples/express/public/scripts/hilary.jQueryEventEmitter.js', filter: 'isFile' },
+                    { src: ['../src/hilary.js'], dest: '../examples/express/node_modules/hilary/src/hilary.js', filter: 'isFile' },
+                    { src: ['../src/hilary.amd.js'], dest: '../examples/express/node_modules/hilary/src/hilary.amd.js', filter: 'isFile' },
+                    { src: ['../index.js'], dest: '../examples/express/node_modules/hilary/index.js', filter: 'isFile' }
                 ]
             }
         }
@@ -59,11 +68,13 @@ module.exports = function (grunt) {
 
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-jasmine');
-    grunt.loadNpmTasks('grunt-mocha-test');
+    grunt.loadNpmTasks('grunt-mocha-test'); // node
+    grunt.loadNpmTasks('grunt-mocha');      // browser
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify', 'jasmine', 'mochaTest', 'copy']);
+    grunt.registerTask('default', ['uglify', 'mocha', 'mochaTest', 'copy']);
+    grunt.registerTask('testnode', ['mochaTest']);
+    grunt.registerTask('testbrowser', ['uglify', 'mocha']);
 
 };

@@ -6,8 +6,10 @@
     "scripts": {
         "test": "mocha"
     },
-    "dependencies": {
+    "devDependencies": {
         "mocha": "*",
-        "chai": "*"
+        "chai": "*",
+        "shortid": "*",
+        "async": "*"
     }
 }

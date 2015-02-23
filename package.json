@@ -1,38 +1,34 @@
 {
-  "name": "hilary",
-  "version": "1.1.9",
-  "description": "hilary is a simple JavaScript IoC container written for Node.js and the browser",
-  "main": "index.js",
-  "directories": {
-    "example": "examples",
-    "test": "test"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Acatar/hilaryjs.git"
-  },
-  "keywords": [
-    "dependency",
-    "injection",
-    "injector",
-    "inversion",
-    "control",
-    "IoC",
-    "DI",
-    "node",
-    "javascript",
-    "autowire",
-    "configuration",
-    "low",
-    "ceremony"
-  ],
-  "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
-  "license": "Apache 2.0",
-  "bugs": {
-    "url": "https://github.com/Acatar/hilaryjs/issues"
-  },
-  "homepage": "https://github.com/Acatar/hilaryjs"
+    "name": "hilary",
+    "version": "2.0.0",
+    "description": "hilary is a simple JavaScript IoC container written for Node.js and the browser",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },   
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Acatar/hilaryjs.git"
+    },
+    "keywords": [
+        "dependency",
+        "injection",
+        "injector",
+        "inversion",
+        "control",
+        "IoC",
+        "DI",
+        "node",
+        "javascript",
+        "autowire",
+        "configuration",
+        "low",
+        "ceremony"
+    ],
+    "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
+    "license": "Apache 2.0",
+    "bugs": {
+        "url": "https://github.com/Acatar/hilaryjs/issues"
+    },
+    "homepage": "https://github.com/Acatar/hilaryjs"
 }
