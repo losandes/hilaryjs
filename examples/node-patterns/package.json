@@ -1,8 +1,8 @@
 {
-    "name": "hilary-simple-http-example",
+    "name": "hilary-node-patterns",
     "version": "2.0.0",
-    "description": "A node.js HTTP server using Hilary and the composition root pattern",
-    "main": "startup.js",
+    "description": "Design patterns for node, using Hilary",
+    "main": "compositionRoot.js",
     "scripts": {
         "start": "nodemon startup.js",
         "test": "echo \"Error: no test specified\" && exit 1"

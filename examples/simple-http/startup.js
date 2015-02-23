@@ -1,7 +1,5 @@
 /*jslint node: true*/
-var Hilary = require('../../index.js'),
-    scope = new Hilary(),
-    compose,
+var compose,
     start;
 
 compose = function (scope) {
@@ -26,6 +24,9 @@ compose = function (scope) {
 
 start = function () {
     "use strict";
+    
+    var Hilary = require('../../index.js'),
+        scope = new Hilary();
 
     compose(scope);
     scope.resolve('server');

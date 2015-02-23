@@ -1,7 +1,10 @@
 /*jslint node: true*/
-var Hilary = require('hilary'), //require('../../index.js'), //require('hilary'),
-    scope = new Hilary().useAMD(),
-    compose,
+
+// All app variables are defined in start and compose.
+// By isolating the app's requirements into the start and compose functions,
+// The entire app can be restarted from within, to react to failure, and to
+// get into a clean running state when associated services recover from failure.
+var compose,
     start;
 
 compose = function (scope) {
@@ -9,7 +12,13 @@ compose = function (scope) {
     
     var express = require('express'),
         expressSingleton = express(),
-        router = express.Router();
+        router = express.Router(),
+        favicon = require('serve-favicon'),
+        logger = require('morgan'),
+        cookieParser = require('cookie-parser'),
+        bodyParser = require('body-parser'),
+        less = require('less-middleware'),
+        debug = require('debug')('expressdefault:server');
     
     /*
     // we'll use the AMD define syntax to wire up the node dependencies, for simplicity.
@@ -22,15 +31,12 @@ compose = function (scope) {
     scope.define('express',             function () { return express; });          // lib
     scope.define('expressSingleton',    function () { return expressSingleton; }); // single instance used for app
     scope.define('router',              function () { return router; });           // route engine
-    scope.define('favicon',             function () { return require('serve-favicon'); });
-    scope.define('logger',              function () { return require('morgan'); });
-    scope.define('cookieParser',        function () { return require('cookie-parser'); });
-    scope.define('bodyParser',          function () { return require('body-parser'); });
-    scope.define('less',                function () { return require('less-middleware'); });
-    //scope.define('serve-static',        function () { return require('serve-static'); });
-    scope.define('debug',               function () {
-        return require('debug')('expressdefault:server');
-    });
+    scope.define('favicon',             function () { return favicon; });
+    scope.define('logger',              function () { return logger; });
+    scope.define('cookieParser',        function () { return cookieParser; });
+    scope.define('bodyParser',          function () { return bodyParser; });
+    scope.define('less',                function () { return less; });
+    scope.define('debug',               function () { return debug; });
     
     /*
     // Alternatively, you can let Hilary gracefully degrade to node's require function.
@@ -41,6 +47,7 @@ compose = function (scope) {
     */
     //scope.define('http', function () { return require('http'); });
     //scope.define('path', function () { return require('path'); });
+    //scope.define('serve-static',        function () { return require('serve-static'); });
     
     
     scope.register(require('./expressApp.js'));             // configures middleware and controllers
@@ -62,6 +69,9 @@ compose = function (scope) {
 // start
 start = function () {
     "use strict";
+    var Hilary = require('hilary'), //require('../../index.js'), //require('hilary'),
+        scope = new Hilary().useAMD();
+    
     console.log('startup::@' + new Date().toISOString());
     console.log('startup::composing application');
     
