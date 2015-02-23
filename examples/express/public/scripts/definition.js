@@ -2,6 +2,6 @@
 (function (exports, Hilary) {
     "use strict";
     
-    exports.spa = new Hilary();
+    exports.spa = new Hilary().useAMD();
     
 }(window, Hilary));

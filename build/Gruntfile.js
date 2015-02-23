@@ -52,7 +52,15 @@ module.exports = function (grunt) {
         copy: {
             main: {
                 files: [
-                    {src: ['../src/*'], dest: '../examples/nodeweb/public/scripts/', filter: 'isFile'}
+                    { src: ['../release/hilary.min.js'], dest: '../examples/express/public/scripts/hilary.min.js', filter: 'isFile' },
+                    { src: ['../src/hilary.js'], dest: '../examples/express/public/scripts/hilary.js', filter: 'isFile' },
+                    { src: ['../release/hilary.amd.min.js'], dest: '../examples/express/public/scripts/hilary.amd.min.js', filter: 'isFile' },
+                    { src: ['../src/hilary.amd.js'], dest: '../examples/express/public/scripts/hilary.amd.js', filter: 'isFile' },
+                    { src: ['../release/hilary.jQueryEventEmitter.min.js'], dest: '../examples/express/public/scripts/hilary.jQueryEventEmitter.min.js', filter: 'isFile' },
+                    { src: ['../src/hilary.jQueryEventEmitter.js'], dest: '../examples/express/public/scripts/hilary.jQueryEventEmitter.js', filter: 'isFile' },
+                    { src: ['../src/hilary.js'], dest: '../examples/express/node_modules/hilary/src/hilary.js', filter: 'isFile' },
+                    { src: ['../src/hilary.amd.js'], dest: '../examples/express/node_modules/hilary/src/hilary.amd.js', filter: 'isFile' },
+                    { src: ['../index.js'], dest: '../examples/express/node_modules/hilary/index.js', filter: 'isFile' }
                 ]
             }
         }

@@ -1,5 +1,5 @@
 /*jslint node: true*/
-var Hilary = require('../../index.js'), //require('hilary'),
+var Hilary = require('hilary'), //require('../../index.js'), //require('hilary'),
     scope = new Hilary().useAMD(),
     compose,
     start;

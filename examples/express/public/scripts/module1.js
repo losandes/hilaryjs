@@ -1,8 +1,11 @@
-/*globals app*/
-spa.register('module1', function () {
-    "use strict";
-    
-    return {
-        isModule1: true
-    };
+/*globals spa*/
+spa.register({
+    name: 'module1',
+    factory: function () {
+        "use strict";
+
+        return {
+            isModule1: true
+        };
+    }
 });
