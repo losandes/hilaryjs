@@ -16,31 +16,44 @@ npm install hilary
 In your startup file, require Hilary, create a new scope, and compose your app.
 
 ```JavaScript
-// app.js
+// startup.js
 var Hilary = require('hilary'),
-    container = new Hilary(),
+    scope = new Hilary(),
     compose,
     start;
 
-compose = function (container) {
+compose = function (scope) {
     "use strict";
-    
-    container.register({ name: 'http', factory: require('http') });
-    container.autoRegister(require('./server.js'));
+
+    scope.register({
+        name: 'http',
+        factory: function () {
+            var isWin = /^win/.test(process.platform);
+            
+            if (isWin) {
+                // take advantage of the httpsys performance enhancements
+                return require('httpsys');
+            } else {
+                // otherwise, stick with the standard http module
+                return require('http');
+            }
+        }
+    });
+    scope.register(require('./www.js'));
 };
 
 start = function () {
     "use strict";
-    
-    compose(container);
-    container.resolve('server');
+
+    compose(scope);
+    scope.resolve('server');
 };
 
 start();
 ```
 
 ```JavaScript
-// server.js
+// www.js
 module.exports.name = 'server';
 module.exports.dependencies = ['http'];
 module.exports.factory = function (http) {

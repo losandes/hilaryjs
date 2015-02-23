@@ -1,13 +1,13 @@
 /*jslint node: true*/
 var Hilary = require('../../index.js'),
-    container = new Hilary(),
+    scope = new Hilary(),
     compose,
     start;
 
-compose = function (container) {
+compose = function (scope) {
     "use strict";
 
-    container.register({
+    scope.register({
         name: 'http',
         factory: function () {
             var isWin = /^win/.test(process.platform);
@@ -21,14 +21,14 @@ compose = function (container) {
             }
         }
     });
-    container.register(require('./www.js'));
+    scope.register(require('./www.js'));
 };
 
 start = function () {
     "use strict";
 
-    compose(container);
-    container.resolve('server');
+    compose(scope);
+    scope.resolve('server');
 };
 
 start();
