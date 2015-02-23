@@ -5,6 +5,8 @@ Hilary is an easy to use JavaScript IoC container written for Node.js and the br
 
 You can find documentation and examples on our [wiki](https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
 
+> Hilary 2.0 is not backwards compatible with previous versions of Hilary. We don't intend to release a backwards compatibility extension because v1 was in the wild for such a short time. If you already built a lot around v1, open an issue, and we will help you with compatibility/upgrades.
+
 Creating your First Node App with Hilary
 ========
 Install Hilary:
