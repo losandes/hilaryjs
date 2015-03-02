@@ -3,6 +3,11 @@
 (function (exports, Hilary) {
     "use strict";
     
+    if (exports.AMDContainer && exports.define && exports.require) {
+        // Hilary AMD was already defined; ignore this instance
+        return false;
+    }
+    
     var extension = function (Hilary) {
         var AMDContainer;
         

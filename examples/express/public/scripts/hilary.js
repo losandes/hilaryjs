@@ -8,6 +8,11 @@
 (function (exports, nodeRequire) {
     "use strict";
     
+    if (exports.Hilary) {
+        // Hilary was already defined; ignore this instance
+        return false;
+    }
+    
     var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], initializers = [], Utils, utils, Exceptions, async;
     
     constants = {
