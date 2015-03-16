@@ -34,7 +34,7 @@ compose = function (scope) {
             
             if (isWin) {
                 // take advantage of the httpsys performance enhancements
-                return require('httpsys');
+                return require('httpsys').http();
             } else {
                 // otherwise, stick with the standard http module
                 return require('http');
