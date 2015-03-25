@@ -94,15 +94,17 @@ Then define your scope, then your modules and finally compose your app:
 
 ```JavaScript
 // myModule.js
-spa.register({
-    name: 'myRouteEngine',
-    dependencies: ['myFactory'],
-    factory: function (myFactory) {
-        "use strict";
-
-        // [CODE]
-    }
-});
+(function (spa) {
+    spa.register({
+        name: 'myRouteEngine',
+        dependencies: ['myFactory'],
+        factory: function (myFactory) {
+            "use strict";
+    
+            // [CODE]
+        }
+    });
+}(spa));
 ```
 
 ```JavaScript
