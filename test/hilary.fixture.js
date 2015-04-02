@@ -15,14 +15,40 @@
 
         // SPEC
         spec.describe('Hilary', function () {
+            
+            var expectScopeToExist = function (scope) {
+                expect(scope).to.not.equal(undefined);
+                expect(scope.register).to.be.a('function');
+                expect(scope.resolve).to.be.a('function');
+                expect(scope.getContext().container).to.eql({});
+            };
+            
             spec.describe('when executed', function () {
                 it('should construct a new Hilary instance', function () {
-                    var specScope = new Hilary();
+                    expectScopeToExist(new Hilary());
+                });
+            });
+            
+            spec.describe('when scope is called with a valid name', function () {
+                it('should construct a new Hilary instance if one does not already exist', function () {
+                    var newScope = Hilary.scope('newScope'),
+                        existingScope = Hilary.scope('newScope');
                     
-                    expect(specScope).to.not.equal(undefined);
-                    expect(specScope.register).to.be.a('function');
-                    expect(specScope.resolve).to.be.a('function');
-                    expect(specScope.getContext().container).to.eql({});
+                    expectScopeToExist(newScope);
+                    expectScopeToExist(existingScope);
+                });
+                
+                it('should return an existing Hilary scope if it exists', function () {
+                    Hilary.scope('newScope2');
+                    
+                    Hilary.scope('newScope2').register({
+                        name: 'foo',
+                        factory: function () {
+                            return true;
+                        }
+                    });
+                    
+                    expect(Hilary.scope('newScope2').resolve('foo')).to.eql(true);
                 });
             });
             

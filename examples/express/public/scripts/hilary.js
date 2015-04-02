@@ -13,7 +13,7 @@
         return false;
     }
     
-    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], initializers = [], Utils, utils, Exceptions, async;
+    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {}, initializers = [], Utils, utils, Exceptions, async;
     
     constants = {
         containerRegistration: 'hilary::container',
@@ -1074,6 +1074,15 @@
         initializers.push(factory);
         
         return true;
+    };
+    
+    Hilary.scope = function (name) {
+        if (scopes[name]) {
+            return scopes[name];
+        } else {
+            scopes[name] = new Hilary();
+            return scopes[name];
+        }
     };
     
     exports.Hilary = Hilary;
