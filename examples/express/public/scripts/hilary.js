@@ -1053,6 +1053,10 @@
         }
         
         // /EXTENSIONS
+        
+        if (config.name) {
+            scopes[config.name] = $this;
+        }
     };
     
     /*

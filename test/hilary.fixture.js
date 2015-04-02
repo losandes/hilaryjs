@@ -29,6 +29,25 @@
                 });
             });
             
+            spec.describe('when executed with a name property in the options', function () {
+                it('should construct a new Hilary instance', function () {
+                    expectScopeToExist(new Hilary());
+                });
+                
+                it('should return an existing Hilary scope if it exists', function () {
+                    var specScope = new Hilary({ name: 'newScope3' });
+                    
+                    Hilary.scope('newScope3').register({
+                        name: 'foo',
+                        factory: function () {
+                            return true;
+                        }
+                    });
+                    
+                    expect(Hilary.scope('newScope3').resolve('foo')).to.eql(true);
+                });
+            });
+            
             spec.describe('when scope is called with a valid name', function () {
                 it('should construct a new Hilary instance if one does not already exist', function () {
                     var newScope = Hilary.scope('newScope'),
@@ -50,6 +69,7 @@
                     
                     expect(Hilary.scope('newScope2').resolve('foo')).to.eql(true);
                 });
+                                
             });
             
             spec.describe('when createChildContainer is executed, the child instance', function () {
