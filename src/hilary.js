@@ -1080,11 +1080,11 @@
         return true;
     };
     
-    Hilary.scope = function (name) {
+    Hilary.scope = function (name, options) {
         if (scopes[name]) {
             return scopes[name];
         } else {
-            scopes[name] = new Hilary();
+            scopes[name] = new Hilary(options);
             return scopes[name];
         }
     };
