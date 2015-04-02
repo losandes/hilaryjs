@@ -19,14 +19,13 @@ In your startup file, require Hilary, create a new scope, and compose your app.
 
 ```JavaScript
 // startup.js
+"use strict";
+
 var Hilary = require('hilary'),
-    scope = new Hilary(),
-    compose,
-    start;
+    scope = Hilary.scope('app'),
+    compose;
 
-compose = function (scope) {
-    "use strict";
-
+compose = function () {
     scope.register({
         name: 'http',
         factory: function () {
@@ -44,14 +43,12 @@ compose = function (scope) {
     scope.register(require('./www.js'));
 };
 
-start = function () {
-    "use strict";
-
-    compose(scope);
+// start
+(function () {
+    compose();
     scope.resolve('server');
-};
+}());
 
-start();
 ```
 
 ```JavaScript
@@ -81,30 +78,19 @@ Add a script reference to Hilary before you load your modules:
 <script src="hilary.min.js"></script>
 ```
 
-Then define your scope, then your modules and finally compose your app:
+Then register modules on a named scope, and finally compose your app:
 
 ```JavaScript
-// spa.js
-(function (exports, Hilary) {
-    "use strict";
-    
-    exports.spa = new Hilary();
-}(window, Hilary));
-```
+// myRouteEngine.js
+Hilary.scope('spa').register({
+    name: 'myRouteEngine',
+    dependencies: ['myFactory'],
+    factory: function (myFactory) {
+        "use strict";
 
-```JavaScript
-// myModule.js
-(function (spa) {
-    spa.register({
-        name: 'myRouteEngine',
-        dependencies: ['myFactory'],
-        factory: function (myFactory) {
-            "use strict";
-    
-            // [CODE]
-        }
-    });
-}(spa));
+        // [CODE]
+    }
+});
 ```
 
 ```JavaScript
@@ -112,11 +98,10 @@ Then define your scope, then your modules and finally compose your app:
 (function (spa) {
     "use strict";
     
-    var compose,
-        start;
+    var compose;
     
-    compose = function (scope) {
-        scope.register({
+    compose = function () {
+        spa.register({
             name: 'myFactory',
             factory: function () {
                 "use strict";
@@ -126,11 +111,11 @@ Then define your scope, then your modules and finally compose your app:
         });
     };
     
-    start = function () {
-        compose(spa);
-        resolve('myRouteEngine');
-    };
+    // start
+    (function () {
+        compose();
+        spa.resolve('myRouteEngine');
+    }());
     
-    start();
-}(spa));
+}(Hilary.scope('spa')));
 ```
