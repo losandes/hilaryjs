@@ -1,11 +1,11 @@
 {
     "name": "hilary",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "hilary is a simple JavaScript IoC container written for Node.js and the browser",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
-    },   
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/Acatar/hilaryjs.git"
