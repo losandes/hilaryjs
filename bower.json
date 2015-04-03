@@ -6,7 +6,7 @@
     "authors": [
         "&y <andes.collab@gmail.com>"
     ],
-    "description": "hilary is a simple JavaScript Inversion of Control (IoC) container for dependency injection, written for Node.js and the browser",
+    "description": "a simple Dependency Injection (DI) library that provides Inversion of Control (IoC) capabilities in Node.js and the browser",
     "moduleType": [
         "amd",
         "globals",
