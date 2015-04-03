@@ -18,7 +18,7 @@
         "hbs": "~2.8.0",
         "less-middleware": "1.0.x",
         "serve-static": "1.8.x",
-        "hilary": "2.1.x"
+        "hilary": "*"
     },
     "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
     "license": "MIT"

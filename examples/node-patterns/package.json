@@ -8,7 +8,7 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
-        "hilary": "2.0.x"
+        "hilary": "*"
     },
     "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
     "license": "Apache 2"
