@@ -1,12 +1,12 @@
 {
   "name": "hilary",
   "main": "release/hilary.min.js",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "homepage": "https://github.com/Acatar/hilaryjs",
   "authors": [
     "&y <andes.collab@gmail.com>"
   ],
-  "description": "hilary is a simple JavaScript Inversion of Control (IoC) container for dependency injection, written for Node.js and the browser",
+  "description": "a simple Dependency Injection (DI) library that provides Inversion of Control (IoC) capabilities in Node.js and the browser",
   "moduleType": [
     "amd",
     "globals",
@@ -33,16 +33,16 @@
     "examples",
     "node_modules",
     "bower_components",
+    "src",
     "test"
   ],
-  "_release": "2.1.2",
+  "_release": "2.1.3",
   "_resolution": {
     "type": "version",
-    "tag": "v2.1.2",
-    "commit": "712cfee6526ff6bc476b7272bc6ab1bcc7dd9044"
+    "tag": "2.1.3",
+    "commit": "88d18b3e9fcfb474e45e8ee634f19dc997183c55"
   },
   "_source": "git://github.com/Acatar/hilaryjs.git",
-  "_target": "~2.1.2",
-  "_originalSource": "hilary",
-  "_direct": true
+  "_target": "*",
+  "_originalSource": "hilary"
 }

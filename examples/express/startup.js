@@ -69,8 +69,8 @@ compose = function (scope) {
 // start
 start = function () {
     "use strict";
-    var Hilary = require('hilary'), //require('../../index.js'), //require('hilary'),
-        scope = new Hilary().useAMD();
+    var Hilary = require('hilary'),
+        scope = Hilary.scope('express-example').useAMD();
     
     console.log('startup::@' + new Date().toISOString());
     console.log('startup::composing application');

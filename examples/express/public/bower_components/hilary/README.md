@@ -1,7 +1,7 @@
 hilary.js
 ========
 
-Hilary is an easy to use JavaScript IoC container written for Node.js and the browser.  Hilary's aim is to deliver low-ceremony dependency injection, to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
+Hilary is an easy to use JavaScript IoC container written for Node.js and the browser.  Hilary's aim is to deliver low-ceremony dependency injection (DI), to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
 You can find documentation and examples on our [wiki](https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
 
@@ -71,6 +71,11 @@ module.exports.factory = function (http) {
 
 Creating your First Browser App with Hilary
 ========
+Install Hilary (or you can download the source):
+
+```
+bower install hilary
+```
 
 Add a script reference to Hilary before you load your modules:
 

@@ -1,20 +1,17 @@
-/*globals spa, console*/
-
+/*globals Hilary, console*/
 (function (spa) {
     "use strict";
     
     var compose,
         start;
     
-    compose = function (scope) {
+    compose = function () {
         // compose the dependency graph here
     };
     
-    start = function () {
-        compose(spa);
+    (function () {
+        compose();
         spa.resolve('myFactory');
-    };
+    }());
     
-    start();
-    
-}(spa));
+}(Hilary.scope('spa')));

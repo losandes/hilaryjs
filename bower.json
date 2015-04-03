@@ -4,7 +4,7 @@
     "version": "2.1.3",
     "homepage": "https://github.com/Acatar/hilaryjs",
     "authors": [
-        "&y <andes.collab@gmail.com>"
+        "&y <andes.collab@gmail.com> (https://github.com/losandes)"
     ],
     "description": "a simple Dependency Injection (DI) library that provides Inversion of Control (IoC) capabilities in Node.js and the browser",
     "moduleType": [

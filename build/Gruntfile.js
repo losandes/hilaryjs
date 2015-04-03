@@ -1,6 +1,23 @@
+/*jslint node: true*/
 /*globals module*/
 module.exports = function (grunt) {
     "use strict";
+    
+    var fs = require('fs'),
+        filesToCopy = [{ src: ['../index.js'], dest: '../examples/express/node_modules/hilary/index.js', filter: 'isFile' }];
+    
+    (function (fs) {
+        var files = fs.readdirSync('../release'),
+            i,
+            name;
+        
+        for (i = 0; i < files.length; i += 1) {
+            name = files[i];
+            filesToCopy.push({ src: ['../release/' + name], dest: '../examples/express/public/bower_components/hilary/release/' + name, filter: 'isFile' });
+            filesToCopy.push({ src: ['../release/' + name], dest: '../examples/express/node_modules/hilary/src/' + name, filter: 'isFile' });
+        }
+        
+    }(fs));
     
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -72,17 +89,7 @@ module.exports = function (grunt) {
         },
         copy: {
             main: {
-                files: [
-                    { src: ['../release/hilary.min.js'], dest: '../examples/express/public/scripts/hilary.min.js', filter: 'isFile' },
-                    { src: ['../src/hilary.js'], dest: '../examples/express/public/scripts/hilary.js', filter: 'isFile' },
-                    { src: ['../release/hilary.amd.min.js'], dest: '../examples/express/public/scripts/hilary.amd.min.js', filter: 'isFile' },
-                    { src: ['../src/hilary.amd.js'], dest: '../examples/express/public/scripts/hilary.amd.js', filter: 'isFile' },
-                    { src: ['../release/hilary.jQueryEventEmitter.min.js'], dest: '../examples/express/public/scripts/hilary.jQueryEventEmitter.min.js', filter: 'isFile' },
-                    { src: ['../src/hilary.jQueryEventEmitter.js'], dest: '../examples/express/public/scripts/hilary.jQueryEventEmitter.js', filter: 'isFile' },
-                    { src: ['../src/hilary.js'], dest: '../examples/express/node_modules/hilary/src/hilary.js', filter: 'isFile' },
-                    { src: ['../src/hilary.amd.js'], dest: '../examples/express/node_modules/hilary/src/hilary.amd.js', filter: 'isFile' },
-                    { src: ['../index.js'], dest: '../examples/express/node_modules/hilary/index.js', filter: 'isFile' }
-                ]
+                files: filesToCopy
             }
         }
     });

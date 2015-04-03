@@ -1,5 +1,5 @@
 {
-    "name": "gidget",
+    "name": "hilary-test",
     "dependencies": {
         "jquery": "*",
         "mocha": "*",

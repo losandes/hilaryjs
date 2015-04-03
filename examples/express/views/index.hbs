@@ -1,15 +1,16 @@
 <h1>{{title}}</h1>
 <p>Welcome to {{title}}</p>
-<div>
+<div id="main">
     <a href="/">Home</a> |
     <a href="/foo">Foo</a>
+    
+    <br /><br /><br />
+    <div id="results"></div>
 </div>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-<script src="/scripts/hilary.js"></script>
-<script src="/scripts/hilary.amd.min.js"></script>
-<script src="/scripts/hilary.jQueryEventEmitter.js"></script>
-<script src="/scripts/definition.js"></script>
+<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+<script src="/bower_components/hilary/release/hilary.js"></script>
+<script src="/bower_components/hilary/release/hilary.jQueryEventEmitter.js"></script>
 <script src="/scripts/myFactory.js"></script>
 <script src="/scripts/module1.js"></script>
 <script src="/scripts/module2.js"></script>

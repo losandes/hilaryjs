@@ -1,5 +1,5 @@
-/*globals spa*/
-spa.register({
+/*globals Hilary*/
+Hilary.scope('spa').register({
     name: 'module2',
     factory: function () {
         "use strict";
