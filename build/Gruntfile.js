@@ -5,10 +5,31 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         uglify: {
-            options: {
-                banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+            debug: {
+                options: {
+                    banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+                    beautify: true,
+                    mangle: false,
+                    compress: false,
+                    sourceMap: false,
+                    drop_console: false,
+                    preserveComments: 'some'
+                },
+                files: {
+                    '../release/hilary.js': ['../src/hilary.js'],
+                    '../release/hilary.amd.js': ['../src/hilary.amd.js'],
+                    '../release/hilaryWithAMD.js': ['../src/hilary.js', '../src/hilary.amd.js'],
+                    '../release/hilary.jQueryEventEmitter.js': ['../src/hilary.jQueryEventEmitter.js']
+                }
             },
-            my_target: {
+            release: {
+                options: {
+                    banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+//                    mangle: true,
+//                    compress: true,
+//                    sourceMap: true,
+//                    drop_console: true
+                },
                 files: {
                     '../release/hilary.min.js': ['../src/hilary.js'],
                     '../release/hilary.amd.min.js': ['../src/hilary.amd.js'],
@@ -73,7 +94,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify', 'mocha', 'mochaTest', 'copy']);
+    grunt.registerTask('default', ['uglify:debug', 'uglify:release', 'mocha', 'mochaTest', 'copy']);
     grunt.registerTask('testnode', ['mochaTest']);
     grunt.registerTask('testbrowser', ['uglify', 'mocha']);
 
