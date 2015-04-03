@@ -21,11 +21,10 @@ In your startup file, require Hilary, create a new scope, and compose your app.
 // startup.js
 "use strict";
 
-var Hilary = require('hilary'),
-    scope = Hilary.scope('app'),
-    compose;
+var compose,
+    start;
 
-compose = function () {
+compose = function (scope) {
     scope.register({
         name: 'http',
         factory: function () {
@@ -43,11 +42,15 @@ compose = function () {
     scope.register(require('./www.js'));
 };
 
-// start
-(function () {
-    compose();
+start = function () {
+    var Hilary = require('hilary'),
+        scope = Hilary.scope('app');
+    
+    compose(scope);
     scope.resolve('server');
-}());
+};
+
+start();
 
 ```
 
