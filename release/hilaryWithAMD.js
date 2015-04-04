@@ -1,4 +1,4 @@
-/*! hilary-build 2015-04-03 */
+/*! hilary-build 2015-04-04 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -223,7 +223,7 @@
         return $this;
     };
     HilarysPrivateParts = function(scope, container, pipeline, parent, err) {
-        var $this = {};
+        var $this = {}, autowire;
         $this.HilaryModule = function(definition) {
             var $this = {};
             if (utils.notString(definition.name)) {
@@ -272,11 +272,31 @@
             pipeline.afterNewChild(opts, child);
             return child;
         };
+        autowire = function(hilaryModule) {
+            if (hilaryModule.dependencies || typeof hilaryModule.factory !== "function") {
+                return hilaryModule;
+            }
+            var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m, FN_ARG_SPLIT = /,/, FN_ARG = /^\s*(_?)(.+?)\1\s*$/, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, functionTxt, argsTxt, args, dependencies = [], i, name;
+            functionTxt = hilaryModule.factory.toString().replace(STRIP_COMMENTS, "");
+            argsTxt = functionTxt.match(FN_ARGS);
+            args = argsTxt[1].split(FN_ARG_SPLIT);
+            for (i = 0; i < args.length; i += 1) {
+                name = args[i].trim();
+                if (name && name.length > 0) {
+                    dependencies.push(name);
+                }
+            }
+            if (dependencies.length > 0) {
+                hilaryModule.dependencies = dependencies;
+            }
+            return hilaryModule;
+        };
         $this.register = function(hilaryModule) {
             pipeline.beforeRegister(hilaryModule);
             if (hilaryModule.name === constants.containerRegistration || hilaryModule.name === constants.parentContainerRegistration) {
                 throw err.argumentException("The name you are trying to register is reserved", "moduleName", hilaryModule.name);
             }
+            hilaryModule = autowire(hilaryModule);
             container[hilaryModule.name] = hilaryModule;
             $this.asyncHandler(function() {
                 pipeline.afterRegister(hilaryModule);
@@ -660,6 +680,7 @@
             return {
                 container: container,
                 parent: parent,
+                pipeline: pipeline,
                 HilaryModule: prive.HilaryModule,
                 register: prive.register,
                 constants: constants,

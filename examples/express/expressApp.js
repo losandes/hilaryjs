@@ -8,7 +8,7 @@ module.exports.dependencies = [
     'logger',
     'cookieParser',
     'bodyParser',
-    'serve-static',
+    'serveStatic',
     'less',
     'controllerFactory'
 ];

@@ -40,6 +40,7 @@
     <script src="hilary.browser.fixture.js"></script>
     <script src="../hilary.di.fixture.js"></script>
     <script src="../hilary.di.async.fixture.js"></script>
+    <script src="../hilary.di.autowire.fixture.js"></script>
     <script src="../hilary.singletons.fixture.js"></script>
     <script src="../hilary.pipeline.fixture.js"></script>
     <script src="hilary.browser.jQueryEventEmitter.fixture.js"></script>
@@ -51,6 +52,7 @@
         window['hilary.browser.fixture']();
         window['hilary.di.fixture'](Hilary, spec, createGuid, makeMockData);
         window['hilary.di.async.fixture'](Hilary, spec, createGuid, makeMockData, async);
+        window['hilary.di.autowire.fixture'](Hilary, spec);
         window['hilary.singletons.fixture'](Hilary, spec);
         window['hilary.pipeline.fixture'](Hilary, spec, createGuid, makeMockData, async);
         window['hilary.browser.jQueryEventEmitter.fixture'](Hilary, spec, $);

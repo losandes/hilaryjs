@@ -121,7 +121,7 @@ window['hilary.browser.amd.fixture'] = function () {
                     var expected = 'hello world!',
                         specScope = new Hilary().useAMD();
 
-                    specScope.define('messenger', function (msg) {
+                    specScope.define('messenger', [], function (msg) {
                         return msg;
                     });
 

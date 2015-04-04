@@ -18,7 +18,8 @@ compose = function (scope) {
         cookieParser = require('cookie-parser'),
         bodyParser = require('body-parser'),
         less = require('less-middleware'),
-        debug = require('debug')('expressdefault:server');
+        debug = require('debug')('expressdefault:server'),
+        serveStatic = require('serve-static');
     
     /*
     // we'll use the AMD define syntax to wire up the node dependencies, for simplicity.
@@ -28,15 +29,16 @@ compose = function (scope) {
     // normally would when using the service-location anti-pattern (i.e. node will to do it's
     // own caching and GC, as normal)
     */
-    scope.define('express',             function () { return express; });          // lib
-    scope.define('expressSingleton',    function () { return expressSingleton; }); // single instance used for app
-    scope.define('router',              function () { return router; });           // route engine
-    scope.define('favicon',             function () { return favicon; });
-    scope.define('logger',              function () { return logger; });
-    scope.define('cookieParser',        function () { return cookieParser; });
-    scope.define('bodyParser',          function () { return bodyParser; });
-    scope.define('less',                function () { return less; });
-    scope.define('debug',               function () { return debug; });
+    scope.define('express', [],            function () { return express; });          // lib
+    scope.define('expressSingleton', [],   function () { return expressSingleton; }); // single instance used for app
+    scope.define('router', [],             function () { return router; });           // route engine
+    scope.define('favicon', [],            function () { return favicon; });
+    scope.define('logger', [],             function () { return logger; });
+    scope.define('cookieParser', [],       function () { return cookieParser; });
+    scope.define('bodyParser', [],         function () { return bodyParser; });
+    scope.define('less', [],               function () { return less; });
+    scope.define('debug', [],              function () { return debug; });
+    scope.define('serveStatic', [],        function () { return serveStatic; });
     
     /*
     // Alternatively, you can let Hilary gracefully degrade to node's require function.
@@ -45,15 +47,16 @@ compose = function (scope) {
     //
     // The commented out definitions below serve as an example in this project
     */
-    //scope.define('http', function () { return require('http'); });
-    //scope.define('path', function () { return require('path'); });
-    //scope.define('serve-static',        function () { return require('serve-static'); });
+    //scope.define('http', [], function () { return require('http'); });
+    //scope.define('path', [], function () { return require('path'); });
+    //scope.define('serve-static', [], function () { return require('serve-static'); });
     
     
     scope.register(require('./expressApp.js'));             // configures middleware and controllers
     scope.register(require('./www.js'));                    // the HTTP server
     scope.register({
         name: 'controllerFactory',
+        dependencies: [],
         factory: function (expressApp, next) {
             scope.autoResolve(require('./controllers/'));   // execute the controller modules to register routes
             expressApp.use(scope.resolve('router'));        // use the router, after the controllers are all registered
@@ -79,7 +82,7 @@ start = function () {
     compose(scope);
     
     console.log('startup::starting server');
-    
+debugger;
     // start the app
     scope.resolve('www');
 };

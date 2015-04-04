@@ -1,10 +1,11 @@
 /*jslint node: true*/
 module.exports.name = 'www';
 module.exports.dependencies = ['expressApp', 'debug', 'http'];
-module.exports.factory = function (app, debug, http) {
+module.exports.factory = function (expressApp, debug, http) {
     "use strict";
     
-    var port,
+    var app = expressApp,
+        port,
         server,
         onError,
         onListening;
