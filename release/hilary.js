@@ -1,4 +1,4 @@
-/*! hilary-build 2015-04-04 */
+/*! hilary-build 2015-04-05 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -223,7 +223,7 @@
         return $this;
     };
     HilarysPrivateParts = function(scope, container, pipeline, parent, err) {
-        var $this = {}, autowire;
+        var $this = {}, autowire, getParameterNames, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g;
         $this.HilaryModule = function(definition) {
             var $this = {};
             if (utils.notString(definition.name)) {
@@ -276,20 +276,18 @@
             if (hilaryModule.dependencies || typeof hilaryModule.factory !== "function") {
                 return hilaryModule;
             }
-            var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m, FN_ARG_SPLIT = /,/, FN_ARG = /^\s*(_?)(.+?)\1\s*$/, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, functionTxt, argsTxt, args, dependencies = [], i, name;
-            functionTxt = hilaryModule.factory.toString().replace(STRIP_COMMENTS, "");
-            argsTxt = functionTxt.match(FN_ARGS);
-            args = argsTxt[1].split(FN_ARG_SPLIT);
-            for (i = 0; i < args.length; i += 1) {
-                name = args[i].trim();
-                if (name && name.length > 0) {
-                    dependencies.push(name);
-                }
-            }
-            if (dependencies.length > 0) {
-                hilaryModule.dependencies = dependencies;
-            }
+            hilaryModule.dependencies = getParameterNames(hilaryModule.factory);
             return hilaryModule;
+        };
+        getParameterNames = function(func) {
+            if (!func) {
+                return [];
+            }
+            var functionTxt = func.toString().replace(STRIP_COMMENTS, ""), result = functionTxt.slice(functionTxt.indexOf("(") + 1, functionTxt.indexOf(")")).match(ARGUMENT_NAMES);
+            if (result === null) {
+                result = [];
+            }
+            return result;
         };
         $this.register = function(hilaryModule) {
             pipeline.beforeRegister(hilaryModule);
