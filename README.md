@@ -28,21 +28,21 @@ var compose,
 // and register things like singletons
 compose = function (scope) {
     var isWin = /^win/.test(process.platform),
-        http;
+        httpSingleton;
             
     if (isWin) {
         // take advantage of the httpsys performance enhancements
-        http =  require('httpsys').http();
+        httpSingleton =  require('httpsys').http();
     } else {
         // otherwise, stick with the standard http module
-        http = require('http');
+        httpSingleton = require('http');
     }
     
     // register the http singleton
     scope.register({
         name: 'http',
         factory: function () {
-            return http;        
+            return httpSingleton;        
         }
     });
     
@@ -106,11 +106,12 @@ Then register modules on a named scope, and finally compose your app:
 Hilary.scope('spa').register({
     // other modules can depend on this one by name
     name: 'myRouteEngine',
-    // Hilary will try to resolve myFactory by looking for registrations by that name
-    factory: function (myFactory) {
+    // Hilary will try to resolve "someSingleton" by 
+    // looking for registrations by that name
+    factory: function (someSingleton) {
         "use strict";
 
-        console.log(myFactory);
+        console.log(someSingleton);
     }
 });
 ```
@@ -129,10 +130,10 @@ Hilary.scope('spa').register({
         
         spa.register({
             // other modules can depend on this one by name
-            name: 'myFactory',
+            name: 'someSingleton',
             // Parameterless factories are executed when being 
             // resolved. The result of this function will be passed 
-            // to any factories that depend on myFactory.
+            // to any factories that depend on "someSingleton".
             factory: function () {
                 "use strict";
 
