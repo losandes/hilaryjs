@@ -3,7 +3,7 @@ hilary.js
 
 Hilary is an easy to use JavaScript Inversion of Control (IoC) container written for Node.js and the browser.  Hilary's aim is to deliver low-ceremony dependency injection (DI), to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
-You can find documentation and examples on our [wiki](https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
+> You can find documentation and examples on our [wiki](https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
 
 > If the use of ``compose`` and ``start`` in examples that follow looks foreign to you, consider reading about the [composition root pattern](http://blog.ploeh.dk/2011/07/28/CompositionRoot/).
 
