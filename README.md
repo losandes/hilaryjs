@@ -24,32 +24,46 @@ In your startup file, require Hilary, create a new scope, and compose your app.
 var compose,
     start;
 
+// Compose the dependency graph
+// and register things like singletons
 compose = function (scope) {
+    var isWin = /^win/.test(process.platform),
+        http;
+            
+    if (isWin) {
+        // take advantage of the httpsys performance enhancements
+        http =  require('httpsys').http();
+    } else {
+        // otherwise, stick with the standard http module
+        http = require('http');
+    }
+    
+    // register the http singleton
     scope.register({
         name: 'http',
         factory: function () {
-            var isWin = /^win/.test(process.platform);
-            
-            if (isWin) {
-                // take advantage of the httpsys performance enhancements
-                return require('httpsys').http();
-            } else {
-                // otherwise, stick with the standard http module
-                return require('http');
-            }
+            return http;        
         }
     });
+    
+    // register the exports from www.js
     scope.register(require('./www.js'));
 };
 
 start = function () {
+    // create a scope for our application lifetime
     var Hilary = require('hilary'),
         scope = Hilary.scope('app');
     
+    // compose the application lifetime
     compose(scope);
+    
+    // Usually, resolving module(s) will result in 
+    // your application starting up
     scope.resolve('server');
 };
 
+// Start the app
 start();
 
 ```
@@ -57,7 +71,6 @@ start();
 ```JavaScript
 // www.js
 module.exports.name = 'server';
-module.exports.dependencies = ['http'];
 module.exports.factory = function (http) {
     "use strict";
     
@@ -91,12 +104,13 @@ Then register modules on a named scope, and finally compose your app:
 ```JavaScript
 // myRouteEngine.js
 Hilary.scope('spa').register({
+    // other modules can depend on this one by name
     name: 'myRouteEngine',
-    dependencies: ['myFactory'],
+    // Hilary will try to resolve myFactory by looking for registrations by that name
     factory: function (myFactory) {
         "use strict";
 
-        // [CODE]
+        console.log(myFactory);
     }
 });
 ```
@@ -108,20 +122,32 @@ Hilary.scope('spa').register({
     
     var compose;
     
+    // Compose the dependency graph
+    // and register things like singletons
     compose = function () {
+        var singleton = 'hello world!';
+        
         spa.register({
+            // other modules can depend on this one by name
             name: 'myFactory',
+            // Parameterless factories are executed when being 
+            // resolved. The result of this function will be passed 
+            // to any factories that depend on myFactory.
             factory: function () {
                 "use strict";
 
-                // [CODE]
+                return singleton;
             }
         });
     };
     
     // start
     (function () {
+        // Compose the application
         compose();
+        
+        // Usually, resolving module(s) will result in 
+        // your application starting up
         spa.resolve('myRouteEngine');
     }());
     
