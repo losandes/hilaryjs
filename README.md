@@ -5,7 +5,7 @@ Hilary is an easy to use JavaScript Inversion of Control (IoC) container written
 
 You can find documentation and examples on our [wiki](https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
 
-> Hilary 2.0 is not backwards compatible with previous versions of Hilary. We don't intend to release a backwards compatibility extension because v1 was in the wild for such a short time. If you already built a lot around v1, open an issue, and we will help you with compatibility/upgrades.
+> If the use of ``compose`` and ``start`` in examples that follow looks foreign to you, consider reading about the [composition root pattern](http://blog.ploeh.dk/2011/07/28/CompositionRoot/).
 
 Creating your First Node App with Hilary
 ========
