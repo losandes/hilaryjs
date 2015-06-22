@@ -1,4 +1,4 @@
-/*! hilary-build 2015-04-05 */
+/*! hilary-build 2015-06-22 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -258,18 +258,16 @@
                 setTimeout(_action, 0);
             }
         };
-        $this.createChildContainer = function(scope, options, config) {
+        $this.createChildContainer = function(scope, options) {
             options = options || {};
-            var opts, child;
-            opts = {
-                parentContainer: scope
-            };
-            pipeline.beforeNewChild(opts);
-            child = new Hilary(opts);
+            var child;
+            options.parentContainer = scope;
+            pipeline.beforeNewChild(options);
+            child = new Hilary(options);
             if (scope.registerAsync) {
                 child.useAsync(async);
             }
-            pipeline.afterNewChild(opts, child);
+            pipeline.afterNewChild(options, child);
             return child;
         };
         autowire = function(hilaryModule) {
@@ -643,7 +641,17 @@
     Hilary = function(options) {
         var $this = this, config = options || {}, container = {}, parent = config.parentContainer, pipeline = config.pipeline || new Pipeline($this, utils), err = new Exceptions(utils, pipeline), ext = {}, init = {}, prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
         $this.createChildContainer = function(options) {
-            return prive.createChildContainer($this, options, config);
+            var opts;
+            if (typeof options === "string") {
+                opts = {
+                    name: options
+                };
+            } else if (utils.isObject(options)) {
+                opts = options;
+            } else {
+                opts = {};
+            }
+            return prive.createChildContainer($this, opts);
         };
         $this.register = function(definition) {
             prive.register(new prive.HilaryModule(definition));

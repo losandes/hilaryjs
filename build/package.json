@@ -6,8 +6,17 @@
         "grunt": "0.4.x",
         "grunt-contrib-uglify": "0.7.x",
         "grunt-contrib-copy": "0.4.x",
-        "grunt-mocha": "*",
-        "grunt-mocha-test": "*"
+        "grunt-mocha-test": "*",
+        "grunt-karma": "*",
+        "karma-mocha": "*",
+        "karma-chai": "*",
+        "karma-chrome-launcher": "*",
+        "karma-firefox-launcher": "*",
+        "karma-safari-launcher": "*",
+        "karma-phantomjs-launcher": "*",
+        "karma-ie-launcher": "*",
+        "karma-nyan-reporter": "*",
+        "karma-mocha-reporter": "*"
     },
     "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
     "license": "Apache 2.0"
