@@ -368,22 +368,20 @@
             }
         };
 
-        $this.createChildContainer = function (scope, options, config) {
+        $this.createChildContainer = function (scope, options) {
             options = options || {};
-            var opts, child;
+            var child;
 
-            opts = {
-                parentContainer: scope
-            };
+            options.parentContainer = scope;
 
-            pipeline.beforeNewChild(opts);
-            child = new Hilary(opts);
+            pipeline.beforeNewChild(options);
+            child = new Hilary(options);
 
             if (scope.registerAsync) {
                 child.useAsync(async);
             }
 
-            pipeline.afterNewChild(opts, child);
+            pipeline.afterNewChild(options, child);
 
             return child;
         };
@@ -944,7 +942,19 @@
         // @returns new Hilary scope with parent set to this (the current Hilary scope)
         */
         $this.createChildContainer = function (options) {
-            return prive.createChildContainer($this, options, config);
+            var opts;
+            
+            if (typeof options === 'string') {
+                // the options argument must be a named scope
+                opts = { name: options };
+            } else if (utils.isObject(options)) {
+                // the options argument must be an object literal
+                opts = options;
+            } else {
+                opts = {};
+            }
+            
+            return prive.createChildContainer($this, opts);
         };
         
         /*

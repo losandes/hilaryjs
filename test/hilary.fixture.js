@@ -123,6 +123,22 @@
 
                     expect(child.registerAsync).to.be.a('function');
                 });
+                
+                it('should be resolvable by name, if the child scope is named', function () {
+                    var sut = Hilary.scope('childSutTest'),
+                        child = sut.createChildContainer({ name: 'childSutTestChild' }),
+                        child2 = sut.createChildContainer('childSutTestChild2');
+                    
+                    sut.register({
+                        name: 'foo',
+                        factory: function () {
+                            return true;
+                        }
+                    });
+                    
+                    expect(Hilary.scope('childSutTestChild').resolve('foo')).to.eql(true);
+                    expect(Hilary.scope('childSutTestChild2').resolve('foo')).to.eql(true);
+                });
             });
 
         });

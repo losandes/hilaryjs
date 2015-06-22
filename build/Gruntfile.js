@@ -2,23 +2,36 @@
 /*globals module*/
 module.exports = function (grunt) {
     "use strict";
-    
-    var fs = require('fs'),
-        filesToCopy = [{ src: ['../index.js'], dest: '../examples/express/node_modules/hilary/index.js', filter: 'isFile' }];
-    
+
+    var os = 'osx',
+        fs = require('fs'),
+        filesToCopy = [{
+            src: ['../index.js'],
+            dest: '../examples/express/node_modules/hilary/index.js',
+            filter: 'isFile'
+        }];
+
     (function (fs) {
         var files = fs.readdirSync('../release'),
             i,
             name;
-        
+
         for (i = 0; i < files.length; i += 1) {
             name = files[i];
-            filesToCopy.push({ src: ['../release/' + name], dest: '../examples/express/public/bower_components/hilary/release/' + name, filter: 'isFile' });
-            filesToCopy.push({ src: ['../release/' + name], dest: '../examples/express/node_modules/hilary/src/' + name, filter: 'isFile' });
+            filesToCopy.push({
+                src: ['../release/' + name],
+                dest: '../examples/express/public/bower_components/hilary/release/' + name,
+                filter: 'isFile'
+            });
+            filesToCopy.push({
+                src: ['../release/' + name],
+                dest: '../examples/express/node_modules/hilary/src/' + name,
+                filter: 'isFile'
+            });
         }
-        
+
     }(fs));
-    
+
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         uglify: {
@@ -42,10 +55,10 @@ module.exports = function (grunt) {
             release: {
                 options: {
                     banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-//                    mangle: true,
-//                    compress: true,
-//                    sourceMap: true,
-//                    drop_console: true
+                        //                    mangle: true,
+                        //                    compress: true,
+                        //                    sourceMap: true,
+                        //                    drop_console: true
                 },
                 files: {
                     '../release/hilary.min.js': ['../src/hilary.js'],
@@ -61,7 +74,7 @@ module.exports = function (grunt) {
                     reporter: 'nyan', // 'spec', // 'min', // 'nyan', // 'xunit',
                     //captureFile: 'results.txt', // Optionally capture the reporter output to a file
                     quiet: false // Optionally suppress output to standard out (defaults to false)
-                    //clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false)
+                        //clearRequireCache: false // Optionally clear the require cache before running tests (defaults to false)
                 },
                 require: 'coverage/blanket',
                 src: ['../test/node/test.js']
@@ -78,13 +91,50 @@ module.exports = function (grunt) {
                 src: ['../test/node/test.js']
             }
         },
-        mocha: {
-            test: {
-                options: {
-                    reporter: 'Nyan', //Spec //Nyan
-                    run: true
-                },
-                src: ['../test/browser/test.html']
+        karma: {
+            options: {
+                // see http://karma-runner.github.io/0.8/config/configuration-file.html
+                basePath: '../',
+                frameworks: ['mocha', 'chai'],
+                files: [
+                    "test/browser/bower_components/jquery/dist/jquery.min.js",
+                    "test/browser/bower_components/async/lib/async.js",
+                    "test/browser/test.setup.js",
+                    // hilary
+                    "release/hilary.min.js",
+                    "release/hilary.jQueryEventEmitter.min.js",
+                    "release/hilary.amd.min.js",
+                    // mock data
+                    "test/mockData.js",
+                    // specs
+                    { pattern: 'test/*.fixture.js', included: true, served: true }, // watched: false, served: true}
+                    { pattern: 'test/browser/*.fixture.js', included: true, served: true },
+                    // runner
+                    "test/browser/test.js"
+                ],
+                reporters: ['nyan'],
+                reportSlowerThan: 2000,
+                singleRun: true
+            },
+            // developer testing mode
+            unit_osx: {
+                browsers: ['Chrome', 'Firefox', 'Safari']
+            },
+            debug_osx: {
+                browsers: ['Chrome'],
+                singleRun: false
+            },
+            unit_windows: {
+                browsers: ['Chrome', 'Firefox', 'IE']
+            },
+            debug_windows: {
+                browsers: ['Chrome'],
+                singleRun: false
+            },
+            //continuous integration mode: run tests once in PhantomJS browser.
+            continuous: {
+                singleRun: true,
+                browsers: ['PhantomJS']
             }
         },
         copy: {
@@ -97,12 +147,17 @@ module.exports = function (grunt) {
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-mocha-test'); // node
-    grunt.loadNpmTasks('grunt-mocha');      // browser
+    grunt.loadNpmTasks('grunt-mocha'); // browser
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-karma');
+    
+    // arguments
+    os = grunt.option('os') || 'osx';
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify:debug', 'uglify:release', 'mocha', 'mochaTest', 'copy']);
-    grunt.registerTask('testnode', ['mochaTest']);
-    grunt.registerTask('testbrowser', ['uglify', 'mocha']);
+    grunt.registerTask('default', ['uglify:debug', 'uglify:release', 'mochaTest', 'karma:unit_' + os, 'copy']);
+    grunt.registerTask('test_node', ['mochaTest']);
+    grunt.registerTask('test_browser', ['uglify', 'karma:unit_' + os]);
+    grunt.registerTask('debug_browser', ['uglify', 'karma:debug_' + os]);
 
 };
