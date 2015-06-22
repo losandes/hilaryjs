@@ -653,6 +653,12 @@
             }
             return prive.createChildContainer($this, opts);
         };
+        $this.setParentContainer = function(scope) {
+            if (typeof scope.register === "function" && typeof scope.resolve === "function") {
+                parent = scope;
+                prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
+            }
+        };
         $this.register = function(definition) {
             prive.register(new prive.HilaryModule(definition));
             return $this;

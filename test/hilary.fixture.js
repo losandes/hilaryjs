@@ -140,6 +140,22 @@
                     expect(Hilary.scope('childSutTestChild2').resolve('foo')).to.eql(true);
                 });
             });
+            
+            spec.describe('when scope parent is set explicitly', function () {
+                it('should support hierarchical resolution', function () {
+                    Hilary.scope('parentSutTest').register({
+                        name: 'foo',
+                        factory: function () {
+                            return true;
+                        }
+                    });
+                    
+                    Hilary.scope('parentSutTestChild').setParentContainer(Hilary.scope('parentSutTest'));
+                    
+                    expect(Hilary.scope('parentSutTestChild').resolve('foo')).to.eql(true);
+                });
+                                
+            });
 
         });
         

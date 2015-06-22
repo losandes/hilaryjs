@@ -958,6 +958,23 @@
         };
         
         /*
+        // allows you to set a scopes parent container explicitly
+        // @param options.utils (object): utilities to use for validation (i.e. isFunction)
+        // @param options.exceptions (object): exception handling
+        //
+        // @returns new Hilary scope with parent set to this (the current Hilary scope)
+        */
+        $this.setParentContainer = function (scope) {
+            if (typeof scope.register === 'function' && typeof scope.resolve === 'function') {
+                // set the parent
+                parent = scope;
+                
+                // update the private functionality
+                prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
+            }
+        };
+        
+        /*
         // register a module by name
         // @param definition (object): the module defintion: at least the name and factory properties are required
         // @returns this (the Hilary scope)
