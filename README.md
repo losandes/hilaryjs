@@ -3,6 +3,8 @@ hilary.js
 
 Hilary is an easy to use JavaScript Inversion of Control (IoC) container written for Node.js and the browser.  Hilary's aim is to deliver low-ceremony dependency injection (DI), to aid in decoupling JavaScript modules and testing.  It's named after Hilary Page, who designed building blocks that later became known as Legos.
 
+Also check out [generator-hilary](https://github.com/losandes/generator-hilary), our Yeoman generator.
+
 > You can find documentation and examples on our [wiki](https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
 
 > If the use of ``compose`` and ``start`` in examples that follow looks foreign to you, consider reading about the [composition root pattern](http://blog.ploeh.dk/2011/07/28/CompositionRoot/).
@@ -42,7 +44,7 @@ compose = function (scope) {
     scope.register({
         name: 'http',
         factory: function () {
-            return httpSingleton;        
+            return httpSingleton;
         }
     });
     
@@ -58,7 +60,7 @@ start = function () {
     // compose the application lifetime
     compose(scope);
     
-    // Usually, resolving module(s) will result in 
+    // Usually, resolving module(s) will result in
     // your application starting up
     scope.resolve('server');
 };
@@ -106,7 +108,7 @@ Then register modules on a named scope, and finally compose your app:
 Hilary.scope('spa').register({
     // other modules can depend on this one by name
     name: 'myRouteEngine',
-    // Hilary will try to resolve "someSingleton" by 
+    // Hilary will try to resolve "someSingleton" by
     // looking for registrations by that name
     factory: function (someSingleton) {
         "use strict";
@@ -131,8 +133,8 @@ Hilary.scope('spa').register({
         spa.register({
             // other modules can depend on this one by name
             name: 'someSingleton',
-            // Parameterless factories are executed when being 
-            // resolved. The result of this function will be passed 
+            // Parameterless factories are executed when being
+            // resolved. The result of this function will be passed
             // to any factories that depend on "someSingleton".
             factory: function () {
                 "use strict";
@@ -147,7 +149,7 @@ Hilary.scope('spa').register({
         // Compose the application
         compose();
         
-        // Usually, resolving module(s) will result in 
+        // Usually, resolving module(s) will result in
         // your application starting up
         spa.resolve('myRouteEngine');
     }());
