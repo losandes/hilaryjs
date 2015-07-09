@@ -6,6 +6,7 @@
         Hilary.extend('registerBlueprint', function (scope) {
             var context = scope.getContext(),
                 utils = context.utils,
+                exceptions = context.exceptionHandlers,
                 registerBlueprint;
                 
             registerBlueprint = function (name, implementationName) {
@@ -30,10 +31,7 @@
                 if (blueprintNotBlueprint && callbackIsFunc) {
                     callback([errorMessage], false);
                 } else if (blueprintNotBlueprint) {
-                    return {
-                        errors: [errorMessage],
-                        result: false
-                    };
+                    throw exceptions.makeException(errorMessage);
                 }
 
                 newCallback = function (err, result) {
@@ -48,6 +46,8 @@
 
                     if (blueprintResult.result) {
                         registerBlueprint(name, implementationName);
+                    } else {
+                        throw exceptions.makeException('Blueprint Signature Match Failure', implementationName + ' does not implement ' + blueprintName, blueprintResult.errors);
                     }
 
                     return blueprintResult;
