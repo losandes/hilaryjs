@@ -25,6 +25,9 @@
     <script src="../hilary.di.autowire.fixture.js"></script>
     <script src="../hilary.singletons.fixture.js"></script>
     <script src="../hilary.pipeline.fixture.js"></script>
+    <script src="../hilary.blueprint.fixture.js"></script>
+    <script src="../hilary.id.fixture.js"></script>
+    <script src="../hilary.is.fixture.js"></script>
     <script src="hilary.browser.jQueryEventEmitter.fixture.js"></script>
     <script src="hilary.browser.amd.fixture.js"></script>
     
@@ -35,7 +38,7 @@
         // Only tests run in real browser, injected script run if options.run == true
         if (navigator.userAgent.indexOf('PhantomJS') < 0) {
             mocha.run();
-        }    
+        }
     </script>
 </body>
 </html>

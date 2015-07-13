@@ -1,4 +1,4 @@
-/*! hilary-build 2015-07-09 */
+/*! hilary-build 2015-07-13 */
 (function(exports, Hilary) {
     "use strict";
     if (exports.AMDContainer && exports.define && exports.require) {
@@ -7,28 +7,28 @@
     var extension = function(Hilary) {
         var AMDContainer;
         Hilary.extend("useAMD", function(scope) {
-            var context = scope.getContext(), utils = context.utils, err = context.exceptionHandlers, constants = context.constants;
+            var context = scope.getContext(), is = context.is, err = context.exceptionHandlers, constants = context.constants;
             return function() {
                 scope.define = function(moduleName, dependencies, factory) {
-                    if (utils.isFunction(factory)) {
+                    if (is.function(factory)) {
                         return scope.register({
                             name: moduleName,
                             dependencies: dependencies,
                             factory: factory
                         });
-                    } else if (utils.isString(moduleName) && utils.isFunction(dependencies)) {
+                    } else if (is.string(moduleName) && is.function(dependencies)) {
                         return scope.register({
                             name: moduleName,
                             factory: dependencies
                         });
-                    } else if (utils.isArray(moduleName) && utils.isFunction(dependencies)) {
+                    } else if (is.array(moduleName) && is.function(dependencies)) {
                         return scope.autoResolve({
                             dependencies: moduleName,
                             factory: dependencies
                         });
-                    } else if (utils.isFunction(moduleName)) {
+                    } else if (is.function(moduleName)) {
                         return scope.require(moduleName);
-                    } else if (utils.isObject(moduleName)) {
+                    } else if (is.object(moduleName)) {
                         var prop;
                         for (prop in moduleName) {
                             if (moduleName.hasOwnProperty(prop)) {
@@ -39,7 +39,7 @@
                             }
                         }
                         return scope;
-                    } else if (utils.isString(moduleName) && utils.isObject(dependencies)) {
+                    } else if (is.string(moduleName) && is.object(dependencies)) {
                         return scope.register({
                             name: moduleName,
                             factory: dependencies
@@ -49,7 +49,7 @@
                     }
                 };
                 scope.require = function(dependencies, factory) {
-                    if (utils.isFunction(dependencies)) {
+                    if (is.function(dependencies)) {
                         return dependencies(scope.require, context.container, window || module);
                     } else if (typeof dependencies === "string") {
                         return scope.resolve(dependencies);
@@ -63,7 +63,7 @@
                 return scope;
             };
         });
-        AMDContainer = new Hilary().useAMD();
+        AMDContainer = Hilary.scope("__AMD").useAMD();
         exports.AMDContainer = AMDContainer;
         exports.define = AMDContainer.define;
         exports.define.amd = {};
