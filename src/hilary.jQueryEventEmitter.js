@@ -1,5 +1,5 @@
-(function (exports, Hilary, $) {
-    "use strict";
+(function (Hilary, $) {
+    'use strict';
     
     Hilary.onInit(function (scope, config) {
         scope.registerEvent('hilary::before::register', function (scope, moduleInfo) {
@@ -31,4 +31,4 @@
         });
     });
 
-}(window, window.Hilary, window.jQuery));
+}(window.Hilary, window.jQuery));

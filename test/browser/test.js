@@ -1,6 +1,6 @@
-/*globals Hilary, spec, createGuid, makeMockData, async, jQuery, mocha*/
-(function (exports, Hilary, spec, createGuid, makeMockData, async, $, mocha) {
-    "use strict";
+/*globals createGuid, makeMockData*/
+(function (exports, Hilary, spec, createGuid, makeMockData, async, $) {
+    'use strict';
     
     exports['hilary.fixture'](Hilary, spec, createGuid, makeMockData, async);
     exports['hilary.browser.fixture']();
@@ -11,5 +11,6 @@
     exports['hilary.pipeline.fixture'](Hilary, spec, createGuid, makeMockData, async);
     exports['hilary.browser.jQueryEventEmitter.fixture'](Hilary, spec, $);
     exports['hilary.browser.amd.fixture']();
+    exports['hilary.blueprint.fixture'](Hilary, spec, createGuid, makeMockData, async);
 
 }(window, Hilary, spec, createGuid, makeMockData, async, jQuery, mocha));

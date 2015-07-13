@@ -1,5 +1,5 @@
-/*! hilary-build 2015-07-09 */
-(function(exports, Hilary, $) {
+/*! hilary-build 2015-07-13 */
+(function(Hilary, $) {
     "use strict";
     Hilary.onInit(function(scope, config) {
         scope.registerEvent("hilary::before::register", function(scope, moduleInfo) {
@@ -45,4 +45,4 @@
             } ]);
         });
     });
-})(window, window.Hilary, window.jQuery);
+})(window.Hilary, window.jQuery);

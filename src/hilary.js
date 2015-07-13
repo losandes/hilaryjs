@@ -1,19 +1,17 @@
-/*jslint regexp: true, nomen: true, bitwise: true*/
-/*globals module, console, Window, Error, require*/
-
 /*
 // A simple Inversion of Control container
 // It's named after Hilary Page, who designed building blocks that later became known as Legos.
 */
 (function (exports, nodeRequire) {
-    "use strict";
+    'use strict';
     
     if (exports.Hilary) {
         // Hilary was already defined; ignore this instance
         return false;
     }
     
-    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {}, initializers = [], Utils, utils, Exceptions, async;
+    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {},
+        initializers = [], is, id, asyncHandler, Blueprint, Exceptions, async;
     
     constants = {
         containerRegistration: 'hilary::container',
@@ -31,98 +29,82 @@
         }
     };
     
-    Utils = function () {
-        var $this = {},
-            objProto = Object.prototype,
-            objProtoToStringFunc = objProto.toString,
-            objProtoHasOwnFunc = objProto.hasOwnProperty,
+    is = (function () {
+        var self = {
+                getType: undefined,
+                defined: undefined,
+                nullOrUndefined: undefined,
+                function: undefined,
+                object: undefined,
+                array: undefined,
+                string: undefined,
+                boolean: undefined,
+                datetime: undefined,
+                regexp: undefined,
+                number: undefined,
+                nullOrWhitespace: undefined,
+                money: undefined,
+                decimal: undefined,
+                Window: undefined,
+                not: {
+                    defined: undefined,
+                    function: undefined,
+                    object: undefined,
+                    array: undefined,
+                    string: undefined,
+                    boolean: undefined,
+                    datetime: undefined,
+                    regexp: undefined,
+                    number: undefined,
+                    nullOrWhitespace: undefined,
+                    money: undefined,
+                    decimal: undefined,
+                    Window: undefined
+                }
+            },
             class2Types = {},
-            class2ObjTypes = ["Boolean", "Number", "String", "Function", "Array", "Date", "RegExp", "Object", "Error"],
+            class2ObjTypes = ['Boolean', 'Number', 'String', 'Function', 'Array', 'Date', 'RegExp', 'Object'],
             i,
             name;
 
         for (i = 0; i < class2ObjTypes.length; i += 1) {
             name = class2ObjTypes[i];
-            class2Types["[object " + name + "]"] = name.toLowerCase();
+            class2Types['[object ' + name + ']'] = name.toLowerCase();
         }
 
-        $this.type = function (obj) {
-            if (typeof obj === "undefined") {
-                return "undefined";
+        self.getType = function (obj) {
+            if (typeof obj === 'undefined') {
+                return 'undefined';
             }
-            
+
             if (obj === null) {
                 return String(obj);
             }
 
-            return typeof obj === "object" || typeof obj === "function" ?
-                    class2Types[objProtoToStringFunc.call(obj)] || "object" :
-                    typeof obj;
+            return typeof obj === 'object' || typeof obj === 'function' ?
+                class2Types[Object.prototype.toString.call(obj)] || 'object' :
+                typeof obj;
         };
 
-        $this.notDefined = function (obj) {
+        self.defined = function (obj) {
             try {
-                return this.type(obj) === 'undefined';
-            } catch (e) {
-                return true;
-            }
-        };
-
-        $this.isDefined = function (obj) {
-            try {
-                return this.type(obj) !== 'undefined';
+                return self.getType(obj) !== 'undefined';
             } catch (e) {
                 return false;
             }
         };
-
-        $this.isFunction = function (obj) {
-            return this.type(obj) === 'function';
-        };
-
-        $this.notFunction = function (obj) {
-            return this.type(obj) !== 'function';
+        
+        self.not.defined = function (obj) {
+            return self.defined(obj) === false;
         };
         
-        $this.isObject = function (obj) {
-            return this.type(obj) === 'object';
+        self.nullOrUndefined = function (obj) {
+            return self.not.defined(obj) || obj === null;
         };
         
-        $this.notObject = function (obj) {
-            return this.type(obj) !== 'object';
-        };
-
-        $this.isArray = function (obj) {
-            return this.type(obj) === 'array';
-        };
-
-        $this.notArray = function (obj) {
-            return this.type(obj) !== 'array';
-        };
-
-        $this.isString = function (obj) {
-            return this.type(obj) === 'string';
-        };
-
-        $this.notString = function (obj) {
-            return this.type(obj) !== 'string';
-        };
-
-        $this.isBoolean = function (obj) {
-            return this.type(obj) === 'boolean';
-        };
-
-        $this.notBoolean = function (obj) {
-            return this.type(obj) !== 'boolean';
-        };
-
-        $this.notNullOrWhitespace = function (str) {
-            if (!str) {
+        self.not.nullOrWhitespace = function (str) {
+            if (typeof str === 'undefined' || typeof str === null || self.not.string(str)) {
                 return false;
-            }
-
-            if (this.notString(str)) {
-                throw new Error('Unable to check if a non-string is whitespace.');
             }
             
             // ([^\s]*) = is not whitespace
@@ -131,28 +113,415 @@
             return (/([^\s])/).test(str);
         };
 
-        $this.isNullOrWhitespace = function (str) {
-            return this.notNullOrWhitespace(str) === false;
+        self.nullOrWhitespace = function (str) {
+            return self.not.nullOrWhitespace(str) === false;
         };
         
-        $this.createGuid = function () {
-            return "zxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0, v = c === "x" ? r : r & 3 | 8;
+        self.function = function (obj) {
+            return self.getType(obj) === 'function';
+        };
+        
+        self.not.function = function (obj) {
+            return self.function(obj) === false;
+        };
+        
+        self.object = function (obj) {
+            return self.getType(obj) === 'object';
+        };
+        
+        self.not.object = function (obj) {
+            return self.object(obj) === false;
+        };
+        
+        self.array = function (obj) {
+            return self.getType(obj) === 'array';
+        };
+        
+        self.not.array = function (obj) {
+            return self.array(obj) === false;
+        };
+        
+        self.string = function (obj) {
+            return self.getType(obj) === 'string';
+        };
+        
+        self.not.string = function (obj) {
+            return self.string(obj) === false;
+        };
+        
+        self.boolean = function (obj) {
+            return self.getType(obj) === 'boolean';
+        };
+        
+        self.not.boolean = function (obj) {
+            return self.boolean(obj) === false;
+        };
+        
+        self.datetime = function (obj) {
+            return self.getType(obj) === 'date';
+        };
+        
+        self.not.datetime = function (obj) {
+            return self.datetime(obj) === false;
+        };
+        
+        self.regexp = function (obj) {
+            return self.getType(obj) === 'regexp';
+        };
+        
+        self.not.regexp = function (obj) {
+            return self.regexp(obj) === false;
+        };
+        
+        self.number = function (obj) {
+            return self.getType(obj) === 'number';
+        };
+        
+        self.not.number = function (obj) {
+            return self.number(obj) === false;
+        };
+
+        self.money = function (val) {
+            return self.defined(val) && (/^(?:-)?[0-9]\d*(?:\.\d{0,2})?$/).test(val.toString());
+        };
+        
+        self.not.money = function (val) {
+            return self.money(val) === false;
+        };
+        
+        self.decimal = function (num, places) {
+            if (self.not.number(num)) {
+                return false;
+            }
+            
+            if (!places && self.number(num)) {
+                return true;
+            }
+            
+            if (!num || +(+num || 0).toFixed(places) !== +num) {
+                return false;
+            }
+            
+            return true;
+        };
+        
+        self.not.decimal = function (val) {
+            return self.decimal(val) === false;
+        };
+        
+        self.Window = function (obj) {
+            return self.is.defined(Window) && obj instanceof Window;
+        };
+        
+        self.not.Window = function (obj) {
+            return self.is.Window(obj) === false;
+        };
+
+        return self;
+    }());
+    
+    id = (function () {
+        var self = {
+                createUid: undefined,
+                createGuid: undefined
+            },
+            createRandomString;
+        
+        createRandomString = function (templateString) {
+            return templateString.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : r & 3 | 8;
                 return v.toString(16);
             });
         };
         
-        return $this;
-    };
+        self.createUid = function (length) {
+            var template;
+            
+            length = length || 12;
+            template = new Array(length + 1).join('x');
+            
+            return createRandomString(template);
+        };
+        
+        self.createGuid = function () {
+            return createRandomString('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx');
+        };
+
+        return self;
+    }());
     
-    utils = new Utils();
+    asyncHandler = (function (is) {
+        var self = {
+            runAsync: undefined
+        };
+
+        self.runAsync = function (func, highPriority) {
+            if (highPriority === true && is.defined(process) && is.function(process.nextTick)) {
+                process.nextTick(func);
+            } else {
+                setTimeout(func, 0);
+            }
+            
+//            else if (is.defined(setImmediate)) {
+//                setImmediate(func);
+//            }
+        };
+
+        return self;
+    }(is));
     
-    Exceptions = function (utils, pipeline) {
+    Blueprint = (function (utils, is, id) {
+        var Blueprint,
+            signatureMatches,
+            syncSignatureMatches,
+            validateSignature,
+            syncValidateSignature,
+            validateProperty,
+            validatePropertyWithDetails,
+            validatePropertyType,
+            validateFunctionArguments,
+            validateDecimalWithPlaces,
+            locale = {
+                errors: {
+                    blueprint: {
+                        requiresImplementation: 'An implementation is required to create a new instance of an interface',
+                        requiresProperty: 'The implementation is missing a required property ',
+                        requiresArguments: 'The implementation of this function requires arguments ',
+                        missingConstructorArgument: 'An object literal is required when constructing a Blueprint',
+                        reservedPropertyName_singatureMatches: 'signatureMatches is a reserved property name for Blueprints',
+                        missingSignatureMatchesImplementationArgument:'A first argument of an object that should implement an interface is required',
+                        missingSignatureMatchesCallbackArgument: 'A callback function is required as the second argument to signatureMatches'
+                    }
+                }
+            };
+        
+        /*
+        // wraps the callback and validates that the implementation matches the blueprint signature
+        */
+        signatureMatches = function (implementation, blueprint, callback) {
+            var newCallback;
+            
+            implementation.__interfaces = implementation.__interfaces || {};
+            
+            newCallback = function (err, result) {
+                if (!err) {
+                    implementation.__interfaces[blueprint.__blueprintId] = true;
+                }
+                
+                if (typeof callback === 'function') {
+                    callback(err, result);
+                }
+            };
+            
+            validateSignature(implementation, blueprint, newCallback);
+        };
+        
+        /*
+        // wraps the callback and validates that the implementation matches the blueprint signature
+        */
+        syncSignatureMatches = function (implementation, blueprint) {
+            var validationResult;
+            
+            implementation.__interfaces = implementation.__interfaces || {};
+            validationResult = syncValidateSignature(implementation, blueprint);
+            
+            if (validationResult.result) {
+                implementation.__interfaces[blueprint.__blueprintId] = true;
+            }
+            
+            return validationResult;
+        };
+        
+        /*
+        // validates that the implementation matches the blueprint signature
+        // executes the callback with errors, if any, and a boolean value for the result
+        */
+        validateSignature = function (implementation, blueprint, callback) {
+            var validationResult = syncValidateSignature(implementation, blueprint);
+
+            if (validationResult.result) {
+                callback(null, true);
+            } else {
+                callback(validationResult.errors, false);
+            }
+        };
+        
+        /*
+        // validates that the implementation matches the blueprint signature
+        // executes the callback with errors, if any, and a boolean value for the result
+        */
+        syncValidateSignature = function (implementation, blueprint) {
+            var errors = [],
+                prop;
+            
+            // if the implementation was already validated previously, skip validation
+            if (implementation.__interfaces[blueprint.__blueprintId]) {
+                return {
+                    errors: null,
+                    result: true
+                };
+            }
+            
+            // validate each blueprint property
+            for (prop in blueprint) {
+                if (blueprint.hasOwnProperty(prop) && prop !== '__blueprintId'  && prop !== 'signatureMatches') {
+                    validateProperty(implementation, prop, blueprint[prop], errors);
+                }
+            }
+
+            if (errors.length > 0) {
+                return {
+                    errors: errors,
+                    result: false
+                };
+            } else {
+                return {
+                    errors: null,
+                    result: true
+                };
+            }
+        };
+        
+        /*
+        // validates a single property from the blueprint
+        */
+        validateProperty = function (implementation, propertyName, propertyValue, errors) {
+            if (is.string(propertyValue)) {
+                validatePropertyType(implementation, propertyName, propertyValue, errors);
+            } else if (is.object(propertyValue)) {
+                validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
+            }
+        };
+        
+        /*
+        // validates blueprint properties that have additional details set, such as function arguments and decimal places
+        */
+        validatePropertyWithDetails = function (implementation, propertyName, propertyValue, type, errors) {
+            if (is.function(propertyValue.validate)) {
+                propertyValue.validate(implementation[propertyName], errors);
+            } else {
+                switch(type) {
+                    case 'function':
+                        validatePropertyType(implementation, propertyName, type, errors);
+                        validateFunctionArguments(implementation, propertyName, propertyValue.args, errors);
+                        break;
+                    case 'decimal':
+                        validateDecimalWithPlaces(implementation, propertyName, propertyValue.places, errors);
+                        break;
+                    default:
+                        validatePropertyType(implementation, propertyName, type, errors);
+                        break;
+                }
+            }
+        };
+        
+        /*
+        // validates that the property type matches the expected blueprint property type
+        // i.e. that implementation.num is a number, if the blueprint has a property: num: 'number'
+        */
+        validatePropertyType = function (implementation, propertyName, propertyType, errors) {
+            if (is.function(is.not[propertyType]) && is.not[propertyType](implementation[propertyName])) {
+                var message = locale.errors.blueprint.requiresProperty;
+                    message += '@property: ' + propertyName;
+                    message += ' (' + propertyType + ')';
+                
+                errors.push(message);
+            }
+        };
+        
+        /*
+        // validates that the implementation has appropriate arguments to satisfy the blueprint
+        */
+        validateFunctionArguments = function (implementation, propertyName, propertyArguments, errors) {
+            // if propertyArguments were defined as an array on the blueprint
+            var argumentsAreValid = is.array(propertyArguments);
+            // and the array isn't empty
+            argumentsAreValid = argumentsAreValid && propertyArguments.length > 0;
+            // and the implementation has the function
+            argumentsAreValid = argumentsAreValid && is.function(implementation[propertyName]);
+            // and the function has the same number of arguments as the propertyArguments array
+            argumentsAreValid = argumentsAreValid && implementation[propertyName].length === propertyArguments.length;
+            
+            // then if argumentsAreValid is not true, push errors into the error array
+            if (!argumentsAreValid) {
+                errors.push(locale.errors.blueprint.requiresArguments + '(' + propertyArguments.join(', ') + ')');
+            }
+        };
+        
+        /*
+        // validates that a number is a decimal with a given number of decimal places
+        */
+        validateDecimalWithPlaces = function (implementation, propertyName, places, errors) {
+            if (is.not.decimal(implementation[propertyName], places)) {
+                var message = locale.errors.blueprint.requiresProperty;
+                    message += '@property: ' + propertyName;
+                    message += ' (decimal with ' + places + ' places)';
+                
+                errors.push(message);
+            }
+        };
+        
+        /*
+        // The Blueprint constructor
+        */
+        Blueprint = function (blueprint) {
+            var self = this,
+                prop;
+            
+            if (is.not.defined(blueprint) || is.not.object(blueprint)) {
+                throw new Error(locale.errors.blueprint.missingConstructorArgument);
+            }
+            
+            for (prop in blueprint) {
+                if (blueprint.hasOwnProperty(prop)) {
+                    if (prop === 'signatureMatches') {
+                        throw new Error(locale.errors.blueprint.reservedPropertyName_singatureMatches);
+                    }
+                    
+                    self[prop] = blueprint[prop];
+                }
+            }
+            
+            if (is.not.string(self.__blueprintId)) {
+                self.__blueprintId = id.createUid(8);
+            }
+            
+            self.signatureMatches = function (implementation, callback) {
+                if (is.not.defined(implementation)) {
+                    callback([locale.errors.blueprint.missingSignatureMatchesImplementationArgument]);
+                    return;
+                }
+                
+                if (is.not.function(callback)) {
+                    throw new Error(locale.errors.blueprint.missingSignatureMatchesCallbackArgument);
+                }
+
+                utils.runAsync(function () {
+                    signatureMatches(implementation, self, callback);
+                });
+            };
+            
+            self.syncSignatureMatches = function (implementation) {
+                if (is.not.defined(implementation)) {
+                    return {
+                        errors: [locale.errors.blueprint.missingSignatureMatchesImplementationArgument],
+                        result: false
+                    };
+                }
+                
+                return syncSignatureMatches(implementation, self);
+            };
+        };
+        
+        return Blueprint;
+    }(asyncHandler, is, id));
+    
+    Exceptions = function (is, pipeline) {
         var $this = {},
             makeException;
         
         makeException = function (name, message, data) {
-            var msg = utils.isString(message) ? message : name,
+            var msg = is.string(message) ? message : name,
                 err = new Error(msg);
             
             err.message = msg;
@@ -174,12 +543,12 @@
         $this.makeException = makeException;
         
         $this.argumentException = function (message, argument, data) {
-            var msg = utils.notDefined(argument) ? message : message + ' (argument: ' + argument + ')';
+            var msg = is.not.defined(argument) ? message : message + ' (argument: ' + argument + ')';
             return makeException('ArgumentException', msg, data);
         };
 
         $this.dependencyException = function (message, dependencyName, data) {
-            var msg = utils.notDefined(dependencyName) ? message : message + ' (dependency: ' + dependencyName + '). If the module exists, does it return a value?';
+            var msg = is.not.defined(dependencyName) ? message : message + ' (dependency: ' + dependencyName + '). If the module exists, does it return a value?';
             return makeException('DependencyException', msg, data);
         };
 
@@ -212,14 +581,13 @@
         return $this;
     };
     
-    Pipeline = function (scope, utils) {
+    Pipeline = function (scope, is) {
         var $this = {},
             registerEvent,
             executeEvent,
             pipelineEvents = new PipelineEvents(),
             beforeRegister,
             afterRegister,
-            beforeResolveOne,
             beforeResolve,
             afterResolve,
             beforeNewChild,
@@ -265,7 +633,7 @@
                     eventArray.splice(i, 1);
                 }
                 
-                if (utils.isFunction(event)) {
+                if (is.function(event)) {
                     event.apply(null, argumentArray);
                 }
             }
@@ -318,615 +686,708 @@
         return $this;
     };
     
-    HilarysPrivateParts = function (scope, container, pipeline, parent, err) {
-        var $this = {},
-            autowire,
-            getParameterNames,
-            STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
-            ARGUMENT_NAMES = /([^\s,]+)/g;
+    HilarysPrivateParts = (function (is, asyncHandler) {
+        return function (scope, container, pipeline, parent, err) {
+            var $this = {},
+                blueprintMatchPairs = [],
+                autowire,
+                makeBlueprintValidator,
+                getParameterNames,
+                STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
+                ARGUMENT_NAMES = /([^\s,]+)/g;
 
-        $this.HilaryModule = function (definition) {
-            var $this = {};
+            $this.HilaryModule = function (definition) {
+                var $this = {};
 
-            if (utils.notString(definition.name)) {
-                throw err.argumentException('The module name is required', 'name');
-            }
-
-            if (utils.notDefined(definition.factory)) {
-                throw err.argumentException('The module factory is required', 'factory');
-            }
-
-            $this.name = definition.name;
-            $this.dependencies = definition.dependencies || undefined;
-            $this.factory = definition.factory;
-
-            return $this;
-        };
-
-        $this.asyncHandler = function (action, next) {
-            var _action = function () {
-                var result;
-
-                try {
-                    result = action();
-                } catch (err) {
-                    if (utils.isFunction(next)) {
-                        next(err);
-                    }
-                    return;
+                if (is.not.string(definition.name)) {
+                    throw err.argumentException('The module name is required', 'name');
                 }
 
-                if (utils.isFunction(next)) {
-                    next(null, result);
+                if (is.not.defined(definition.factory)) {
+                    throw err.argumentException('The module factory is required', 'factory');
                 }
+
+                $this.name = definition.name;
+                $this.dependencies = definition.dependencies || undefined;
+                $this.factory = definition.factory;
+                $this.blueprint = definition.blueprint;
+
+                return $this;
             };
 
-            if (async) {
-                async.nextTick(_action);
-            } else if (setTimeout) {
-                setTimeout(_action, 0);
-            }
-        };
+            $this.asyncHandler = function (action, next) {
+                var _action = function () {
+                    var result;
 
-        $this.createChildContainer = function (scope, options) {
-            options = options || {};
-            var child;
-
-            options.parentContainer = scope;
-
-            pipeline.beforeNewChild(options);
-            child = new Hilary(options);
-
-            if (scope.registerAsync) {
-                child.useAsync(async);
-            }
-
-            pipeline.afterNewChild(options, child);
-
-            return child;
-        };
-
-        autowire = function (hilaryModule) {
-            if (hilaryModule.dependencies || typeof hilaryModule.factory !== 'function') {
-                return hilaryModule;
-            }
-            
-            hilaryModule.dependencies = getParameterNames(hilaryModule.factory);
-            return hilaryModule;
-        };
-        
-        getParameterNames = function (func) {
-            if (!func) {
-                return [];
-            }
-
-            var functionTxt = func.toString().replace(STRIP_COMMENTS, ''),
-                result = functionTxt.slice(functionTxt.indexOf('(') + 1, functionTxt.indexOf(')')).match(ARGUMENT_NAMES);
-
-            if (result === null) {
-                result = [];
-            }
-
-            return result;
-        };
-        
-        $this.register = function (hilaryModule) {
-            pipeline.beforeRegister(hilaryModule);
-
-            if (hilaryModule.name === constants.containerRegistration || hilaryModule.name === constants.parentContainerRegistration) {
-                throw err.argumentException('The name you are trying to register is reserved', 'moduleName', hilaryModule.name);
-            }
-
-            hilaryModule = autowire(hilaryModule);
-            container[hilaryModule.name] = hilaryModule;
-
-            $this.asyncHandler(function () {
-                pipeline.afterRegister(hilaryModule);
-            });
-
-            return hilaryModule;
-        };
-
-        $this.resolve = function (moduleName) {
-            var theModule,
-                output;
-
-            if (utils.notString(moduleName)) {
-                throw err.argumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveMany.', 'moduleName');
-            }
-
-            pipeline.beforeResolve(moduleName);
-
-            theModule = container[moduleName];
-
-            if (theModule !== undefined) {
-                output = $this.invoke(theModule);
-
-                return $this.returnResult({
-                    name: moduleName,
-                    result: output
-                }, pipeline);
-            }
-
-            output = $this.findResult(moduleName);
-
-            if (output) {
-                return $this.returnResult({
-                    name: moduleName,
-                    result: output
-                }, pipeline);
-            } else {
-                // otherwise, throw notResolvableException
-                throw err.notResolvableException(moduleName);
-            }
-        };
-        
-        $this.resolveMany = function (moduleNameArray, next) {
-            var modules = [],
-                i,
-                current;
-            
-            if (utils.notArray(moduleNameArray)) {
-                throw err.argumentException('The moduleNameArray is required and must be an Array', 'moduleNameArray');
-            }
-            
-            if (utils.notFunction(next)) {
-                throw err.argumentException('The next argument is required and must be a Function', 'next');
-            }
-            
-            for (i = 0; i < moduleNameArray.length; i += 1) {
-                try {
-                    current = scope.resolve(moduleNameArray[i]);
-                    modules.push(current);
-                } catch (e) {
-                    modules.push(e);
-                }
-            }
-
-            return next.apply(null, modules);
-        };
-        
-        $this.resolveManyAsync = function (moduleNameArray, next) {
-            var moduleTasks = [],
-                modules = {},
-                i,
-                makeTask = function (moduleName) {
-                    return function (callback) {
-                        try {
-                            //scope.resolveAsync(moduleName, container, pipeline, parent, callback);
-                            modules[moduleName] = scope.resolve(moduleName);
-                            callback(null, null);
-                        } catch (e) {
-                            callback(e);
+                    try {
+                        result = action();
+                    } catch (err) {
+                        if (is.function(next)) {
+                            next(err);
                         }
-                    };
+                        return;
+                    }
+
+                    if (is.function(next)) {
+                        next(null, result);
+                    }
                 };
 
-            if (utils.notArray(moduleNameArray)) {
-                throw err.argumentException('The moduleNameArray is required and must be an Array', 'moduleNameArray');
-            }
-
-            if (utils.notFunction(next)) {
-                throw err.argumentException('The next argument is required and must be a Function', 'next');
-            }
-
-            for (i = 0; i < moduleNameArray.length; i += 1) {
-                moduleTasks.push(makeTask(moduleNameArray[i]));
-            }
-
-            async.parallel(moduleTasks, function (err, moduleResults) {
-                next(err, modules);
-            });
-        };
-
-        $this.resolveAsync = function (moduleName, next) {
-            var validateTask,
-                beforeResolveTask,
-                findAndInvokeResultTask,
-                findResultTask,
-                afterResultTask;
-
-            validateTask = function (_next) {
-                if (utils.notString(moduleName)) {
-                    _next(err.argumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveManyAsync.', 'moduleName'));
+                if (async) {
+                    async.nextTick(_action);
                 } else {
-                    _next(null, null);
+                    asyncHandler.runAsync(_action);
                 }
             };
 
-            beforeResolveTask = function (previousTaskResult, _next) {
-                _next(null, pipeline.beforeResolve(moduleName));
+            $this.createChildContainer = function (scope, options) {
+                options = options || {};
+                var child;
+
+                options.parentContainer = scope;
+
+                pipeline.beforeNewChild(options);
+                child = new Hilary(options);
+
+                if (scope.registerAsync) {
+                    child.useAsync(async);
+                }
+
+                pipeline.afterNewChild(options, child);
+
+                return child;
             };
 
-            findAndInvokeResultTask = function (previousTaskResult, _next) {
+            autowire = function (hilaryModule) {
+                if (hilaryModule.dependencies || typeof hilaryModule.factory !== 'function') {
+                    return hilaryModule;
+                }
+
+                hilaryModule.dependencies = getParameterNames(hilaryModule.factory);
+                return hilaryModule;
+            };
+
+            getParameterNames = function (func) {
+                if (!func) {
+                    return [];
+                }
+
+                var functionTxt = func.toString().replace(STRIP_COMMENTS, ''),
+                    result = functionTxt.slice(functionTxt.indexOf('(') + 1, functionTxt.indexOf(')')).match(ARGUMENT_NAMES);
+
+                if (result === null) {
+                    result = [];
+                }
+
+                return result;
+            };
+            
+            makeBlueprintValidator = function (blueprintName, moduleName) {
+                return function () {
+                    var blueprint = scope.resolve(blueprintName),
+                        implementation = scope.resolve(moduleName),
+                        blueprintNotBlueprint = is.not.function(blueprint.signatureMatches),
+                        errorMessage = 'Blueprints must have a signatureMatches function';
+
+                    if (blueprintNotBlueprint) {
+                        return {
+                            errors: [errorMessage],
+                            result: false
+                        };
+                    }
+
+                    return blueprint.syncSignatureMatches(implementation);
+                };
+            };
+
+            $this.register = function (hilaryModule) {
+                pipeline.beforeRegister(hilaryModule);
+
+                if (hilaryModule.name === constants.containerRegistration || hilaryModule.name === constants.parentContainerRegistration) {
+                    throw err.argumentException('The name you are trying to register is reserved', 'moduleName', hilaryModule.name);
+                }
+
+                hilaryModule = autowire(hilaryModule);
+                container[hilaryModule.name] = hilaryModule;
+
+                if (is.string(hilaryModule.blueprint)) {
+                    blueprintMatchPairs.push({
+                        blueprintName: hilaryModule.blueprint,
+                        moduleName: hilaryModule.name
+                    });
+                }
+                
+                $this.asyncHandler(function () {
+                    pipeline.afterRegister(hilaryModule);
+                });
+
+                return hilaryModule;
+            };
+
+            $this.resolve = function (moduleName) {
                 var theModule,
                     output;
+
+                if (is.not.string(moduleName)) {
+                    throw err.argumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveMany.', 'moduleName');
+                }
+
+                pipeline.beforeResolve(moduleName);
 
                 theModule = container[moduleName];
 
                 if (theModule !== undefined) {
-                    $this.invokeAsync(theModule, _next);
-                } else {
-                    _next(null, null);
-                }
-            };
+                    output = $this.invoke(theModule);
 
-            findResultTask = function (previousTaskResult, _next) {
-                if (previousTaskResult) {
-                    _next(null, previousTaskResult);
-                } else {
-                    _next(null, $this.findResult(moduleName));
-                }
-            };
-
-            afterResultTask = function (previousTaskResult, _next) {
-                if (previousTaskResult) {
-                    pipeline.afterResolve({
+                    return $this.returnResult({
                         name: moduleName,
-                        result: previousTaskResult
-                    });
-                    _next(null, previousTaskResult);
+                        result: output
+                    }, pipeline);
+                }
+
+                output = $this.findResult(moduleName);
+
+                if (output) {
+                    return $this.returnResult({
+                        name: moduleName,
+                        result: output
+                    }, pipeline);
                 } else {
-                    _next(err.notResolvableException(moduleName));
+                    // otherwise, throw notResolvableException
+                    throw err.notResolvableException(moduleName);
                 }
             };
 
-            async.waterfall([validateTask, beforeResolveTask, findAndInvokeResultTask, findResultTask, afterResultTask], next);
-        };
+            $this.resolveMany = function (moduleNameArray, next) {
+                var modules = [],
+                    i,
+                    current;
 
-        $this.findResult = function (moduleName) {
-            if (moduleName === constants.containerRegistration) {
-                return container;
-            } else if (moduleName === constants.parentContainerRegistration) {
-                return parent.context.getContainer();
-            } else if (parent !== undefined) {
-                // attempt to resolve from the parent container
-                return parent.resolve(moduleName);
-            } else if (nodeRequire) {
-                // attempt to resolve from node's require
-                try {
-                    return nodeRequire(moduleName);
-                } catch (e) {
-                    return null;
+                if (is.not.array(moduleNameArray)) {
+                    throw err.argumentException('The moduleNameArray is required and must be an Array', 'moduleNameArray');
                 }
-            } else if (window) {
-                // attempt to resolve from Window
-                return exports[moduleName];
-            }
-        };
 
-        $this.returnResult = function (result) {
-            $this.asyncHandler(function () {
-                pipeline.afterResolve(result);
-            });
+                if (is.not.function(next)) {
+                    throw err.argumentException('The next argument is required and must be a Function', 'next');
+                }
 
-            return result.result;
-        };
+                for (i = 0; i < moduleNameArray.length; i += 1) {
+                    try {
+                        current = scope.resolve(moduleNameArray[i]);
+                        modules.push(current);
+                    } catch (e) {
+                        modules.push(e);
+                    }
+                }
 
-        $this.invoke = function (theModule) {
-            if (utils.isArray(theModule.dependencies) && theModule.dependencies.length > 0) {
-                // the module has dependencies, let's get them
-                return $this.applyDependencies(theModule);
-            }
+                return next.apply(null, modules);
+            };
 
-            if (utils.isFunction(theModule.factory) && theModule.factory.length === 0) {
-                // the module is a function and takes no arguments, return the result of executing it
-                return theModule.factory.call();
-            } else {
-                // the module takes arguments and has no dependencies, this must be a factory
-                return theModule.factory;
-            }
-        };
-
-        $this.invokeAsync = function (theModule, next) {
-            if (utils.isArray(theModule.dependencies) && theModule.dependencies.length > 0) {
-                // the module has dependencies, let's get them
-                $this.applyDependenciesAsync(theModule, next);
-                return;
-            }
-
-            if (utils.isFunction(theModule.factory) && theModule.factory.length === 0) {
-                // the module is a function and takes no arguments, return the result of executing it
-                next(null, theModule.factory.call());
-            } else {
-                // the module takes arguments and has no dependencies, this must be a factory
-                next(null, theModule.factory);
-            }
-        };
-
-        $this.applyDependencies = function (theModule) {
-            var i,
-                dependencies = [],
-                resolveModule = function (moduleName) {
-                    return $this.resolve(moduleName);
-                };
-
-            for (i = 0; i < theModule.dependencies.length; i += 1) {
-                dependencies.push(resolveModule(theModule.dependencies[i]));
-            }
-
-            // and apply them
-            return theModule.factory.apply(null, dependencies);
-        };
-
-        $this.applyDependenciesAsync = function (theModule, next) {
-            var i,
-                dependencyTasks = [],
-                makeTask = function (moduleName) {
-                    return function (callback) {
-                        $this.resolveAsync(moduleName, callback);
+            $this.resolveManyAsync = function (moduleNameArray, next) {
+                var moduleTasks = [],
+                    modules = {},
+                    i,
+                    makeTask = function (moduleName) {
+                        return function (callback) {
+                            try {
+                                //scope.resolveAsync(moduleName, container, pipeline, parent, callback);
+                                modules[moduleName] = scope.resolve(moduleName);
+                                callback(null, null);
+                            } catch (e) {
+                                callback(e);
+                            }
+                        };
                     };
-                };
 
-            for (i = 0; i < theModule.dependencies.length; i += 1) {
-                dependencyTasks.push(makeTask(theModule.dependencies[i]));
-            }
-
-            async.parallel(dependencyTasks, function (err, dependencies) {
-                next(null, theModule.factory.apply(null, dependencies));
-            });
-        };
-
-        $this.makeAutoRegistrationTasks = function (index, makeTask) {
-            var key,
-                i,
-                tasks = [];
-
-            if (utils.isObject(index) && (index.name || index.dependencies || index.factory)) {
-                tasks.push(function () { makeTask(index).call(); });
-            } else if (utils.isObject(index)) {
-
-                for (key in index) {
-                    if (index.hasOwnProperty(key)) {
-                        tasks.push(makeTask(index[key]));
-                    }
+                if (is.not.array(moduleNameArray)) {
+                    throw err.argumentException('The moduleNameArray is required and must be an Array', 'moduleNameArray');
                 }
 
-            } else if (utils.isArray(index)) {
-
-                for (i = 0; i < index.length; i += 1) {
-                    tasks.push(makeTask(index[i]));
+                if (is.not.function(next)) {
+                    throw err.argumentException('The next argument is required and must be a Function', 'next');
                 }
 
-            } else {
-                throw err.argumentException('A index must be defined and must be a typeof object or array', 'index');
-            }
+                for (i = 0; i < moduleNameArray.length; i += 1) {
+                    moduleTasks.push(makeTask(moduleNameArray[i]));
+                }
 
-            return tasks;
-        };
-        
-        $this.autoRegister = function (index, next) {
-            var makeTask,
-                tasks,
-                i;
-            
-            makeTask = function (item) {
-                return function () {
-                    $this.register(item);
-                };
+                async.parallel(moduleTasks, function (err) {
+                    next(err, modules);
+                });
             };
-            
-            try {
-                tasks = $this.makeAutoRegistrationTasks(index, makeTask);
 
-                for (i = 0; i < tasks.length; i += 1) {
-                    tasks[i]();
-                }
+            $this.resolveAsync = function (moduleName, next) {
+                var validateTask,
+                    beforeResolveTask,
+                    findAndInvokeResultTask,
+                    findResultTask,
+                    afterResultTask;
 
-                if (utils.isFunction(next)) {
-                    next(null);
-                }
-            } catch (e) {
-                next(e);
-            }
-        };
-        
-        $this.autoResolve = function (index, next) {
-            var makeTask,
-                tasks,
-                i;
-            
-            makeTask = function (item) {
-                return function () {
-                    if (utils.isArray(item.dependencies) && utils.isFunction(item.factory)) {
-                        scope.resolveMany(item.dependencies, item.factory);
-                    } else if (utils.isFunction(item.factory) && item.factory.length === 0) {
-                        item.factory();
-                    }
-                };
-            };
-            
-            try {
-                tasks = $this.makeAutoRegistrationTasks(index, makeTask);
-
-                for (i = 0; i < tasks.length; i += 1) {
-                    tasks[i]();
-                }
-
-                if (utils.isFunction(next)) {
-                    next(null, null);
-                }
-            } catch (e) {
-                next(e);
-            }
-        };
-        
-        $this.autoResolveAsync = function (index, next) {
-            var makeTask,
-                tasks,
-                i;
-
-            makeTask = function (item) {
-                return function (callback) {
-                    if (utils.isArray(item.dependencies) && utils.isFunction(item.factory)) {
-                        scope.resolveManyAsync(item.dependencies, item.factory);
-                        callback(null, null);
-                    } else if (utils.isFunction(item.factory) && item.factory.length === 0) {
-                        item.factory();
-                        callback(null, null);
+                validateTask = function (_next) {
+                    if (is.not.string(moduleName)) {
+                        _next(err.argumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveManyAsync.', 'moduleName'));
                     } else {
-                        callback(err.argumentException('One or more of the items in this index do not meet the requirements for resolution.', 'index', item));
+                        _next(null, null);
                     }
                 };
-            };
 
-            async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
-        };
+                beforeResolveTask = function (previousTaskResult, _next) {
+                    _next(null, pipeline.beforeResolve(moduleName));
+                };
 
-        $this.dispose = function (moduleName) {
-            var key, i, result;
-            
-            if (utils.isString(moduleName)) {
-                return $this.disposeOne(moduleName);
-            } else if (utils.isArray(moduleName)) {
-                result = true;
-                
-                for (i = 0; i < moduleName.length; i += 1) {
-                    result = result && $this.disposeOne(moduleName[i]);
-                }
+                findAndInvokeResultTask = function (previousTaskResult, _next) {
+                    var theModule;
 
-                return result;
-            } else if (!moduleName) {
-                result = true;
-                
-                for (key in container) {
-                    if (container.hasOwnProperty(key)) {
-                        result = result && $this.disposeOne(key);
+                    theModule = container[moduleName];
+
+                    if (theModule !== undefined) {
+                        $this.invokeAsync(theModule, _next);
+                    } else {
+                        _next(null, null);
                     }
-                }
-                
-                return result;
-            } else {
-                return false;
-            }
-        };
-        
-        $this.disposeOne = function (moduleName) {
-            if (container[moduleName]) {
-                delete container[moduleName];
-                return true;
-            } else {
-                return false;
-            }
-        };
+                };
 
-        $this.useAsync = function (_async) {
-            if (!_async || !_async.nextTick || !_async.waterfall || !_async.parallel) {
-                throw err.argumentException('The async library is required (https://www.npmjs.com/package/async)', 'async');
-            }
+                findResultTask = function (previousTaskResult, _next) {
+                    if (previousTaskResult) {
+                        _next(null, previousTaskResult);
+                    } else {
+                        _next(null, $this.findResult(moduleName));
+                    }
+                };
 
-            // we only need a single instance of async for a given runtime
-            if (!async) {
-                async = _async;
-            }
+                afterResultTask = function (previousTaskResult, _next) {
+                    if (previousTaskResult) {
+                        pipeline.afterResolve({
+                            name: moduleName,
+                            result: previousTaskResult
+                        });
+                        _next(null, previousTaskResult);
+                    } else {
+                        _next(err.notResolvableException(moduleName));
+                    }
+                };
 
-            /*
-            // register a module by name (ASYNC)
-            // @param definition (object): the module defintion: at least a name and factory are required
-            // @param next (function): the callback function to be executed after the registration is complete
-            */
-            scope.registerAsync = function (definition, next) {
-                $this.asyncHandler(function () {
-                    return scope.register(definition);
-                }, next);
-                return scope;
+                async.waterfall([validateTask, beforeResolveTask, findAndInvokeResultTask, findResultTask, afterResultTask], next);
             };
 
-            /*
-            // auto-register an index of objects (ASYNC)
-            // @param index (object or array): the index of objects to be registered
-            //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
-            */
-            scope.autoRegisterAsync = function (index, next) {
+            $this.findResult = function (moduleName) {
+                if (moduleName === constants.containerRegistration) {
+                    return container;
+                } else if (moduleName === constants.parentContainerRegistration) {
+                    return parent.context.getContainer();
+                } else if (parent !== undefined) {
+                    // attempt to resolve from the parent container
+                    return parent.resolve(moduleName);
+                } else if (nodeRequire) {
+                    // attempt to resolve from node's require
+                    try {
+                        return nodeRequire(moduleName);
+                    } catch (e) {
+                        return null;
+                    }
+                } else if (window) {
+                    // attempt to resolve from Window
+                    return exports[moduleName];
+                }
+            };
+
+            $this.returnResult = function (result) {
+                $this.asyncHandler(function () {
+                    pipeline.afterResolve(result);
+                });
+
+                return result.result;
+            };
+
+            $this.invoke = function (theModule) {
+                if (is.array(theModule.dependencies) && theModule.dependencies.length > 0) {
+                    // the module has dependencies, let's get them
+                    return $this.applyDependencies(theModule);
+                }
+
+                if (is.function(theModule.factory) && theModule.factory.length === 0) {
+                    // the module is a function and takes no arguments, return the result of executing it
+                    return theModule.factory.call();
+                } else {
+                    // the module takes arguments and has no dependencies, this must be a factory
+                    return theModule.factory;
+                }
+            };
+
+            $this.invokeAsync = function (theModule, next) {
+                if (is.array(theModule.dependencies) && theModule.dependencies.length > 0) {
+                    // the module has dependencies, let's get them
+                    $this.applyDependenciesAsync(theModule, next);
+                    return;
+                }
+
+                if (is.function(theModule.factory) && theModule.factory.length === 0) {
+                    // the module is a function and takes no arguments, return the result of executing it
+                    next(null, theModule.factory.call());
+                } else {
+                    // the module takes arguments and has no dependencies, this must be a factory
+                    next(null, theModule.factory);
+                }
+            };
+
+            $this.applyDependencies = function (theModule) {
+                var i,
+                    dependencies = [],
+                    resolveModule = function (moduleName) {
+                        return $this.resolve(moduleName);
+                    };
+
+                for (i = 0; i < theModule.dependencies.length; i += 1) {
+                    dependencies.push(resolveModule(theModule.dependencies[i]));
+                }
+
+                // and apply them
+                return theModule.factory.apply(null, dependencies);
+            };
+
+            $this.applyDependenciesAsync = function (theModule, next) {
+                var i,
+                    dependencyTasks = [],
+                    makeTask = function (moduleName) {
+                        return function (callback) {
+                            $this.resolveAsync(moduleName, callback);
+                        };
+                    };
+
+                for (i = 0; i < theModule.dependencies.length; i += 1) {
+                    dependencyTasks.push(makeTask(theModule.dependencies[i]));
+                }
+
+                async.parallel(dependencyTasks, function (err, dependencies) {
+                    next(null, theModule.factory.apply(null, dependencies));
+                });
+            };
+
+            $this.makeAutoRegistrationTasks = function (index, makeTask) {
+                var key,
+                    i,
+                    tasks = [];
+
+                if (is.object(index) && (index.name || index.dependencies || index.factory)) {
+                    tasks.push(function () { makeTask(index).call(); });
+                } else if (is.object(index)) {
+
+                    for (key in index) {
+                        if (index.hasOwnProperty(key)) {
+                            tasks.push(makeTask(index[key]));
+                        }
+                    }
+
+                } else if (is.array(index)) {
+
+                    for (i = 0; i < index.length; i += 1) {
+                        tasks.push(makeTask(index[i]));
+                    }
+
+                } else {
+                    throw err.argumentException('A index must be defined and must be a typeof object or array', 'index');
+                }
+
+                return tasks;
+            };
+
+            $this.autoRegister = function (index, next) {
                 var makeTask,
                     tasks,
                     i;
 
                 makeTask = function (item) {
+                    return function () {
+                        $this.register(item);
+                    };
+                };
+
+                try {
+                    tasks = $this.makeAutoRegistrationTasks(index, makeTask);
+
+                    for (i = 0; i < tasks.length; i += 1) {
+                        tasks[i]();
+                    }
+
+                    if (is.function(next)) {
+                        next(null);
+                    }
+                } catch (e) {
+                    next(e);
+                }
+            };
+
+            $this.autoResolve = function (index, next) {
+                var makeTask,
+                    tasks,
+                    i;
+
+                makeTask = function (item) {
+                    return function () {
+                        if (is.array(item.dependencies) && is.function(item.factory)) {
+                            scope.resolveMany(item.dependencies, item.factory);
+                        } else if (is.function(item.factory) && item.factory.length === 0) {
+                            item.factory();
+                        }
+                    };
+                };
+
+                try {
+                    tasks = $this.makeAutoRegistrationTasks(index, makeTask);
+
+                    for (i = 0; i < tasks.length; i += 1) {
+                        tasks[i]();
+                    }
+
+                    if (is.function(next)) {
+                        next(null, null);
+                    }
+                } catch (e) {
+                    next(e);
+                }
+            };
+
+            $this.autoResolveAsync = function (index, next) {
+                var makeTask;
+
+                makeTask = function (item) {
                     return function (callback) {
-                        scope.registerAsync(item, callback);
+                        if (is.array(item.dependencies) && is.function(item.factory)) {
+                            scope.resolveManyAsync(item.dependencies, item.factory);
+                            callback(null, null);
+                        } else if (is.function(item.factory) && item.factory.length === 0) {
+                            item.factory();
+                            callback(null, null);
+                        } else {
+                            callback(err.argumentException('One or more of the items in this index do not meet the requirements for resolution.', 'index', item));
+                        }
                     };
                 };
 
                 async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
-                return scope;
             };
 
-            /*
-            // attempt to resolve a dependency by name (supports parental hierarchy) (ASYNC)
-            // @param moduleName (string): the qualified name that the module can be located by in the container
-            */
-            scope.resolveAsync = function (moduleName, next) {
-                $this.resolveAsync(moduleName, next);
-                return scope;
+            $this.dispose = function (moduleName) {
+                var key, i, result;
+
+                if (is.string(moduleName)) {
+                    return $this.disposeOne(moduleName);
+                } else if (is.array(moduleName)) {
+                    result = true;
+
+                    for (i = 0; i < moduleName.length; i += 1) {
+                        result = result && $this.disposeOne(moduleName[i]);
+                    }
+
+                    return result;
+                } else if (!moduleName) {
+                    result = true;
+
+                    for (key in container) {
+                        if (container.hasOwnProperty(key)) {
+                            result = result && $this.disposeOne(key);
+                        }
+                    }
+
+                    return result;
+                } else {
+                    return false;
+                }
             };
 
-            /*
-            // attempt to resolve multiple dependencies by name (supports parental hierarchy) (ASYNC)
-            // @param moduleNameArray (array): a list of qualified names that the modules can be located by in the container
-            // @param next (function): the function that will accept all of the dependency results as arguments (in order)
-            */
-            scope.resolveManyAsync = function (moduleNameArray, next) {
-                $this.resolveManyAsync(moduleNameArray, next);
-                return scope;
+            $this.disposeOne = function (moduleName) {
+                if (container[moduleName]) {
+                    delete container[moduleName];
+                    return true;
+                } else {
+                    return false;
+                }
+            };
+            
+            $this.validateBlueprints = function () {
+                var currentResult,
+                    blueprintValidators = [],
+                    errors = [],
+                    result = true,
+                    i;
+                
+                // make the validation tasks
+                for (i = 0; i < blueprintMatchPairs.length; i += 1) {
+                    blueprintValidators.push(makeBlueprintValidator(blueprintMatchPairs[i].blueprintName, blueprintMatchPairs[i].moduleName));
+                }
+                
+                // execute the validation tasks
+                for (i = 0; i < blueprintValidators.length; i += 1) {
+                    currentResult = blueprintValidators[i]();
+                    
+                    if (currentResult.result === false) {
+                        errors.concat(currentResult.errors);
+                        result = false;
+                    }
+                }
+                
+                // return the validation results
+                if (result) {
+                    return {
+                        errors: null,
+                        result: true
+                    };
+                } else {
+                    return {
+                        errors: errors,
+                        result: false
+                    };
+                }
+            };
+            
+            $this.validateBlueprintsAsync = function (next) {
+                var makeTask,
+                    tasks = [],
+                    i;
+                
+                // make a validation task
+                makeTask = function (i) {
+                    return function (callback) {
+                        var valResult = (makeBlueprintValidator(blueprintMatchPairs[i].blueprintName, blueprintMatchPairs[i].moduleName)());
+                        callback(valResult.errors, valResult.result);
+                    };
+                };
+                
+                // make the validation tasks
+                for (i = 0; i < blueprintMatchPairs.length; i += 1) {
+                    tasks.push(makeTask(i));
+                }
+                
+                // execute the validation tasks in parallel
+                async.parallel(tasks, next);
             };
 
-            /*
-            // auto-resolve an index of objects (ASYNC)
-            // @param index (object or array): the index of objects to be resolved.
-            //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
-            // @param next (function): the callback that will be executed upon completion
-            // @returns: undefined
-            // @next (err): next recieves a single argument: err, which will be null when the process succeeded
-            */
-            scope.autoResolveAsync = function (index, next) {
-                $this.autoResolveAsync(index, next);
-                return scope;
-            };
-
-            scope.disposeAsync = function (moduleName, next) {
-                var _next = next,
-                    _moduleName = moduleName;
-
-                if (utils.isFunction(moduleName)) {
-                    _next = moduleName;
-                    _moduleName = null;
+            $this.useAsync = function (_async) {
+                if (!_async || !_async.nextTick || !_async.waterfall || !_async.parallel) {
+                    throw err.argumentException('The async library is required (https://www.npmjs.com/package/async)', 'async');
                 }
 
-                $this.asyncHandler(function () {
-                    return scope.dispose(_moduleName);
-                }, _next);
+                // we only need a single instance of async for a given runtime
+                if (!async) {
+                    async = _async;
+                }
+
+                /*
+                // register a module by name (ASYNC)
+                // @param definition (object): the module defintion: at least a name and factory are required
+                // @param next (function): the callback function to be executed after the registration is complete
+                */
+                scope.registerAsync = function (definition, next) {
+                    $this.asyncHandler(function () {
+                        return scope.register(definition);
+                    }, next);
+                    return scope;
+                };
+
+                /*
+                // auto-register an index of objects (ASYNC)
+                // @param index (object or array): the index of objects to be registered
+                //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
+                */
+                scope.autoRegisterAsync = function (index, next) {
+                    var makeTask;
+
+                    makeTask = function (item) {
+                        return function (callback) {
+                            scope.registerAsync(item, callback);
+                        };
+                    };
+
+                    async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
+                    return scope;
+                };
+
+                /*
+                // attempt to resolve a dependency by name (supports parental hierarchy) (ASYNC)
+                // @param moduleName (string): the qualified name that the module can be located by in the container
+                */
+                scope.resolveAsync = function (moduleName, next) {
+                    $this.resolveAsync(moduleName, next);
+                    return scope;
+                };
+
+                /*
+                // attempt to resolve multiple dependencies by name (supports parental hierarchy) (ASYNC)
+                // @param moduleNameArray (array): a list of qualified names that the modules can be located by in the container
+                // @param next (function): the function that will accept all of the dependency results as arguments (in order)
+                */
+                scope.resolveManyAsync = function (moduleNameArray, next) {
+                    $this.resolveManyAsync(moduleNameArray, next);
+                    return scope;
+                };
+
+                /*
+                // auto-resolve an index of objects (ASYNC)
+                // @param index (object or array): the index of objects to be resolved.
+                //      NOTE: this is designed for registering node indexes, but doesn't have to be used that way.
+                // @param next (function): the callback that will be executed upon completion
+                // @returns: undefined
+                // @next (err): next recieves a single argument: err, which will be null when the process succeeded
+                */
+                scope.autoResolveAsync = function (index, next) {
+                    $this.autoResolveAsync(index, next);
+                    return scope;
+                };
+
+                scope.disposeAsync = function (moduleName, next) {
+                    var _next = next,
+                        _moduleName = moduleName;
+
+                    if (is.function(moduleName)) {
+                        _next = moduleName;
+                        _moduleName = null;
+                    }
+
+                    $this.asyncHandler(function () {
+                        return scope.dispose(_moduleName);
+                    }, _next);
+
+                    return scope;
+                };
                 
+                /*
+                // Validates all modules that are registered with a blueprint against their blueprint
+                // @returns this
+                // @param next (function): the function that will accept all of the validation results as arguments (in order)
+                */
+                scope.validateBlueprintsAsync = function (next) {
+                    $this.validateBlueprintsAsync(next);
+                    return scope;
+                };
+
+                /*
+                // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.) (ASYNC)
+                // @param eventName (string): the name of the event to register the handler for
+                // @param eventHandler (function): the callback function that will be called when the event is triggered
+                // @param next (function): the callback function to be executed after the event registration is complete
+                */
+                scope.registerEventAsync = function (eventName, eventHandler, next) {
+                    $this.asyncHandler(function () {
+                        return scope.registerEvent(eventName, eventHandler);
+                    }, next);
+
+                    return scope;
+                };
+
                 return scope;
             };
 
-            /*
-            // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.) (ASYNC)
-            // @param eventName (string): the name of the event to register the handler for
-            // @param eventHandler (function): the callback function that will be called when the event is triggered
-            // @param next (function): the callback function to be executed after the event registration is complete
-            */
-            scope.registerEventAsync = function (eventName, eventHandler, next) {
-                $this.asyncHandler(function () {
-                    return scope.registerEvent(eventName, eventHandler);
-                }, next);
-                
-                return scope;
-            };
-
-            return scope;
+            return $this;
         };
-
-        return $this;
-    };
+    }(is, asyncHandler));
     
     Hilary = function (options) {
         var $this = this,
             config = options || {},
             container = {},
             parent = config.parentContainer,
-            pipeline = config.pipeline || new Pipeline($this, utils),
-            err = new Exceptions(utils, pipeline),
+            pipeline = config.pipeline || new Pipeline($this, is),
+            err = new Exceptions(is, pipeline),
             ext = {},
             init = {},
             prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
@@ -947,7 +1408,7 @@
             if (typeof options === 'string') {
                 // the options argument must be a named scope
                 opts = { name: options };
-            } else if (utils.isObject(options)) {
+            } else if (is.object(options)) {
                 // the options argument must be an object literal
                 opts = options;
             } else {
@@ -1058,6 +1519,14 @@
         };
         
         /*
+        // Validates all modules that are registered with a blueprint against their blueprint
+        // @returns object with "errors" (null or array) and "result" (boolean) parameters.
+        */
+        $this.validateBlueprints = function () {
+            return prive.validateBlueprints();
+        };
+        
+        /*
         // Hilary has a built in extension for asynchronous operations. Unlike the sync operations,
         // Hilary depends on a third-party library for async operations: async.js (https://github.com/caolan/async).
         // So, to turn on async operations, you need to call useAsync(async), where the async argument is async.js
@@ -1081,7 +1550,8 @@
                 HilaryModule: prive.HilaryModule,
                 register: prive.register,
                 constants: constants,
-                utils: utils,
+                is: is,
+                id: id,
                 exceptionHandlers: err
             };
         };
@@ -1094,9 +1564,9 @@
         for (ext.count = 0; ext.count < extensions.length; ext.count += 1) {
             ext.current = extensions[ext.count];
             
-            if (utils.isFunction(ext.current.factory)) {
+            if (is.function(ext.current.factory)) {
                 $this[ext.current.name] = ext.current.factory($this);
-            } else if (utils.isDefined(ext.current.factory)) {
+            } else if (is.defined(ext.current.factory)) {
                 $this[ext.current.name] = ext.current.factory;
             }
         }
@@ -1104,7 +1574,7 @@
         for (init.count = 0; init.count < initializers.length; init.count += 1) {
             init.current = initializers[init.count];
             
-            if (utils.isFunction(init.current)) {
+            if (is.function(init.current)) {
                 init.current($this, config);
             }
         }
@@ -1145,6 +1615,8 @@
             return scopes[name];
         }
     };
+    
+    Hilary.Blueprint = Blueprint;
     
     exports.Hilary = Hilary;
     

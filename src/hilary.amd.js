@@ -1,7 +1,5 @@
-/*jslint plusplus: true*/
-/*globals module, require*/
 (function (exports, Hilary) {
-    "use strict";
+    'use strict';
     
     if (exports.AMDContainer && exports.define && exports.require) {
         // Hilary AMD was already defined; ignore this instance
@@ -13,37 +11,37 @@
         
         Hilary.extend('useAMD', function (scope) {
             var context = scope.getContext(),
-                utils = context.utils,
+                is = context.is,
                 err = context.exceptionHandlers,
                 constants = context.constants;
             
             return function () {
                 scope.define = function (moduleName, dependencies, factory) {
-                    if (utils.isFunction(factory)) {
+                    if (is.function(factory)) {
                         // all 3 arguments are present
                         return scope.register({
                             name: moduleName,
                             dependencies: dependencies,
                             factory: factory
                         });
-                    } else if (utils.isString(moduleName) && utils.isFunction(dependencies)) {
+                    } else if (is.string(moduleName) && is.function(dependencies)) {
                         // the factory was passed in as the second argument - no dependencies exist
                         // moduleName == moduleName and dependencies == factory
                         return scope.register({
                             name: moduleName,
                             factory: dependencies
                         });
-                    } else if (utils.isArray(moduleName) && utils.isFunction(dependencies)) {
+                    } else if (is.array(moduleName) && is.function(dependencies)) {
                         // anonymous definition: the factory was passed in as the second argument - dependencies exist
                         // moduleName == dependencies and dependencies == factory
                         return scope.autoResolve({
                             dependencies: moduleName,
                             factory: dependencies
                         });
-                    } else if (utils.isFunction(moduleName)) {
+                    } else if (is.function(moduleName)) {
                         // anonymous definition: the factory was passed in as the first argument
                         return scope.require(moduleName);
-                    } else if (utils.isObject(moduleName)) {
+                    } else if (is.object(moduleName)) {
                         // anonymous definition: an object literal was passed in as the first argument
                         var prop;
 
@@ -56,7 +54,7 @@
                             }
                         }
                         return scope;
-                    } else if (utils.isString(moduleName) && utils.isObject(dependencies)) {
+                    } else if (is.string(moduleName) && is.object(dependencies)) {
                         // the factory in an object literal and was passed in as the second argument - no dependencies exist
                         // moduleName == moduleName and dependencies == object literal
                         return scope.register({
@@ -69,7 +67,7 @@
                 };
                 
                 scope.require = function (dependencies, factory) {
-                    if (utils.isFunction(dependencies)) {
+                    if (is.function(dependencies)) {
                         // The first argument is the factory
                         return dependencies(scope.require, context.container, (window || module));
                     } else if (typeof dependencies === 'string') {
@@ -89,7 +87,7 @@
             };
         });
 
-        AMDContainer = new Hilary().useAMD();
+        AMDContainer = Hilary.scope('__AMD').useAMD();
 
         // export the main container and make define and require globals
         exports.AMDContainer = AMDContainer;
