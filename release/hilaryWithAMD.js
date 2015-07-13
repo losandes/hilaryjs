@@ -282,7 +282,6 @@
             if (is.function(propertyValue.validate)) {
                 propertyValue.validate(implementation[propertyName], errors);
             } else {
-                console.log("!!!type", type);
                 switch (type) {
                   case "function":
                     validatePropertyType(implementation, propertyName, type, errors);
@@ -325,7 +324,6 @@
             }
         };
         validateBooleanArgument = function(implementation, propertyName, errors) {
-            console.log("!!!!!!!!!!!!bool-test", implementation[propertyName]);
             if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
                 var message = locale.errors.blueprint.requiresProperty;
                 message += "@property: " + propertyName;
