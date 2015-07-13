@@ -377,7 +377,6 @@
                     actual = scope.validateBlueprints();
 
                     // then
-                    debugger;
                     expect(actual.result).to.equal(false);
                     expect(actual.errors).to.not.equal(null);
                     

@@ -281,6 +281,7 @@
             validatePropertyType,
             validateFunctionArguments,
             validateDecimalWithPlaces,
+            validateBooleanArgument,
             locale = {
                 errors: {
                     blueprint: {
@@ -386,7 +387,9 @@
         // validates a single property from the blueprint
         */
         validateProperty = function (implementation, propertyName, propertyValue, errors) {
-            if (is.string(propertyValue)) {
+            if (propertyValue === 'bool') {
+                validateBooleanArgument(implementation, propertyName, errors);
+            }else if (is.string(propertyValue)) {
                 validatePropertyType(implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
                 validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
@@ -456,6 +459,16 @@
                 var message = locale.errors.blueprint.requiresProperty;
                     message += '@property: ' + propertyName;
                     message += ' (decimal with ' + places + ' places)';
+                
+                errors.push(message);
+            }
+        };
+        
+        validateBooleanArgument = function (implementation, propertyName, errors) {
+            if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
+                var message = locale.errors.blueprint.requiresProperty;
+                    message += '@property: ' + propertyName;
+                    message += ' (boolean)';
                 
                 errors.push(message);
             }

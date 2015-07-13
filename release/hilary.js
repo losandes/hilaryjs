@@ -201,7 +201,7 @@
         return self;
     }(is);
     Blueprint = function(utils, is, id) {
-        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, locale = {
+        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, locale = {
             errors: {
                 blueprint: {
                     requiresImplementation: "An implementation is required to create a new instance of an interface",
@@ -270,7 +270,9 @@
             }
         };
         validateProperty = function(implementation, propertyName, propertyValue, errors) {
-            if (is.string(propertyValue)) {
+            if (propertyValue === "bool") {
+                validateBooleanArgument(implementation, propertyName, errors);
+            } else if (is.string(propertyValue)) {
                 validatePropertyType(implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
                 validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
@@ -280,6 +282,7 @@
             if (is.function(propertyValue.validate)) {
                 propertyValue.validate(implementation[propertyName], errors);
             } else {
+                console.log("!!!type", type);
                 switch (type) {
                   case "function":
                     validatePropertyType(implementation, propertyName, type, errors);
@@ -318,6 +321,15 @@
                 var message = locale.errors.blueprint.requiresProperty;
                 message += "@property: " + propertyName;
                 message += " (decimal with " + places + " places)";
+                errors.push(message);
+            }
+        };
+        validateBooleanArgument = function(implementation, propertyName, errors) {
+            console.log("!!!!!!!!!!!!bool-test", implementation[propertyName]);
+            if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
+                var message = locale.errors.blueprint.requiresProperty;
+                message += "@property: " + propertyName;
+                message += " (boolean)";
                 errors.push(message);
             }
         };

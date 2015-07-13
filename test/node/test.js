@@ -19,4 +19,6 @@ require('../hilary.di.async.fixture.js')['hilary.di.async.fixture'](Hilary, spec
 require('../hilary.singletons.fixture.js')['hilary.singletons.fixture'](Hilary, spec);
 require('../hilary.pipeline.fixture.js')['hilary.pipeline.fixture'](Hilary, spec, shortid.generate, mockData.makeMockData, async);
 require('../hilary.di.autowire.fixture.js')['hilary.di.autowire.fixture'](Hilary, spec);
-require('../hilary.blueprint.fixture.js')['hilary.blueprint.fixture'](Hilary, spec, shortid.generate, mockData.makeMockData, async);
+require('../hilary.blueprint.fixture.js')['hilary.blueprint.fixture'](Hilary, spec);
+require('../hilary.id.fixture.js')['hilary.id.fixture'](Hilary, spec);
+require('../hilary.is.fixture.js')['hilary.is.fixture'](Hilary, spec);
