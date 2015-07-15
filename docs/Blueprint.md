@@ -51,6 +51,28 @@ IFoo.signatureMatches(foo, function (err, result) {
 });
 ```
 
+### Blueprint Inheritance
+Blueprints can inherit other Blueprints
+
+```JavaScript
+var IFoo,
+    IFooBar;
+
+// IFoo requires the "name" property, which must be a string
+IFoo = new Hilary.Blueprint({
+    name: 'string'
+});
+
+// IFooBar requires the "description" property, which must be a string
+IFooBar = new Hilary.Blueprint({
+    description: 'string'
+});
+
+// IFooBar now requires the "name" and "description" properties, which must be strings
+IFooBar.inherits(IFoo);
+```
+
+
 ## Custom Validation
 You can override the Blueprint validation for any property by setting the value of that property to an object literal with a validation function on it.
 
