@@ -8,6 +8,7 @@
     constants = {
         containerRegistration: "hilary::container",
         parentContainerRegistration: "hilary::parent",
+        blueprintRegistration: "hilary::Blueprint",
         singletons: "__singletons",
         notResolvable: "hilary::handler::not::resolvable",
         pipeline: {
@@ -339,9 +340,7 @@
         };
         Blueprint = function(blueprint) {
             var self = this, prop;
-            if (is.not.defined(blueprint) || is.not.object(blueprint)) {
-                throw new Error(locale.errors.blueprint.missingConstructorArgument);
-            }
+            blueprint = blueprint || {};
             self.props = {};
             for (prop in blueprint) {
                 if (blueprint.hasOwnProperty(prop)) {
@@ -375,6 +374,13 @@
                     };
                 }
                 return syncSignatureMatches(implementation, self);
+            };
+            self.inherits = function(otherBlueprint) {
+                for (prop in otherBlueprint.props) {
+                    if (otherBlueprint.props.hasOwnProperty(prop)) {
+                        self.props[prop] = otherBlueprint.props[prop];
+                    }
+                }
             };
         };
         return Blueprint;
@@ -503,7 +509,7 @@
     };
     HilarysPrivateParts = function(is, asyncHandler) {
         return function(scope, container, pipeline, parent, err) {
-            var $this = {}, blueprintMatchPairs = [], autowire, makeBlueprintValidator, getParameterNames, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g;
+            var $this = {}, blueprintMatchPairs = [], autowire, makeBlueprintValidator, registerBlueprintMatchPair, getParameterNames, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g;
             $this.HilaryModule = function(definition) {
                 var $this = {};
                 if (is.not.string(definition.name)) {
@@ -580,6 +586,22 @@
                     return blueprint.syncSignatureMatches(implementation);
                 };
             };
+            registerBlueprintMatchPair = function(hilaryModule) {
+                if (is.string(hilaryModule.blueprint)) {
+                    blueprintMatchPairs.push({
+                        blueprintName: hilaryModule.blueprint,
+                        moduleName: hilaryModule.name
+                    });
+                } else if (is.array(hilaryModule.blueprint)) {
+                    var i;
+                    for (i = 0; i < hilaryModule.blueprint.length; i += 1) {
+                        blueprintMatchPairs.push({
+                            blueprintName: hilaryModule.blueprint[i],
+                            moduleName: hilaryModule.name
+                        });
+                    }
+                }
+            };
             $this.register = function(hilaryModule) {
                 pipeline.beforeRegister(hilaryModule);
                 if (hilaryModule.name === constants.containerRegistration || hilaryModule.name === constants.parentContainerRegistration) {
@@ -587,11 +609,8 @@
                 }
                 hilaryModule = autowire(hilaryModule);
                 container[hilaryModule.name] = hilaryModule;
-                if (is.string(hilaryModule.blueprint)) {
-                    blueprintMatchPairs.push({
-                        blueprintName: hilaryModule.blueprint,
-                        moduleName: hilaryModule.name
-                    });
+                if (is.defined(hilaryModule.blueprint)) {
+                    registerBlueprintMatchPair(hilaryModule);
                 }
                 $this.asyncHandler(function() {
                     pipeline.afterRegister(hilaryModule);
@@ -709,7 +728,9 @@
                 if (moduleName === constants.containerRegistration) {
                     return container;
                 } else if (moduleName === constants.parentContainerRegistration) {
-                    return parent.context.getContainer();
+                    return parent.getContext().container;
+                } else if (moduleName === constants.blueprintRegistration) {
+                    return Hilary.Blueprint;
                 } else if (parent !== undefined) {
                     return parent.resolve(moduleName);
                 } else if (nodeRequire) {
@@ -982,7 +1003,7 @@
     Hilary = function(options) {
         var $this = this, config = options || {}, container = {}, parent = config.parentContainer, pipeline = config.pipeline || new Pipeline($this, is), err = new Exceptions(is, pipeline), ext = {}, init = {}, prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
         $this.createChildContainer = function(options) {
-            var opts;
+            var opts, childContainer;
             if (typeof options === "string") {
                 opts = {
                     name: options

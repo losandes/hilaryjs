@@ -4,15 +4,15 @@
 */
 (function (exports, nodeRequire) {
     'use strict';
-    
+
     if (exports.Hilary) {
         // Hilary was already defined; ignore this instance
         return false;
     }
-    
+
     var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {},
         initializers = [], is, id, asyncHandler, Blueprint, Exceptions, async;
-    
+
     constants = {
         containerRegistration: 'hilary::container',
         parentContainerRegistration: 'hilary::parent',
@@ -29,7 +29,7 @@
             onError: 'hilary::error'
         }
     };
-    
+
     is = (function () {
         var self = {
                 getType: undefined,
@@ -96,20 +96,20 @@
                 return false;
             }
         };
-        
+
         self.not.defined = function (obj) {
             return self.defined(obj) === false;
         };
-        
+
         self.nullOrUndefined = function (obj) {
             return self.not.defined(obj) || obj === null;
         };
-        
+
         self.not.nullOrWhitespace = function (str) {
             if (typeof str === 'undefined' || typeof str === null || self.not.string(str)) {
                 return false;
             }
-            
+
             // ([^\s]*) = is not whitespace
             // /^$|\s+/ = is empty or whitespace
 
@@ -119,35 +119,35 @@
         self.nullOrWhitespace = function (str) {
             return self.not.nullOrWhitespace(str) === false;
         };
-        
+
         self.function = function (obj) {
             return self.getType(obj) === 'function';
         };
-        
+
         self.not.function = function (obj) {
             return self.function(obj) === false;
         };
-        
+
         self.object = function (obj) {
             return self.getType(obj) === 'object';
         };
-        
+
         self.not.object = function (obj) {
             return self.object(obj) === false;
         };
-        
+
         self.array = function (obj) {
             return self.getType(obj) === 'array';
         };
-        
+
         self.not.array = function (obj) {
             return self.array(obj) === false;
         };
-        
+
         self.string = function (obj) {
             return self.getType(obj) === 'string';
         };
-        
+
         self.not.string = function (obj) {
             return self.string(obj) === false;
         };
@@ -155,39 +155,39 @@
         self.bool = function (obj) {
             return self.getType(obj) === 'boolean';
         };
-        
+
         self.not.bool = function (obj) {
             return self.boolean(obj) === false;
         };
-        
+
         self.boolean = function (obj) {
             return self.getType(obj) === 'boolean';
         };
-        
+
         self.not.boolean = function (obj) {
             return self.boolean(obj) === false;
         };
-        
+
         self.datetime = function (obj) {
             return self.getType(obj) === 'date';
         };
-        
+
         self.not.datetime = function (obj) {
             return self.datetime(obj) === false;
         };
-        
+
         self.regexp = function (obj) {
             return self.getType(obj) === 'regexp';
         };
-        
+
         self.not.regexp = function (obj) {
             return self.regexp(obj) === false;
         };
-        
+
         self.number = function (obj) {
             return self.getType(obj) === 'number';
         };
-        
+
         self.not.number = function (obj) {
             return self.number(obj) === false;
         };
@@ -195,72 +195,72 @@
         self.money = function (val) {
             return self.defined(val) && (/^(?:-)?[0-9]\d*(?:\.\d{0,2})?$/).test(val.toString());
         };
-        
+
         self.not.money = function (val) {
             return self.money(val) === false;
         };
-        
+
         self.decimal = function (num, places) {
             if (self.not.number(num)) {
                 return false;
             }
-            
+
             if (!places && self.number(num)) {
                 return true;
             }
-            
+
             if (!num || +(+num || 0).toFixed(places) !== +num) {
                 return false;
             }
-            
+
             return true;
         };
-        
+
         self.not.decimal = function (val) {
             return self.decimal(val) === false;
         };
-        
+
         self.Window = function (obj) {
             return self.is.defined(Window) && obj instanceof Window;
         };
-        
+
         self.not.Window = function (obj) {
             return self.is.Window(obj) === false;
         };
 
         return self;
     }());
-    
+
     id = (function () {
         var self = {
                 createUid: undefined,
                 createGuid: undefined
             },
             createRandomString;
-        
+
         createRandomString = function (templateString) {
             return templateString.replace(/[xy]/g, function (c) {
                 var r = Math.random() * 16 | 0, v = c === 'x' ? r : r & 3 | 8;
                 return v.toString(16);
             });
         };
-        
+
         self.createUid = function (length) {
             var template;
-            
+
             length = length || 12;
             template = new Array(length + 1).join('x');
-            
+
             return createRandomString(template);
         };
-        
+
         self.createGuid = function () {
             return createRandomString('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx');
         };
 
         return self;
     }());
-    
+
     asyncHandler = (function (is) {
         var self = {
             runAsync: undefined
@@ -272,7 +272,7 @@
             } else {
                 setTimeout(func, 0);
             }
-            
+
 //            else if (is.defined(setImmediate)) {
 //                setImmediate(func);
 //            }
@@ -280,7 +280,7 @@
 
         return self;
     }(is));
-    
+
     Blueprint = (function (utils, is, id) {
         var Blueprint,
             signatureMatches,
@@ -306,44 +306,44 @@
                     }
                 }
             };
-        
+
         /*
         // wraps the callback and validates that the implementation matches the blueprint signature
         */
         signatureMatches = function (implementation, blueprint, callback) {
             var newCallback;
-            
+
             implementation.__interfaces = implementation.__interfaces || {};
-            
+
             newCallback = function (err, result) {
                 if (!err) {
                     implementation.__interfaces[blueprint.__blueprintId] = true;
                 }
-                
+
                 if (typeof callback === 'function') {
                     callback(err, result);
                 }
             };
-            
+
             validateSignature(implementation, blueprint, newCallback);
         };
-        
+
         /*
         // wraps the callback and validates that the implementation matches the blueprint signature
         */
         syncSignatureMatches = function (implementation, blueprint) {
             var validationResult;
-            
+
             implementation.__interfaces = implementation.__interfaces || {};
             validationResult = syncValidateSignature(implementation, blueprint);
-            
+
             if (validationResult.result) {
                 implementation.__interfaces[blueprint.__blueprintId] = true;
             }
-            
+
             return validationResult;
         };
-        
+
         /*
         // validates that the implementation matches the blueprint signature
         // executes the callback with errors, if any, and a boolean value for the result
@@ -357,7 +357,7 @@
                 callback(validationResult.errors, false);
             }
         };
-        
+
         /*
         // validates that the implementation matches the blueprint signature
         // executes the callback with errors, if any, and a boolean value for the result
@@ -365,7 +365,7 @@
         syncValidateSignature = function (implementation, blueprint) {
             var errors = [],
                 prop;
-            
+
             // if the implementation was already validated previously, skip validation
             if (implementation.__interfaces[blueprint.__blueprintId]) {
                 return {
@@ -373,7 +373,7 @@
                     result: true
                 };
             }
-            
+
             // validate each blueprint property
             for (prop in blueprint.props) {
                 if (blueprint.props.hasOwnProperty(prop)) {
@@ -393,7 +393,7 @@
                 };
             }
         };
-        
+
         /*
         // validates a single property from the blueprint
         */
@@ -401,14 +401,14 @@
 //            if (propertyValue === 'bool') {
 //                validateBooleanArgument(implementation, propertyName, errors);
 //            } else
-            
+
             if (is.string(propertyValue)) {
                 validatePropertyType(implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
                 validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
             }
         };
-        
+
         /*
         // validates blueprint properties that have additional details set, such as function arguments and decimal places
         */
@@ -430,7 +430,7 @@
                 }
             }
         };
-        
+
         /*
         // validates that the property type matches the expected blueprint property type
         // i.e. that implementation.num is a number, if the blueprint has a property: num: 'number'
@@ -440,11 +440,11 @@
                 var message = locale.errors.blueprint.requiresProperty;
                     message += '@property: ' + propertyName;
                     message += ' (' + propertyType + ')';
-                
+
                 errors.push(message);
             }
         };
-        
+
         /*
         // validates that the implementation has appropriate arguments to satisfy the blueprint
         */
@@ -457,13 +457,13 @@
             argumentsAreValid = argumentsAreValid && is.function(implementation[propertyName]);
             // and the function has the same number of arguments as the propertyArguments array
             argumentsAreValid = argumentsAreValid && implementation[propertyName].length === propertyArguments.length;
-            
+
             // then if argumentsAreValid is not true, push errors into the error array
             if (!argumentsAreValid) {
                 errors.push(locale.errors.blueprint.requiresArguments + '(' + propertyArguments.join(', ') + ')');
             }
         };
-        
+
         /*
         // validates that a number is a decimal with a given number of decimal places
         */
@@ -472,34 +472,31 @@
                 var message = locale.errors.blueprint.requiresProperty;
                     message += '@property: ' + propertyName;
                     message += ' (decimal with ' + places + ' places)';
-                
+
                 errors.push(message);
             }
         };
-        
+
         validateBooleanArgument = function (implementation, propertyName, errors) {
             if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
                 var message = locale.errors.blueprint.requiresProperty;
                     message += '@property: ' + propertyName;
                     message += ' (boolean)';
-                
+
                 errors.push(message);
             }
         };
-        
+
         /*
         // The Blueprint constructor
         */
         Blueprint = function (blueprint) {
             var self = this,
                 prop;
-            
-            if (is.not.defined(blueprint) || is.not.object(blueprint)) {
-                throw new Error(locale.errors.blueprint.missingConstructorArgument);
-            }
-            
+
+            blueprint = blueprint || {};
             self.props = {};
-            
+
             for (prop in blueprint) {
                 if (blueprint.hasOwnProperty(prop)) {
                     if (prop === '__blueprintId') {
@@ -509,17 +506,17 @@
                     }
                 }
             }
-            
+
             if (is.not.string(self.__blueprintId)) {
                 self.__blueprintId = id.createUid(8);
             }
-            
+
             self.signatureMatches = function (implementation, callback) {
                 if (is.not.defined(implementation)) {
                     callback([locale.errors.blueprint.missingSignatureMatchesImplementationArgument]);
                     return;
                 }
-                
+
                 if (is.not.function(callback)) {
                     throw new Error(locale.errors.blueprint.missingSignatureMatchesCallbackArgument);
                 }
@@ -528,7 +525,7 @@
                     signatureMatches(implementation, self, callback);
                 });
             };
-            
+
             self.syncSignatureMatches = function (implementation) {
                 if (is.not.defined(implementation)) {
                     return {
@@ -536,10 +533,10 @@
                         result: false
                     };
                 }
-                
+
                 return syncSignatureMatches(implementation, self);
             };
-            
+
             self.inherits = function (otherBlueprint) {
                 for (prop in otherBlueprint.props) {
                     if (otherBlueprint.props.hasOwnProperty(prop)) {
@@ -548,18 +545,18 @@
                 }
             };
         };
-        
+
         return Blueprint;
     }(asyncHandler, is, id));
-    
+
     Exceptions = function (is, pipeline) {
         var $this = {},
             makeException;
-        
+
         makeException = function (name, message, data) {
             var msg = is.string(message) ? message : name,
                 err = new Error(msg);
-            
+
             err.message = msg;
 
             if (name !== msg) {
@@ -569,15 +566,15 @@
             if (data) {
                 err.data = data;
             }
-            
+
             // pass the error to the pipeline
             pipeline.onError(err);
-            
+
             return err;
         };
-        
+
         $this.makeException = makeException;
-        
+
         $this.argumentException = function (message, argument, data) {
             var msg = is.not.defined(argument) ? message : message + ' (argument: ' + argument + ')';
             return makeException('ArgumentException', msg, data);
@@ -591,21 +588,21 @@
         $this.notImplementedException = function (message, data) {
             return makeException('NotImplementedException', message, data);
         };
-        
+
         // the default handler for modules that fail to resolve
         // @param moduleName (string): the name of the module that was not resolved
         $this.notResolvableException = function (moduleName) {
             return $this.dependencyException('The module cannot be resolved', moduleName);
         };
-        
+
         return $this;
     };
-    
+
     //err = new Exceptions(utils);
-    
+
     PipelineEvents = function () {
         var $this = {};
-        
+
         $this.beforeRegisterEvents = [];
         $this.afterRegisterEvents = [];
         $this.beforeResolveEvents = [];
@@ -613,10 +610,10 @@
         $this.beforeNewChildEvents = [];
         $this.afterNewChildEvents = [];
         $this.onError = [];
-        
+
         return $this;
     };
-    
+
     Pipeline = function (scope, is) {
         var $this = {},
             registerEvent,
@@ -629,7 +626,7 @@
             beforeNewChild,
             afterNewChild,
             onError;
-        
+
         registerEvent = function (name, callback) {
             switch (name) {
             case constants.pipeline.beforeRegister:
@@ -657,18 +654,18 @@
                 throw new Error('the pipeline event you are trying to register is not implemented (name: ' + name + ')');
             }
         };
-        
+
         executeEvent = function (eventArray, argumentArray) {
             var i,
                 event;
-            
+
             for (i = 0; i < eventArray.length; i += 1) {
                 event = eventArray[i];
-                
+
                 if (event.once) {
                     eventArray.splice(i, 1);
                 }
-                
+
                 if (is.function(event)) {
                     event.apply(null, argumentArray);
                 }
@@ -694,34 +691,34 @@
         beforeNewChild = function (options) {
             executeEvent($this.events.beforeNewChildEvents, [scope, options]);
         };
-        
+
         afterNewChild = function (options, child) {
             executeEvent($this.events.afterNewChildEvents, [scope, options, child]);
         };
-        
+
         onError = function (err) {
             executeEvent($this.events.onError, [err]);
         };
-        
+
         // EVENTS
         $this.events = pipelineEvents;
         $this.registerEvent = registerEvent;
         $this.onError = onError;
-        
+
         // REGISTRATION and RESOLUTION
         $this.beforeRegister = beforeRegister;
         $this.afterRegister = afterRegister;
-        
+
         $this.beforeResolve = beforeResolve;
         $this.afterResolve = afterResolve;
-        
+
         // CONTAINERS
         $this.beforeNewChild = beforeNewChild;
         $this.afterNewChild = afterNewChild;
-        
+
         return $this;
     };
-    
+
     HilarysPrivateParts = (function (is, asyncHandler) {
         return function (scope, container, pipeline, parent, err) {
             var $this = {},
@@ -819,7 +816,7 @@
 
                 return result;
             };
-            
+
             makeBlueprintValidator = function (blueprintName, moduleName) {
                 return function () {
                     var blueprint = scope.resolve(blueprintName),
@@ -837,7 +834,7 @@
                     return blueprint.syncSignatureMatches(implementation);
                 };
             };
-            
+
             registerBlueprintMatchPair = function (hilaryModule) {
                 if (is.string(hilaryModule.blueprint)) {
                     blueprintMatchPairs.push({
@@ -846,7 +843,7 @@
                     });
                 } else if (is.array(hilaryModule.blueprint)) {
                     var i;
-                    
+
                     for (i = 0; i < hilaryModule.blueprint.length; i += 1) {
                         blueprintMatchPairs.push({
                             blueprintName: hilaryModule.blueprint[i],
@@ -869,7 +866,7 @@
                 if (is.defined(hilaryModule.blueprint)) {
                     registerBlueprintMatchPair(hilaryModule);
                 }
-                
+
                 $this.asyncHandler(function () {
                     pipeline.afterRegister(hilaryModule);
                 });
@@ -1258,29 +1255,29 @@
                     return false;
                 }
             };
-            
+
             $this.validateBlueprints = function () {
                 var currentResult,
                     blueprintValidators = [],
                     errors = [],
                     result = true,
                     i;
-                
+
                 // make the validation tasks
                 for (i = 0; i < blueprintMatchPairs.length; i += 1) {
                     blueprintValidators.push(makeBlueprintValidator(blueprintMatchPairs[i].blueprintName, blueprintMatchPairs[i].moduleName));
                 }
-                
+
                 // execute the validation tasks
                 for (i = 0; i < blueprintValidators.length; i += 1) {
                     currentResult = blueprintValidators[i]();
-                    
+
                     if (currentResult.result === false) {
                         errors.concat(currentResult.errors);
                         result = false;
                     }
                 }
-                
+
                 // return the validation results
                 if (result) {
                     return {
@@ -1294,12 +1291,12 @@
                     };
                 }
             };
-            
+
             $this.validateBlueprintsAsync = function (next) {
                 var makeTask,
                     tasks = [],
                     i;
-                
+
                 // make a validation task
                 makeTask = function (i) {
                     return function (callback) {
@@ -1307,12 +1304,12 @@
                         callback(valResult.errors, valResult.result);
                     };
                 };
-                
+
                 // make the validation tasks
                 for (i = 0; i < blueprintMatchPairs.length; i += 1) {
                     tasks.push(makeTask(i));
                 }
-                
+
                 // execute the validation tasks in parallel
                 async.parallel(tasks, next);
             };
@@ -1404,7 +1401,7 @@
 
                     return scope;
                 };
-                
+
                 /*
                 // Validates all modules that are registered with a blueprint against their blueprint
                 // @returns this
@@ -1435,7 +1432,7 @@
             return $this;
         };
     }(is, asyncHandler));
-    
+
     Hilary = function (options) {
         var $this = this,
             config = options || {},
@@ -1446,10 +1443,10 @@
             ext = {},
             init = {},
             prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
-        
-        
+
+
         // PUBLIC
-        
+
         /*
         // exposes the constructor for hilary so you can create child contexts
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
@@ -1460,7 +1457,7 @@
         $this.createChildContainer = function (options) {
             var opts,
                 childContainer;
-            
+
             if (typeof options === 'string') {
                 // the options argument must be a named scope
                 opts = { name: options };
@@ -1470,10 +1467,10 @@
             } else {
                 opts = {};
             }
-            
+
             return prive.createChildContainer($this, opts);
         };
-        
+
         /*
         // allows you to set a scopes parent container explicitly
         // @param options.utils (object): utilities to use for validation (i.e. isFunction)
@@ -1485,12 +1482,12 @@
             if (typeof scope.register === 'function' && typeof scope.resolve === 'function') {
                 // set the parent
                 parent = scope;
-                
+
                 // update the private functionality
                 prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
             }
         };
-        
+
         /*
         // register a module by name
         // @param definition (object): the module defintion: at least the name and factory properties are required
@@ -1500,7 +1497,7 @@
             prive.register(new prive.HilaryModule(definition));
             return $this;
         };
-        
+
         /*
         // auto-register an index of objects
         // @param index (object or array): the index of objects to be registered.
@@ -1520,7 +1517,7 @@
             prive.autoRegister(index, next);
             return $this;
         };
-        
+
         /*
         // attempt to resolve a dependency by name (supports parental hierarchy)
         // @param moduleName (string): the qualified name that the module can be located by in the container
@@ -1529,7 +1526,7 @@
         $this.resolve = function (moduleName) {
             return prive.resolve(moduleName);
         };
-        
+
         /*
         // attempt to resolve multiple dependencies by name (supports parental hierarchy)
         // @param moduleNameArray (array): a list of qualified names that the modules can be located by in the container
@@ -1539,7 +1536,7 @@
         $this.resolveMany = function (moduleNameArray, next) {
             return prive.resolveMany(moduleNameArray, next);
         };
-        
+
         /*
         // auto-resolve an index of objects
         // @param index (object or array): the index of objects to be resolved.
@@ -1552,7 +1549,7 @@
             prive.autoResolve(index, next);
             return $this;
         };
-        
+
         /*
         // Disposes a module, or all modules. When a moduleName is not passed
         // as an argument, the entire container is disposed.
@@ -1562,7 +1559,7 @@
         $this.dispose = function (moduleName) {
             return prive.dispose(moduleName);
         };
-        
+
         /*
         // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
         // @param eventName (string): the name of the event to register the handler for
@@ -1573,7 +1570,7 @@
             pipeline.registerEvent(eventName, eventHandler);
             return $this;
         };
-        
+
         /*
         // Validates all modules that are registered with a blueprint against their blueprint
         // @returns object with "errors" (null or array) and "result" (boolean) parameters.
@@ -1581,7 +1578,7 @@
         $this.validateBlueprints = function () {
             return prive.validateBlueprints();
         };
-        
+
         /*
         // Hilary has a built in extension for asynchronous operations. Unlike the sync operations,
         // Hilary depends on a third-party library for async operations: async.js (https://github.com/caolan/async).
@@ -1593,7 +1590,7 @@
             prive.useAsync(async);
             return $this;
         };
-        
+
         /*
         // Exposes read access to private context for extensibility and debugging. this is not meant
         // to be used in production application code, aside from Hilary extensions.
@@ -1611,37 +1608,37 @@
                 exceptionHandlers: err
             };
         };
-        
+
         // /PUBLIC
-        
+
         // EXTENSIONS
-        
+
         // add extensions to this
         for (ext.count = 0; ext.count < extensions.length; ext.count += 1) {
             ext.current = extensions[ext.count];
-            
+
             if (is.function(ext.current.factory)) {
                 $this[ext.current.name] = ext.current.factory($this);
             } else if (is.defined(ext.current.factory)) {
                 $this[ext.current.name] = ext.current.factory;
             }
         }
-        
+
         for (init.count = 0; init.count < initializers.length; init.count += 1) {
             init.current = initializers[init.count];
-            
+
             if (is.function(init.current)) {
                 init.current($this, config);
             }
         }
-        
+
         // /EXTENSIONS
-        
+
         if (config.name) {
             scopes[config.name] = $this;
         }
     };
-    
+
     /*
     // a function for extending Hilary. The scope (this) is passed to the factory;
     */
@@ -1650,19 +1647,19 @@
             name: name,
             factory: factory
         });
-        
+
         return true;
     };
-    
+
     /*
     // a function for extending Hilary. The scope (this), and constructor options are passed to the factory;
     */
     Hilary.onInit = function (factory) {
         initializers.push(factory);
-        
+
         return true;
     };
-    
+
     Hilary.scope = function (name, options) {
         if (scopes[name]) {
             return scopes[name];
@@ -1671,11 +1668,11 @@
             return scopes[name];
         }
     };
-    
+
     Hilary.Blueprint = Blueprint;
-    
+
     exports.Hilary = Hilary;
-    
+
 }(
     (typeof module !== 'undefined' && module.exports) ? module.exports : window,    // node or browser
     (typeof module !== 'undefined' && module.exports) ? require : undefined         // node's require or undefined
