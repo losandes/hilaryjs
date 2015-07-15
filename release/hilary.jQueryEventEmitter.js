@@ -1,4 +1,4 @@
-/*! hilary-build 2015-07-13 */
+/*! hilary-build 2015-07-15 */
 (function(Hilary, $) {
     "use strict";
     Hilary.onInit(function(scope, config) {

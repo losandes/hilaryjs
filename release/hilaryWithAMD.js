@@ -1,4 +1,4 @@
-/*! hilary-build 2015-07-13 */
+/*! hilary-build 2015-07-15 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -29,6 +29,7 @@
             object: undefined,
             array: undefined,
             string: undefined,
+            bool: undefined,
             "boolean": undefined,
             datetime: undefined,
             regexp: undefined,
@@ -43,6 +44,7 @@
                 object: undefined,
                 array: undefined,
                 string: undefined,
+                bool: undefined,
                 "boolean": undefined,
                 datetime: undefined,
                 regexp: undefined,
@@ -111,6 +113,12 @@
         };
         self.not.string = function(obj) {
             return self.string(obj) === false;
+        };
+        self.bool = function(obj) {
+            return self.getType(obj) === "boolean";
+        };
+        self.not.bool = function(obj) {
+            return self.boolean(obj) === false;
         };
         self.boolean = function(obj) {
             return self.getType(obj) === "boolean";
@@ -252,9 +260,9 @@
                     result: true
                 };
             }
-            for (prop in blueprint) {
-                if (blueprint.hasOwnProperty(prop) && prop !== "__blueprintId" && prop !== "signatureMatches") {
-                    validateProperty(implementation, prop, blueprint[prop], errors);
+            for (prop in blueprint.props) {
+                if (blueprint.props.hasOwnProperty(prop)) {
+                    validateProperty(implementation, prop, blueprint.props[prop], errors);
                 }
             }
             if (errors.length > 0) {
@@ -270,9 +278,7 @@
             }
         };
         validateProperty = function(implementation, propertyName, propertyValue, errors) {
-            if (propertyValue === "bool") {
-                validateBooleanArgument(implementation, propertyName, errors);
-            } else if (is.string(propertyValue)) {
+            if (is.string(propertyValue)) {
                 validatePropertyType(implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
                 validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
@@ -336,12 +342,14 @@
             if (is.not.defined(blueprint) || is.not.object(blueprint)) {
                 throw new Error(locale.errors.blueprint.missingConstructorArgument);
             }
+            self.props = {};
             for (prop in blueprint) {
                 if (blueprint.hasOwnProperty(prop)) {
-                    if (prop === "signatureMatches") {
-                        throw new Error(locale.errors.blueprint.reservedPropertyName_singatureMatches);
+                    if (prop === "__blueprintId") {
+                        self.__blueprintId = blueprint.__blueprintId;
+                    } else {
+                        self.props[prop] = blueprint[prop];
                     }
-                    self[prop] = blueprint[prop];
                 }
             }
             if (is.not.string(self.__blueprintId)) {

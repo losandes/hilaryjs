@@ -38,6 +38,7 @@
                 object: undefined,
                 array: undefined,
                 string: undefined,
+                bool: undefined,
                 boolean: undefined,
                 datetime: undefined,
                 regexp: undefined,
@@ -52,6 +53,7 @@
                     object: undefined,
                     array: undefined,
                     string: undefined,
+                    bool: undefined,
                     boolean: undefined,
                     datetime: undefined,
                     regexp: undefined,
@@ -147,6 +149,14 @@
         
         self.not.string = function (obj) {
             return self.string(obj) === false;
+        };
+
+        self.bool = function (obj) {
+            return self.getType(obj) === 'boolean';
+        };
+        
+        self.not.bool = function (obj) {
+            return self.boolean(obj) === false;
         };
         
         self.boolean = function (obj) {
@@ -364,9 +374,9 @@
             }
             
             // validate each blueprint property
-            for (prop in blueprint) {
-                if (blueprint.hasOwnProperty(prop) && prop !== '__blueprintId'  && prop !== 'signatureMatches') {
-                    validateProperty(implementation, prop, blueprint[prop], errors);
+            for (prop in blueprint.props) {
+                if (blueprint.props.hasOwnProperty(prop)) {
+                    validateProperty(implementation, prop, blueprint.props[prop], errors);
                 }
             }
 
@@ -387,9 +397,11 @@
         // validates a single property from the blueprint
         */
         validateProperty = function (implementation, propertyName, propertyValue, errors) {
-            if (propertyValue === 'bool') {
-                validateBooleanArgument(implementation, propertyName, errors);
-            }else if (is.string(propertyValue)) {
+//            if (propertyValue === 'bool') {
+//                validateBooleanArgument(implementation, propertyName, errors);
+//            } else
+            
+            if (is.string(propertyValue)) {
                 validatePropertyType(implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
                 validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
@@ -485,13 +497,15 @@
                 throw new Error(locale.errors.blueprint.missingConstructorArgument);
             }
             
+            self.props = {};
+            
             for (prop in blueprint) {
                 if (blueprint.hasOwnProperty(prop)) {
-                    if (prop === 'signatureMatches') {
-                        throw new Error(locale.errors.blueprint.reservedPropertyName_singatureMatches);
+                    if (prop === '__blueprintId') {
+                        self.__blueprintId = blueprint.__blueprintId;
+                    } else {
+                        self.props[prop] = blueprint[prop];
                     }
-                    
-                    self[prop] = blueprint[prop];
                 }
             }
             
@@ -523,6 +537,14 @@
                 }
                 
                 return syncSignatureMatches(implementation, self);
+            };
+            
+            self.inherits = function (otherBlueprint) {
+                for (prop in otherBlueprint.props) {
+                    if (otherBlueprint.props.hasOwnProperty(prop)) {
+                        self.props[prop] = otherBlueprint.props[prop];
+                    }
+                }
             };
         };
         
@@ -705,6 +727,7 @@
                 blueprintMatchPairs = [],
                 autowire,
                 makeBlueprintValidator,
+                registerBlueprintMatchPair,
                 getParameterNames,
                 STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
                 ARGUMENT_NAMES = /([^\s,]+)/g;
@@ -812,6 +835,24 @@
                     return blueprint.syncSignatureMatches(implementation);
                 };
             };
+            
+            registerBlueprintMatchPair = function (hilaryModule) {
+                if (is.string(hilaryModule.blueprint)) {
+                    blueprintMatchPairs.push({
+                        blueprintName: hilaryModule.blueprint,
+                        moduleName: hilaryModule.name
+                    });
+                } else if (is.array(hilaryModule.blueprint)) {
+                    var i;
+                    
+                    for (i = 0; i < hilaryModule.blueprint.length; i += 1) {
+                        blueprintMatchPairs.push({
+                            blueprintName: hilaryModule.blueprint[i],
+                            moduleName: hilaryModule.name
+                        });
+                    }
+                }
+            };
 
             $this.register = function (hilaryModule) {
                 pipeline.beforeRegister(hilaryModule);
@@ -823,11 +864,8 @@
                 hilaryModule = autowire(hilaryModule);
                 container[hilaryModule.name] = hilaryModule;
 
-                if (is.string(hilaryModule.blueprint)) {
-                    blueprintMatchPairs.push({
-                        blueprintName: hilaryModule.blueprint,
-                        moduleName: hilaryModule.name
-                    });
+                if (is.defined(hilaryModule.blueprint)) {
+                    registerBlueprintMatchPair(hilaryModule);
                 }
                 
                 $this.asyncHandler(function () {
