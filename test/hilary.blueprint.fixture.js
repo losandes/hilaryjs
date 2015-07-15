@@ -270,6 +270,27 @@
 
             });
             
+            describe('when a blueprint inherits another blueprint', function () {
+                
+                it('should have the properties of both blueprints', function () {
+                    // given
+                    var bp1 = new Blueprint({
+                            name: 'string'
+                        }),
+                        bp2 = new Blueprint({
+                            description: 'string'
+                        });
+                    
+                    // when
+                    bp2.inherits(bp1);
+                    
+                    // then
+                    expect(bp2.props.name).to.equal('string');
+                    expect(bp2.props.description).to.equal('string');
+                });
+                
+            });
+            
             describe('when registering modules', function () {
 
                 it('should be able to define the blueprint by name', function () {
@@ -291,6 +312,29 @@
 
                     // then
                     scope.getContext().container[moduleName].blueprint.should.equal(expected);
+                });
+                
+                it('should be able to define the blueprint in an array', function () {
+                    // given
+                    var moduleName = id.createUid(8),
+                        expected1 = id.createUid(8),
+                        expected2 = id.createUid(8),
+                        factory;
+
+                    factory = function () {
+                        return expected1;
+                    };
+
+                    // when
+                    scope.register({
+                        name: moduleName,
+                        factory: factory,
+                        blueprint: [expected1, expected2]
+                    });
+
+                    // then
+                    scope.getContext().container[moduleName].blueprint[0].should.equal(expected1);
+                    scope.getContext().container[moduleName].blueprint[1].should.equal(expected2);
                 });
 
             }); // /registering
@@ -339,6 +383,54 @@
                     
                 });
                 
+                it('should return a happy result if the modules implement each blueprint in the array', function () {
+                    
+                    // given
+                    var scope = new Hilary(),
+                        blueprintName1 = id.createUid(8),
+                        blueprintName2 = id.createUid(8),
+                        moduleName = id.createUid(8),
+                        actual,
+                        bp1 = new Blueprint({
+                            name: 'string'
+                        }),
+                        bp2 = new Blueprint({
+                            description: 'string'
+                        });
+
+                    // when
+                    scope.register({
+                        name: blueprintName1,
+                        factory: function () {
+                            return bp1;
+                        },
+                    });
+                    
+                    scope.register({
+                        name: blueprintName2,
+                        factory: function () {
+                            return bp2;
+                        },
+                    });
+                    
+                    scope.register({
+                        name: moduleName,
+                        factory: function () {
+                            return {
+                                name: 'hello',
+                                description: 'world'
+                            };
+                        },
+                        blueprint: [blueprintName1, blueprintName2]
+                    });
+                    
+                    actual = scope.validateBlueprints();
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                    
+                });
+                
                 it('should return a sad result if the modules do NOT implement the blueprint', function () {
                     
                     // given
@@ -372,6 +464,55 @@
                             };
                         },
                         blueprint: blueprintName
+                    });
+                    
+                    actual = scope.validateBlueprints();
+
+                    // then
+                    expect(actual.result).to.equal(false);
+                    expect(actual.errors).to.not.equal(null);
+                    
+                });
+                
+                it('should return a sad result if the modules do NOT implement each blueprint in the array', function () {
+                    
+                    // given
+                    var scope = new Hilary(),
+                        blueprintName1 = id.createUid(8),
+                        blueprintName2 = id.createUid(8),
+                        moduleName = id.createUid(8),
+                        actual,
+                        bp1 = new Blueprint({
+                            name: 'string'
+                        }),
+                        bp2 = new Blueprint({
+                            description: 'string'
+                        });
+
+                    // when
+                    scope.register({
+                        name: blueprintName1,
+                        factory: function () {
+                            return bp1;
+                        },
+                    });
+                    
+                    scope.register({
+                        name: blueprintName2,
+                        factory: function () {
+                            return bp2;
+                        },
+                    });
+                    
+                    scope.register({
+                        name: moduleName,
+                        factory: function () {
+                            return {
+                                name: 'hello',
+                                //description: 'world'
+                            };
+                        },
+                        blueprint: [blueprintName1, blueprintName2]
                     });
                     
                     actual = scope.validateBlueprints();
