@@ -178,6 +178,56 @@
                         done();
                     });
                 });
+                
+                it('should be able to resolve the container by name', function () {
+                    // given
+                    var container,
+                        moduleName = generateId();
+                    
+                    scope.register({
+                        name: moduleName,
+                        factory: function () {}
+                    });
+                    
+                    // when
+                    container = scope.resolve('hilary::container');
+                    
+                    // then
+                    expect(container[moduleName]).to.not.equal(undefined);
+                });
+                
+                it('should be able to resolve the parent container by name', function () {
+                    // given
+                    var sutScope = new Hilary(),
+                        sutChildScope = sutScope.createChildContainer(),
+                        container,
+                        moduleName = generateId();
+                    
+                    sutScope.register({
+                        name: moduleName,
+                        factory: function () {}
+                    });
+                    
+                    // when
+                    container = sutChildScope.resolve('hilary::parent');
+                    
+                    // then
+                    expect(container[moduleName]).to.not.equal(undefined);
+                });
+                
+                it('should be able to resolve Blueprint by name', function () {
+                    // given
+                    var Bp,
+                        sutBp,
+                        sutBpId = generateId();
+                    
+                    // when
+                    Bp = scope.resolve('hilary::Blueprint');
+                    sutBp = new Bp({ __blueprintId: sutBpId, name: 'string' });
+                    
+                    // then
+                    expect(sutBp.__blueprintId).to.equal(sutBpId);
+                });
 
             }); // /resolving
 

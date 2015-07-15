@@ -16,6 +16,7 @@
     constants = {
         containerRegistration: 'hilary::container',
         parentContainerRegistration: 'hilary::parent',
+        blueprintRegistration: 'hilary::Blueprint',
         singletons: '__singletons',
         notResolvable: 'hilary::handler::not::resolvable',
         pipeline: {
@@ -784,6 +785,7 @@
 
                 pipeline.beforeNewChild(options);
                 child = new Hilary(options);
+                //child.setParentContainer($this);
 
                 if (scope.registerAsync) {
                     child.useAsync(async);
@@ -1025,7 +1027,9 @@
                 if (moduleName === constants.containerRegistration) {
                     return container;
                 } else if (moduleName === constants.parentContainerRegistration) {
-                    return parent.context.getContainer();
+                    return parent.getContext().container;
+                } else if (moduleName === constants.blueprintRegistration) {
+                    return Hilary.Blueprint;
                 } else if (parent !== undefined) {
                     // attempt to resolve from the parent container
                     return parent.resolve(moduleName);
@@ -1454,7 +1458,8 @@
         // @returns new Hilary scope with parent set to this (the current Hilary scope)
         */
         $this.createChildContainer = function (options) {
-            var opts;
+            var opts,
+                childContainer;
             
             if (typeof options === 'string') {
                 // the options argument must be a named scope
