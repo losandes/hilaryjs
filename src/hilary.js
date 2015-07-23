@@ -720,7 +720,7 @@
     };
 
     HilarysPrivateParts = (function (is, asyncHandler) {
-        return function (scope, container, pipeline, parent, err) {
+        return function (scope, container, singletons, pipeline, parent, err) {
             var $this = {},
                 blueprintMatchPairs = [],
                 autowire,
@@ -745,6 +745,7 @@
                 $this.dependencies = definition.dependencies || undefined;
                 $this.factory = definition.factory;
                 $this.blueprint = definition.blueprint;
+                $this.singleton = definition.singleton;
 
                 return $this;
             };
@@ -875,8 +876,7 @@
             };
 
             $this.resolve = function (moduleName) {
-                var theModule,
-                    output;
+                var output;
 
                 if (is.not.string(moduleName)) {
                     throw err.argumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveMany.', 'moduleName');
@@ -884,10 +884,19 @@
 
                 pipeline.beforeResolve(moduleName);
 
-                theModule = container[moduleName];
+                if (singletons[moduleName] !== undefined) {
+                    return $this.returnResult({
+                        name: moduleName,
+                        result: singletons[moduleName]
+                    }, pipeline);
+                }
 
-                if (theModule !== undefined) {
-                    output = $this.invoke(theModule);
+                if (container[moduleName] !== undefined) {
+                    output = $this.invoke(container[moduleName]);
+
+                    if (container[moduleName].singleton === true) {
+                        singletons[moduleName] = output;
+                    }
 
                     return $this.returnResult({
                         name: moduleName,
@@ -986,12 +995,10 @@
                 };
 
                 findAndInvokeResultTask = function (previousTaskResult, _next) {
-                    var theModule;
-
-                    theModule = container[moduleName];
-
-                    if (theModule !== undefined) {
-                        $this.invokeAsync(theModule, _next);
+                    if (singletons[moduleName] !== undefined) {
+                        _next(null, singletons[moduleName]);
+                    } else if (container[moduleName] !== undefined) {
+                        $this.invokeAsync(container[moduleName], _next);
                     } else {
                         _next(null, null);
                     }
@@ -1067,6 +1074,8 @@
             };
 
             $this.invokeAsync = function (theModule, next) {
+                var output;
+
                 if (is.array(theModule.dependencies) && theModule.dependencies.length > 0) {
                     // the module has dependencies, let's get them
                     $this.applyDependenciesAsync(theModule, next);
@@ -1075,11 +1084,17 @@
 
                 if (is.function(theModule.factory) && theModule.factory.length === 0) {
                     // the module is a function and takes no arguments, return the result of executing it
-                    next(null, theModule.factory.call());
+                    output = theModule.factory.call();
                 } else {
                     // the module takes arguments and has no dependencies, this must be a factory
-                    next(null, theModule.factory);
+                    output = theModule.factory;
                 }
+
+                if (theModule.singleton === true) {
+                    singletons[theModule.name] = output;
+                }
+
+                next(null, output);
             };
 
             $this.applyDependencies = function (theModule) {
@@ -1111,7 +1126,13 @@
                 }
 
                 async.parallel(dependencyTasks, function (err, dependencies) {
-                    next(null, theModule.factory.apply(null, dependencies));
+                    var output = theModule.factory.apply(null, dependencies);
+
+                    if (theModule.singleton === true) {
+                        singletons[theModule.name] = output;
+                    }
+
+                    next(null, output);
                 });
             };
 
@@ -1437,12 +1458,13 @@
         var $this = this,
             config = options || {},
             container = {},
+            singletons = {},
             parent = config.parentContainer,
             pipeline = config.pipeline || new Pipeline($this, is),
             err = new Exceptions(is, pipeline),
             ext = {},
             init = {},
-            prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
+            prive = new HilarysPrivateParts($this, container, singletons, pipeline, parent, err);
 
 
         // PUBLIC
@@ -1455,10 +1477,9 @@
         // @returns new Hilary scope with parent set to this (the current Hilary scope)
         */
         $this.createChildContainer = function (options) {
-            var opts,
-                childContainer;
+            var opts;
 
-            if (typeof options === 'string') {
+            if (is.string(options)) {
                 // the options argument must be a named scope
                 opts = { name: options };
             } else if (is.object(options)) {
@@ -1484,7 +1505,7 @@
                 parent = scope;
 
                 // update the private functionality
-                prive = new HilarysPrivateParts($this, container, pipeline, parent, err);
+                prive = new HilarysPrivateParts($this, container, singletons, pipeline, parent, err);
             }
         };
 
@@ -1598,6 +1619,7 @@
         $this.getContext = function () {
             return {
                 container: container,
+                singletons: singletons,
                 parent: parent,
                 pipeline: pipeline,
                 HilaryModule: prive.HilaryModule,
