@@ -727,6 +727,7 @@
                 makeBlueprintValidator,
                 registerBlueprintMatchPair,
                 getParameterNames,
+                makeSingleton,
                 STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
                 ARGUMENT_NAMES = /([^\s,]+)/g;
 
@@ -854,6 +855,30 @@
                 }
             };
 
+            makeSingleton = function (hilaryModule, singletonInstance) {
+                var makeIt = function (name, factory) {
+                    // put the factory on the singletons object
+                    singletons[name] = factory;
+
+                    // rewrite the module factory so it only returns the singleton and saves memory
+                    container[name].resolvedDependencies = container[name].dependencies;
+                    container[name].dependencies = undefined;
+                    container[name].factory = function () {
+                        return singletons[name];
+                    };
+                };
+
+                if (singletonInstance) {
+                    makeIt(hilaryModule.name, singletonInstance);
+                } else if(
+                    (is.object(hilaryModule.factory)) ||
+                    // the factory has arguments and dependencies is either not defined or is an empty array
+                    (is.function(hilaryModule.factory) && hilaryModule.factory.length > 0 && (is.not.defined(hilaryModule.dependencies) || hilaryModule.dependencies.length < 1))
+                ) {
+                    makeIt(hilaryModule.name, hilaryModule.factory);
+                }
+            };
+
             $this.register = function (hilaryModule) {
                 pipeline.beforeRegister(hilaryModule);
 
@@ -865,13 +890,7 @@
                 container[hilaryModule.name] = hilaryModule;
 
                 // register singletons that have no dependencies
-                if(
-                    (is.object(hilaryModule.factory)) ||
-                    // the factory has arguments and dependencies is either not defined or is an empty array
-                    (is.function(hilaryModule.factory) && hilaryModule.factory.length > 0 && (is.not.defined(hilaryModule.dependencies) || hilaryModule.dependencies.length < 1))
-                ) {
-                    singletons[hilaryModule.name] = hilaryModule.factory;
-                }
+                makeSingleton(hilaryModule);
 
                 if (is.defined(hilaryModule.blueprint)) {
                     registerBlueprintMatchPair(hilaryModule);
@@ -893,18 +912,11 @@
 
                 pipeline.beforeResolve(moduleName);
 
-                if (singletons[moduleName] !== undefined) {
-                    return $this.returnResult({
-                        name: moduleName,
-                        result: singletons[moduleName]
-                    }, pipeline);
-                }
-
                 if (container[moduleName] !== undefined) {
                     output = $this.invoke(container[moduleName]);
 
                     if (container[moduleName].singleton === true) {
-                        singletons[moduleName] = output;
+                        makeSingleton(container[moduleName], output);
                     }
 
                     return $this.returnResult({
@@ -1004,9 +1016,7 @@
                 };
 
                 findAndInvokeResultTask = function (previousTaskResult, _next) {
-                    if (singletons[moduleName] !== undefined) {
-                        _next(null, singletons[moduleName]);
-                    } else if (container[moduleName] !== undefined) {
+                    if (container[moduleName] !== undefined) {
                         $this.invokeAsync(container[moduleName], _next);
                     } else {
                         _next(null, null);
@@ -1100,7 +1110,7 @@
                 }
 
                 if (theModule.singleton === true) {
-                    singletons[theModule.name] = output;
+                    makeSingleton(theModule, output);
                 }
 
                 next(null, output);
@@ -1138,7 +1148,7 @@
                     var output = theModule.factory.apply(null, dependencies);
 
                     if (theModule.singleton === true) {
-                        singletons[theModule.name] = output;
+                        makeSingleton(theModule, output);
                     }
 
                     next(null, output);

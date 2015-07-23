@@ -1,7 +1,7 @@
 /*jslint node: true*/
 (function (exports) {
     "use strict";
-    
+
     exports['hilary.di.async.fixture'] = function (Hilary, spec, generateId, makeMockData, async) {
         // SETUP
 
@@ -83,7 +83,7 @@
                         var container = scope.getContext().container;
                         expect(err).to.equal(null);
                         container[moduleName].should.not.equal(undefined);
-                        container[moduleName].factory.val.should.equal(expected);
+                        container[moduleName].factory().val.should.equal(expected);
                         done();
                     };
 
@@ -95,7 +95,7 @@
                         }
                     }, next);
                 });
-                
+
                 it('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {
                     var shouldThrow = function () {
                         scope.register({});
@@ -103,25 +103,25 @@
 
                     expect(shouldThrow).to.Throw();
                 });
-                
+
                 it('should throw when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
                     // given
                     var sutName = generateId(),
                         missingDependency = generateId(),
                         shouldTrow;
-                    
+
                     scope.register({
                         name: sutName,
                         dependencies: [missingDependency],
                         factory: function (dep) {}
                     });
-                    
+
                     // when
                     scope.resolveAsync(sutName, function (err) {
                         expect(err).to.be.a('object');
                         done();
                     });
-                    
+
                 });
 
             }); // /registering
@@ -140,18 +140,18 @@
                         done();
                     });
                 });
-                
+
                 it('should throw when attempting to resolve a module that doesn\'t exist', function (done) {
                     scope.resolveAsync(function () {}, function (err) {
                         expect(err).to.be.a('object');
-                        
+
                         scope.resolveAsync('icanhascheeseburger', function (err) {
                             expect(err).to.be.a('object');
                             done();
                         });
                     });
                 });
-                
+
                 it('should be able to resolve multiple modules at the same time', function (done) {
                     // when
                     scope.resolveManyAsync([testModules.module1.name, testModules.module2.name], function (err, results) {
@@ -165,10 +165,10 @@
                         done();
                     });
                 });
-                
+
                 it('should return an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
                     var sutName1 = generateId();
-                    
+
                     scope.resolveManyAsync([testModules.module1.name, sutName1], function (err, results) {
                         expect(err).to.be.a('object');
                         done();
@@ -191,7 +191,7 @@
                         done();
                     });
                 };
-                
+
                 it('should be able to register an array of definitions', function (done) {
                     var mock1 = testModules.module1.moduleDefinition,
                         mock2 = testModules.module2.moduleDefinition,
@@ -209,10 +209,10 @@
                             mock3: testModules.module3.moduleDefinition,
                             mock4: testModules.module4.moduleDefinition
                         };
-                    
+
                     assert(new Hilary().useAsync(async), index, done);
                 });
-                
+
                 it('should return an error when any or all registrations failed', function (done) {
                     var mock1 = testModules.module1.moduleDefinition,
                         mock2 = {},
@@ -229,16 +229,16 @@
             }); // /autoRegister
 
             spec.describe('when auto-resolving modules', function () {
-                
+
                 var mockIndex,
                     assert;
-                
+
                 mockIndex = function (mockRegistrationName) {
                     var mock1,
                         mock2,
                         mock3,
                         index;
-                    
+
                     mock1 = {
                         dependencies: [testModules.module2.name, testModules.module3.name],
                         factory: function (mod2, mod3) {
@@ -253,30 +253,30 @@
                             });
                         }
                     };
-                    
+
                     mock2 = testModules.module2.moduleDefinition;
                     delete mock2.name;
                     mock3 = testModules.module3.moduleDefinition;
                     delete mock3.name;
-                    
+
                     return {
                         mock1: mock1,
                         mock2: mock2,
                         mock3: mock3
                     };
                 };
-                
+
                 assert = function (index, mockRegistrationName, done) {
                     scope.autoResolve(index, function (err) {
                         // when
                         var result = scope.resolve(mockRegistrationName);
-                        
+
                         // then
                         expect(err).to.equal(null);
-                        
+
                         expect(result.mod2).to.not.equal(undefined);
                         expect(result.mod2.thisOut).to.equal(testModules.module2.expected);
-                        
+
                         expect(result.mod3).to.not.equal(undefined);
                         expect(result.mod3.thisOut).to.equal(testModules.module3.expected);
 
@@ -288,13 +288,13 @@
                     var mockRegistrationName = generateId(),
                         idx = mockIndex(mockRegistrationName),
                         index = [idx.mock3, idx.mock2, idx.mock1];
-                    
+
                     assert(index, mockRegistrationName, done);
                 });
-                
+
                 it('should be able to resolve an object of definitions', function (done) {
                     var mockRegistrationName = generateId();
-                    
+
                     assert(mockIndex(mockRegistrationName), mockRegistrationName, done);
                 });
 
@@ -302,33 +302,33 @@
                     var mockRegistrationName = generateId(),
                         idx = mockIndex(mockRegistrationName),
                         index;
-                    
+
                     delete idx.mock2.factory;
                     index = [idx.mock3, idx.mock2, idx.mock1];
-                    
+
                     scope.autoResolveAsync(index, function (err) {
                         expect(err).to.be.a('object');
 
                         done();
                     });
                 });
-                
+
                 it('should return an error if some or all dependencies of an item in the index were not met', function (done) {
                     var mockRegistrationName = generateId(),
                         missingName = generateId(),
                         idx = mockIndex(mockRegistrationName),
                         index;
-                    
+
                     idx.mock2.dependencies.push(missingName);
                     index = [idx.mock3, idx.mock2, idx.mock1];
-                    
+
                     scope.autoResolveAsync(index, function (err) {
                         expect(err).to.be.a('object');
 
                         done();
                     });
                 });
-                
+
             }); // /autoResolve
 
         }); // /Hilary DI
@@ -351,11 +351,11 @@
                         done();
                     });
                 });
-                
+
                 it('should return false, if it does not exist', function (done) {
                     var sut = new Hilary().useAsync(async),
                         sutModules = makeMockData(sut, generateId);
-                    
+
                     sut.disposeAsync(generateId(), function (err, actual) {
                         expect(actual).to.equal(false);
                         done();
@@ -386,7 +386,7 @@
                         done();
                     });
                 });
-                
+
                 it('should return false, if any do not exist', function (done) {
                     // given
                     var sut = new Hilary().useAsync(async),
@@ -397,7 +397,7 @@
                         done();
                     });
                 });
-                
+
             });
 
             spec.describe('when no argument is passed', function () {
@@ -424,7 +424,7 @@
                     });
                 });
             });
-            
+
             spec.describe('when an argument that isn\'t supported is passed', function (done) {
                 it('should return false', function () {
                     var actual = scope.dispose(function (err, result) {

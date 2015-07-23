@@ -509,7 +509,7 @@
     };
     HilarysPrivateParts = function(is, asyncHandler) {
         return function(scope, container, singletons, pipeline, parent, err) {
-            var $this = {}, blueprintMatchPairs = [], autowire, makeBlueprintValidator, registerBlueprintMatchPair, getParameterNames, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g;
+            var $this = {}, blueprintMatchPairs = [], autowire, makeBlueprintValidator, registerBlueprintMatchPair, getParameterNames, makeSingleton, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g;
             $this.HilaryModule = function(definition) {
                 var $this = {};
                 if (is.not.string(definition.name)) {
@@ -603,6 +603,21 @@
                     }
                 }
             };
+            makeSingleton = function(hilaryModule, singletonInstance) {
+                var makeIt = function(name, factory) {
+                    singletons[name] = factory;
+                    container[name].resolvedDependencies = container[name].dependencies;
+                    container[name].dependencies = undefined;
+                    container[name].factory = function() {
+                        return singletons[name];
+                    };
+                };
+                if (singletonInstance) {
+                    makeIt(hilaryModule.name, singletonInstance);
+                } else if (is.object(hilaryModule.factory) || is.function(hilaryModule.factory) && hilaryModule.factory.length > 0 && (is.not.defined(hilaryModule.dependencies) || hilaryModule.dependencies.length < 1)) {
+                    makeIt(hilaryModule.name, hilaryModule.factory);
+                }
+            };
             $this.register = function(hilaryModule) {
                 pipeline.beforeRegister(hilaryModule);
                 if (hilaryModule.name === constants.containerRegistration || hilaryModule.name === constants.parentContainerRegistration) {
@@ -610,9 +625,7 @@
                 }
                 hilaryModule = autowire(hilaryModule);
                 container[hilaryModule.name] = hilaryModule;
-                if (is.object(hilaryModule.factory) || is.function(hilaryModule.factory) && hilaryModule.factory.length > 0 && (is.not.defined(hilaryModule.dependencies) || hilaryModule.dependencies.length < 1)) {
-                    singletons[hilaryModule.name] = hilaryModule.factory;
-                }
+                makeSingleton(hilaryModule);
                 if (is.defined(hilaryModule.blueprint)) {
                     registerBlueprintMatchPair(hilaryModule);
                 }
@@ -627,16 +640,10 @@
                     throw err.argumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveMany.", "moduleName");
                 }
                 pipeline.beforeResolve(moduleName);
-                if (singletons[moduleName] !== undefined) {
-                    return $this.returnResult({
-                        name: moduleName,
-                        result: singletons[moduleName]
-                    }, pipeline);
-                }
                 if (container[moduleName] !== undefined) {
                     output = $this.invoke(container[moduleName]);
                     if (container[moduleName].singleton === true) {
-                        singletons[moduleName] = output;
+                        makeSingleton(container[moduleName], output);
                     }
                     return $this.returnResult({
                         name: moduleName,
@@ -708,9 +715,7 @@
                     _next(null, pipeline.beforeResolve(moduleName));
                 };
                 findAndInvokeResultTask = function(previousTaskResult, _next) {
-                    if (singletons[moduleName] !== undefined) {
-                        _next(null, singletons[moduleName]);
-                    } else if (container[moduleName] !== undefined) {
+                    if (container[moduleName] !== undefined) {
                         $this.invokeAsync(container[moduleName], _next);
                     } else {
                         _next(null, null);
@@ -783,7 +788,7 @@
                     output = theModule.factory;
                 }
                 if (theModule.singleton === true) {
-                    singletons[theModule.name] = output;
+                    makeSingleton(theModule, output);
                 }
                 next(null, output);
             };
@@ -808,7 +813,7 @@
                 async.parallel(dependencyTasks, function(err, dependencies) {
                     var output = theModule.factory.apply(null, dependencies);
                     if (theModule.singleton === true) {
-                        singletons[theModule.name] = output;
+                        makeSingleton(theModule, output);
                     }
                     next(null, output);
                 });

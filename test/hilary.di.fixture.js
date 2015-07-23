@@ -1,7 +1,7 @@
 /*jslint node: true*/
 (function (exports) {
     "use strict";
-    
+
     exports['hilary.di.fixture'] = function (Hilary, spec, generateId, makeMockData) {
         // SETUP
 
@@ -79,14 +79,14 @@
                     // then
                     container = scope.getContext().container;
                     container[moduleName].should.not.equal(undefined);
-                    container[moduleName].factory.val.should.equal(expected);
+                    container[moduleName].factory().val.should.equal(expected);
                 });
-                
+
                 it('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {
                     var shouldThrow = function () {
                         scope.register({});
                     };
-                    
+
                     expect(shouldThrow).to.Throw();
                 });
 
@@ -120,43 +120,43 @@
                     result.dep2Out.thisOut.should.equal(testModules.module2.expected);
                     result.thisOut.should.equal(testModules.module3.expected);
                 });
-                
+
                 it('should throw when attempting to resolve a module that doesn\'t exist', function () {
                     var shouldThrow1,
                         shouldThrow2;
-                    
+
                     shouldThrow1 = function () {
                         var foo = scope.resolve('icanhascheeseburger');
                     };
-                    
+
                     shouldThrow2 = function () {
                         var foo = scope.resolve(function () {});
                     };
-                    
+
                     expect(shouldThrow1).to.Throw();
                     expect(shouldThrow2).to.Throw();
                 });
-                
+
                 it('should throw when attempting to resolve a module that depends on modules that don\'t exist', function () {
                     // given
                     var sutName = generateId(),
                         missingDependency = generateId(),
                         shouldTrow;
-                    
+
                     scope.register({
                         name: sutName,
                         dependencies: [missingDependency],
                         factory: function (dep) {}
                     });
-                    
+
                     // when
                     shouldTrow = function () {
                         scope.resolve(sutName);
                     };
-                    
+
                     // then
                     expect(shouldTrow).to.Throw();
-                    
+
                 });
 
                 it('should be able to resolve multiple modules at the same time', function (done) {
@@ -169,62 +169,62 @@
                         done();
                     });
                 });
-                
+
                 it('should return an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
                     var sutName1 = generateId();
-                    
+
                     scope.resolveMany([testModules.module1.name, sutName1], function (dep1, dep2) {
                         expect(dep2.name).to.equal('DependencyException');
                         done();
                     });
                 });
-                
+
                 it('should be able to resolve the container by name', function () {
                     // given
                     var container,
                         moduleName = generateId();
-                    
+
                     scope.register({
                         name: moduleName,
                         factory: function () {}
                     });
-                    
+
                     // when
                     container = scope.resolve('hilary::container');
-                    
+
                     // then
                     expect(container[moduleName]).to.not.equal(undefined);
                 });
-                
+
                 it('should be able to resolve the parent container by name', function () {
                     // given
                     var sutScope = new Hilary(),
                         sutChildScope = sutScope.createChildContainer(),
                         container,
                         moduleName = generateId();
-                    
+
                     sutScope.register({
                         name: moduleName,
                         factory: function () {}
                     });
-                    
+
                     // when
                     container = sutChildScope.resolve('hilary::parent');
-                    
+
                     // then
                     expect(container[moduleName]).to.not.equal(undefined);
                 });
-                
+
                 it('should be able to resolve Blueprint by name', function () {
                     // given
                     var Bp,
                         sutBp,
                         sutBpId = generateId();
-                    
+
                     // when
                     Bp = scope.resolve('hilary::Blueprint');
                     sutBp = new Bp({ __blueprintId: sutBpId, name: 'string' });
-                    
+
                     // then
                     expect(sutBp.__blueprintId).to.equal(sutBpId);
                 });
@@ -232,7 +232,7 @@
             }); // /resolving
 
             spec.describe('when auto-registering modules', function () {
-                
+
                 var assert = function (newScope, index, done) {
                     newScope.autoRegister(index, function () {
                         // when
@@ -266,7 +266,7 @@
 
                     assert(new Hilary(), index, done);
                 });
-                
+
                 it('should return an error when any or all registrations failed', function (done) {
                     var mock1 = testModules.module1.moduleDefinition,
                         mock2 = {},
@@ -283,16 +283,16 @@
             }); // /autoRegister
 
             spec.describe('when auto-resolving modules', function () {
-                
+
                 var mockIndex,
                     assert;
-                
+
                 mockIndex = function (mockRegistrationName) {
                     var mock1,
                         mock2,
                         mock3,
                         index;
-                    
+
                     mock1 = {
                         dependencies: [testModules.module2.name, testModules.module3.name],
                         factory: function (mod2, mod3) {
@@ -307,30 +307,30 @@
                             });
                         }
                     };
-                    
+
                     mock2 = testModules.module2.moduleDefinition;
                     delete mock2.name;
                     mock3 = testModules.module3.moduleDefinition;
                     delete mock3.name;
-                    
+
                     return {
                         mock1: mock1,
                         mock2: mock2,
                         mock3: mock3
                     };
                 };
-                
+
                 assert = function (index, mockRegistrationName, done) {
                     scope.autoResolve(index, function (err) {
                         // when
                         var result = scope.resolve(mockRegistrationName);
-                        
+
                         // then
                         expect(err).to.equal(null);
-                        
+
                         expect(result.mod2).to.not.equal(undefined);
                         expect(result.mod2.thisOut).to.equal(testModules.module2.expected);
-                        
+
                         expect(result.mod3).to.not.equal(undefined);
                         expect(result.mod3.thisOut).to.equal(testModules.module3.expected);
 
@@ -342,24 +342,24 @@
                     var mockRegistrationName = generateId(),
                         idx = mockIndex(mockRegistrationName),
                         index = [idx.mock3, idx.mock2, idx.mock1];
-                    
+
                     assert(index, mockRegistrationName, done);
                 });
-                
+
                 it('should be able to resolve an object of definitions', function (done) {
                     var mockRegistrationName = generateId();
-                    
+
                     assert(mockIndex(mockRegistrationName), mockRegistrationName, done);
                 });
-                
+
                 it('should return an error if some or all dependencies were not met', function (done) {
                     var mockRegistrationName = generateId(),
                         idx = mockIndex(mockRegistrationName),
                         index;
-                    
+
                     delete idx.mock2.factory;
                     index = [idx.mock3, idx.mock2, idx.mock1];
-                    
+
                     scope.autoResolve(index, function (err) {
                         expect(err).to.be.a('object');
 
@@ -387,12 +387,12 @@
                     expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
                     expect(actual2).to.Throw();
                 });
-                
+
                 it('should return false, if it does not exist', function () {
                     var sut = new Hilary(),
                         sutModules = makeMockData(sut, generateId),
                         actual = sut.dispose(generateId());
-                    
+
                     expect(actual).to.equal(false);
                 });
             });
@@ -418,13 +418,13 @@
                     expect(actual3).to.Throw();
                     expect(actual4).to.Throw();
                 });
-                
+
                 it('should return false, if any do not exist', function () {
                     // given
                     var sut = new Hilary(),
                         sutModules = makeMockData(sut, generateId),
                         actual;
-                    
+
                     actual = sut.dispose([sutModules.module1.name, generateId()]);
                     expect(actual).to.equal(false);
                 });
@@ -452,7 +452,7 @@
                     expect(actual4).to.Throw();
                 });
             });
-            
+
             spec.describe('when an argument that isn\'t supported is passed', function () {
                 it('should return false', function () {
                     var actual = scope.dispose(function () {});

@@ -5,7 +5,6 @@
     exports['hilary.singletons.fixture'] = function (Hilary, spec) {
 
         var expect = spec.expect,
-            should = spec.should,
             it = spec.it;
 
         spec.describe('Hilary Singletons', function () {
@@ -35,7 +34,40 @@
                     expect(typeof scope.getContext().singletons.sut).to.equal('object');
                     sut2 = scope.resolve('sut');
                     sut2.state.should.equal('off');
-                    
+
+                }); // /it
+
+            }); // /describe
+
+            spec.describe('when a module is registered with a function that takes arguments but has not dependencies', function () {
+
+                it('should be treated as a singleton', function () {
+                    // given
+                    var scope = new Hilary(),
+                        expected = 'hello world!',
+                        sut,
+                        sut2;
+
+                    scope.register({
+                        name: 'sut',
+                        dependencies: [],
+                        factory: function (arg1) {
+                            return {
+                                state: arg1
+                            };
+                        }
+                    });
+
+                    // when
+                    sut = scope.resolve('sut');
+                    expect(sut.extension).to.equal(undefined);
+                    sut.extension = expected;
+
+                    // then
+                    expect(typeof scope.getContext().singletons.sut).to.equal('function');
+                    sut2 = scope.resolve('sut');
+                    sut2.extension.should.equal(expected);
+
                 }); // /it
 
             }); // /describe
