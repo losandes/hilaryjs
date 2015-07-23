@@ -857,14 +857,16 @@
 
             makeSingleton = function (hilaryModule, singletonInstance) {
                 var makeIt = function (name, factory) {
+                    // register the original
+                    var newRegistration = $this.HilaryModule(hilaryModule);
+                    container['hilary::original::' + name] = newRegistration;
+
                     // put the factory on the singletons object
                     singletons[name] = factory;
 
                     // rewrite the module dependencies so they don't
-                    container[name].originalDependencies = container[name].dependencies;
                     container[name].dependencies = undefined;
                     // rewrite the module factory so it only returns the singleton and saves memory
-                    container[name].originalFactory = container[name].factory;
                     container[name].factory = function () {
                         return singletons[name];
                     };

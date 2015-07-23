@@ -103,6 +103,44 @@
 
             }); // /describe
 
+            spec.describe('when a singleton is registered', function () {
+
+                it('a copy of the original module should be registered as hilary::original::{name}', function () {
+                    // given
+                    var scope = new Hilary(),
+                        sut;
+
+                    scope.register({
+                        name: 'sut2',
+                        factory: function () {
+                            return {
+                                foo: true
+                            };
+                        }
+                    });
+
+                    scope.register({
+                        name: 'sut',
+                        singleton: true,
+                        dependencies: ['sut2'],
+                        factory: function (sut2) {
+                            return {
+                                foo: sut2.foo
+                            };
+                        }
+                    });
+
+                    // when
+                    sut = scope.resolve('sut');
+
+                    // then
+                    expect(typeof scope.getContext().singletons.sut).to.equal('object');
+                    expect(scope.getContext().container['hilary::original::sut'].dependencies[0]).to.equal('sut2');
+                    expect(scope.getContext().container['hilary::original::sut'].factory.length).to.equal(1);
+                }); // /it
+
+            }); // /describe
+
         }); // /Hilary DI
 
     };
