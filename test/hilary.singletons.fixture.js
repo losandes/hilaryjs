@@ -10,25 +10,20 @@
 
         spec.describe('Hilary Singletons', function () {
 
-            spec.describe('when a module is registered as a singleton', function () {
-                it('should always resolve the single instance', function () {
+            spec.describe('when an object literal is registered as the factory', function () {
+
+                it('should be treated as a singleton', function () {
                     // given
                     var scope = new Hilary(),
                         sut,
                         sut2;
 
                     scope.register({
-                        name: 'sutCtor',
-                        factory: function () {
-                            return {
-                                state: 'on'
-                            };
-                        }
-                    });
-
-                    scope.register({
                         name: 'sut',
-                        factory: scope.resolve('sutCtor')
+                        singleton: true,
+                        factory: {
+                            state: 'on'
+                        }
                     });
 
                     // when
@@ -37,12 +32,16 @@
                     sut.state = 'off';
 
                     // then
+                    expect(typeof scope.getContext().singletons.sut).to.equal('object');
                     sut2 = scope.resolve('sut');
                     sut2.state.should.equal('off');
-                });
-            });
+                    
+                }); // /it
+
+            }); // /describe
 
             spec.describe('when a module is registered using the singleton flag', function () {
+
                 it('should always resolve the single instance', function () {
                     // given
                     var scope = new Hilary(),
@@ -68,8 +67,9 @@
                     expect(typeof scope.getContext().singletons.sut).to.equal('object');
                     sut2 = scope.resolve('sut');
                     sut2.state.should.equal('off');
-                });
-            });
+                }); // /it
+
+            }); // /describe
 
         }); // /Hilary DI
 
