@@ -606,8 +606,9 @@
             makeSingleton = function(hilaryModule, singletonInstance) {
                 var makeIt = function(name, factory) {
                     singletons[name] = factory;
-                    container[name].resolvedDependencies = container[name].dependencies;
+                    container[name].originalDependencies = container[name].dependencies;
                     container[name].dependencies = undefined;
+                    container[name].originalFactory = container[name].factory;
                     container[name].factory = function() {
                         return singletons[name];
                     };

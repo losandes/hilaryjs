@@ -861,9 +861,10 @@
                     singletons[name] = factory;
 
                     // rewrite the module dependencies so they don't
-                    container[name].resolvedDependencies = container[name].dependencies;
+                    container[name].originalDependencies = container[name].dependencies;
                     container[name].dependencies = undefined;
                     // rewrite the module factory so it only returns the singleton and saves memory
+                    container[name].originalFactory = container[name].factory;
                     container[name].factory = function () {
                         return singletons[name];
                     };
