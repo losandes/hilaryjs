@@ -134,9 +134,14 @@
                     sut = scope.resolve('sut');
 
                     // then
+                    // expect the module to be on the singletons object
                     expect(typeof scope.getContext().singletons.sut).to.equal('object');
+                    // expect the original module prefixed with "hilary::original::" to be registered on the container
                     expect(scope.getContext().container['hilary::original::sut'].dependencies[0]).to.equal('sut2');
                     expect(scope.getContext().container['hilary::original::sut'].factory.length).to.equal(1);
+                    // expect the module dependencies and factory to be replaced with new values
+                    expect(scope.getContext().container.sut.dependencies).to.equal(undefined);
+                    expect(scope.getContext().container.sut.factory.length).to.equal(0);
                 }); // /it
 
             }); // /describe
