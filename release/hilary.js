@@ -610,6 +610,9 @@
                 }
                 hilaryModule = autowire(hilaryModule);
                 container[hilaryModule.name] = hilaryModule;
+                if (is.object(hilaryModule.factory) || is.function(hilaryModule.factory) && hilaryModule.factory.length > 0 && (is.not.defined(hilaryModule.dependencies) || hilaryModule.dependencies.length < 1)) {
+                    singletons[hilaryModule.name] = hilaryModule.factory;
+                }
                 if (is.defined(hilaryModule.blueprint)) {
                     registerBlueprintMatchPair(hilaryModule);
                 }
