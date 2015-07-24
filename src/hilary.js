@@ -732,7 +732,7 @@
                 ARGUMENT_NAMES = /([^\s,]+)/g;
 
             $this.HilaryModule = function (definition) {
-                var $this = {};
+                var $this = this;
 
                 if (is.not.string(definition.name)) {
                     throw err.argumentException('The module name is required', 'name');
@@ -748,7 +748,7 @@
                 $this.blueprint = definition.blueprint;
                 $this.singleton = definition.singleton;
 
-                return $this;
+                //return $this;
             };
 
             $this.asyncHandler = function (action, next) {
@@ -858,7 +858,8 @@
             makeSingleton = function (hilaryModule, singletonInstance) {
                 var makeIt = function (name, factory) {
                     // register the original
-                    var newRegistration = $this.HilaryModule(hilaryModule);
+                    var newRegistration = new $this.HilaryModule(hilaryModule);
+                    newRegistration.singleton = 'true';
                     container['hilary::original::' + name] = newRegistration;
 
                     // put the factory on the singletons object
