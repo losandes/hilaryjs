@@ -16,6 +16,7 @@ module.exports = function (grunt) {
                 'test/browser/bower_components/async/lib/async.js',
                 'test/browser/test.setup.js',
                 // hilary
+                // 'release/hilary.js',
                 'release/hilary.min.js',
                 'release/hilary.jQueryEventEmitter.min.js',
                 'release/hilary.amd.min.js',

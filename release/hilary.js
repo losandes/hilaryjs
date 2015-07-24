@@ -1,4 +1,4 @@
-/*! hilary-build 2015-07-23 */
+/*! hilary-build 2015-07-24 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -209,12 +209,12 @@
         return self;
     }(is);
     Blueprint = function(utils, is, id) {
-        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, locale = {
+        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, makeErrorMessage, locale = {
             errors: {
                 blueprint: {
                     requiresImplementation: "An implementation is required to create a new instance of an interface",
-                    requiresProperty: "The implementation is missing a required property ",
-                    requiresArguments: "The implementation of this function requires arguments ",
+                    requiresProperty: "The implementation is missing a required property",
+                    requiresArguments: "The implementation of this function requires arguments",
                     missingConstructorArgument: "An object literal is required when constructing a Blueprint",
                     reservedPropertyName_singatureMatches: "signatureMatches is a reserved property name for Blueprints",
                     missingSignatureMatchesImplementationArgument: "A first argument of an object that should implement an interface is required",
@@ -262,7 +262,7 @@
             }
             for (prop in blueprint.props) {
                 if (blueprint.props.hasOwnProperty(prop)) {
-                    validateProperty(implementation, prop, blueprint.props[prop], errors);
+                    validateProperty(blueprint.__blueprintId, implementation, prop, blueprint.props[prop], errors);
                 }
             }
             if (errors.length > 0) {
@@ -277,64 +277,60 @@
                 };
             }
         };
-        validateProperty = function(implementation, propertyName, propertyValue, errors) {
+        validateProperty = function(blueprintId, implementation, propertyName, propertyValue, errors) {
             if (is.string(propertyValue)) {
-                validatePropertyType(implementation, propertyName, propertyValue, errors);
+                validatePropertyType(blueprintId, implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
-                validatePropertyWithDetails(implementation, propertyName, propertyValue, propertyValue.type, errors);
+                validatePropertyWithDetails(blueprintId, implementation, propertyName, propertyValue, propertyValue.type, errors);
             }
         };
-        validatePropertyWithDetails = function(implementation, propertyName, propertyValue, type, errors) {
+        validatePropertyWithDetails = function(blueprintId, implementation, propertyName, propertyValue, type, errors) {
             if (is.function(propertyValue.validate)) {
                 propertyValue.validate(implementation[propertyName], errors);
             } else {
                 switch (type) {
                   case "function":
-                    validatePropertyType(implementation, propertyName, type, errors);
-                    validateFunctionArguments(implementation, propertyName, propertyValue.args, errors);
+                    validatePropertyType(blueprintId, implementation, propertyName, type, errors);
+                    validateFunctionArguments(blueprintId, implementation, propertyName, propertyValue.args, errors);
                     break;
 
                   case "decimal":
-                    validateDecimalWithPlaces(implementation, propertyName, propertyValue.places, errors);
+                    validateDecimalWithPlaces(blueprintId, implementation, propertyName, propertyValue.places, errors);
                     break;
 
                   default:
-                    validatePropertyType(implementation, propertyName, type, errors);
+                    validatePropertyType(blueprintId, implementation, propertyName, type, errors);
                     break;
                 }
             }
         };
-        validatePropertyType = function(implementation, propertyName, propertyType, errors) {
+        makeErrorMessage = function(message, blueprintId, propertyName, propertyType) {
+            var msg = message.concat(" @blueprint: ", blueprintId, " @property: ", propertyName, " (", propertyType, ")");
+            return msg;
+        };
+        validatePropertyType = function(blueprintId, implementation, propertyName, propertyType, errors) {
             if (is.function(is.not[propertyType]) && is.not[propertyType](implementation[propertyName])) {
-                var message = locale.errors.blueprint.requiresProperty;
-                message += "@property: " + propertyName;
-                message += " (" + propertyType + ")";
-                errors.push(message);
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, propertyType));
             }
         };
-        validateFunctionArguments = function(implementation, propertyName, propertyArguments, errors) {
-            var argumentsAreValid = is.array(propertyArguments);
+        validateFunctionArguments = function(blueprintId, implementation, propertyName, propertyArguments, errors) {
+            var argumentsAreValid;
+            argumentsAreValid = is.array(propertyArguments);
             argumentsAreValid = argumentsAreValid && propertyArguments.length > 0;
             argumentsAreValid = argumentsAreValid && is.function(implementation[propertyName]);
             argumentsAreValid = argumentsAreValid && implementation[propertyName].length === propertyArguments.length;
             if (!argumentsAreValid) {
-                errors.push(locale.errors.blueprint.requiresArguments + "(" + propertyArguments.join(", ") + ")");
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresArguments, blueprintId, propertyName, propertyArguments.join(", ")));
             }
         };
-        validateDecimalWithPlaces = function(implementation, propertyName, places, errors) {
+        validateDecimalWithPlaces = function(blueprintId, implementation, propertyName, places, errors) {
             if (is.not.decimal(implementation[propertyName], places)) {
-                var message = locale.errors.blueprint.requiresProperty;
-                message += "@property: " + propertyName;
-                message += " (decimal with " + places + " places)";
-                errors.push(message);
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, "decimal with " + places + " places"));
             }
         };
-        validateBooleanArgument = function(implementation, propertyName, errors) {
+        validateBooleanArgument = function(blueprintId, implementation, propertyName, errors) {
             if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
-                var message = locale.errors.blueprint.requiresProperty;
-                message += "@property: " + propertyName;
-                message += " (boolean)";
-                errors.push(message);
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, "boolean"));
             }
         };
         Blueprint = function(blueprint) {
@@ -937,7 +933,7 @@
                 for (i = 0; i < blueprintValidators.length; i += 1) {
                     currentResult = blueprintValidators[i]();
                     if (currentResult.result === false) {
-                        errors.concat(currentResult.errors);
+                        errors = errors.concat(currentResult.errors);
                         result = false;
                     }
                 }
