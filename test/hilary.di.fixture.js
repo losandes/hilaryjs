@@ -79,7 +79,7 @@
                     // then
                     container = scope.getContext().container;
                     container[moduleName].should.not.equal(undefined);
-                    container[moduleName].factory().val.should.equal(expected);
+                    container[moduleName].factory.val.should.equal(expected);
                 });
 
                 it('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {

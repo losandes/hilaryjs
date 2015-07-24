@@ -83,7 +83,7 @@
                         var container = scope.getContext().container;
                         expect(err).to.equal(null);
                         container[moduleName].should.not.equal(undefined);
-                        container[moduleName].factory().val.should.equal(expected);
+                        container[moduleName].factory.val.should.equal(expected);
                         done();
                     };
 

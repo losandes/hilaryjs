@@ -9,7 +9,6 @@
         containerRegistration: "hilary::container",
         parentContainerRegistration: "hilary::parent",
         blueprintRegistration: "hilary::Blueprint",
-        singletons: "__singletons",
         notResolvable: "hilary::handler::not::resolvable",
         pipeline: {
             beforeRegister: "hilary::before::register",
@@ -604,14 +603,7 @@
             };
             makeSingleton = function(hilaryModule, singletonInstance) {
                 var makeIt = function(name, factory) {
-                    var newRegistration = new $this.HilaryModule(hilaryModule);
-                    newRegistration.singleton = "true";
-                    container["hilary::original::" + name] = newRegistration;
                     singletons[name] = factory;
-                    container[name].dependencies = undefined;
-                    container[name].factory = function() {
-                        return singletons[name];
-                    };
                 };
                 if (singletonInstance) {
                     makeIt(hilaryModule.name, singletonInstance);
@@ -641,6 +633,12 @@
                     throw err.argumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveMany.", "moduleName");
                 }
                 pipeline.beforeResolve(moduleName);
+                if (singletons[moduleName] !== undefined) {
+                    return $this.returnResult({
+                        name: moduleName,
+                        result: singletons[moduleName]
+                    }, pipeline);
+                }
                 if (container[moduleName] !== undefined) {
                     output = $this.invoke(container[moduleName]);
                     if (container[moduleName].singleton === true) {
@@ -716,7 +714,9 @@
                     _next(null, pipeline.beforeResolve(moduleName));
                 };
                 findAndInvokeResultTask = function(previousTaskResult, _next) {
-                    if (container[moduleName] !== undefined) {
+                    if (singletons[moduleName] !== undefined) {
+                        _next(null, singletons[moduleName]);
+                    } else if (container[moduleName] !== undefined) {
                         $this.invokeAsync(container[moduleName], _next);
                     } else {
                         _next(null, null);
