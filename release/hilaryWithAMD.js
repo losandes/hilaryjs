@@ -510,7 +510,7 @@
         return function(scope, container, singletons, pipeline, parent, err) {
             var $this = {}, blueprintMatchPairs = [], autowire, makeBlueprintValidator, registerBlueprintMatchPair, getParameterNames, makeSingleton, STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm, ARGUMENT_NAMES = /([^\s,]+)/g;
             $this.HilaryModule = function(definition) {
-                var $this = {};
+                var $this = this;
                 if (is.not.string(definition.name)) {
                     throw err.argumentException("The module name is required", "name");
                 }
@@ -522,7 +522,6 @@
                 $this.factory = definition.factory;
                 $this.blueprint = definition.blueprint;
                 $this.singleton = definition.singleton;
-                return $this;
             };
             $this.asyncHandler = function(action, next) {
                 var _action = function() {

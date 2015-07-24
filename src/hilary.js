@@ -731,7 +731,7 @@
                 ARGUMENT_NAMES = /([^\s,]+)/g;
 
             $this.HilaryModule = function (definition) {
-                var $this = {};
+                var $this = this;
 
                 if (is.not.string(definition.name)) {
                     throw err.argumentException('The module name is required', 'name');
@@ -747,7 +747,7 @@
                 $this.blueprint = definition.blueprint;
                 $this.singleton = definition.singleton;
 
-                return $this;
+                //return $this;
             };
 
             $this.asyncHandler = function (action, next) {
