@@ -17,7 +17,6 @@
         containerRegistration: 'hilary::container',
         parentContainerRegistration: 'hilary::parent',
         blueprintRegistration: 'hilary::Blueprint',
-        singletons: '__singletons',
         notResolvable: 'hilary::handler::not::resolvable',
         pipeline: {
             beforeRegister: 'hilary::before::register',
@@ -857,19 +856,8 @@
 
             makeSingleton = function (hilaryModule, singletonInstance) {
                 var makeIt = function (name, factory) {
-                    // register the original
-                    var newRegistration = $this.HilaryModule(hilaryModule);
-                    container['hilary::original::' + name] = newRegistration;
-
                     // put the factory on the singletons object
                     singletons[name] = factory;
-
-                    // rewrite the module dependencies so they don't
-                    container[name].dependencies = undefined;
-                    // rewrite the module factory so it only returns the singleton and saves memory
-                    container[name].factory = function () {
-                        return singletons[name];
-                    };
                 };
 
                 if (singletonInstance) {
@@ -915,6 +903,13 @@
                 }
 
                 pipeline.beforeResolve(moduleName);
+
+                if (singletons[moduleName] !== undefined) {
+                    return $this.returnResult({
+                        name: moduleName,
+                        result: singletons[moduleName]
+                    }, pipeline);
+                }
 
                 if (container[moduleName] !== undefined) {
                     output = $this.invoke(container[moduleName]);
@@ -1020,7 +1015,9 @@
                 };
 
                 findAndInvokeResultTask = function (previousTaskResult, _next) {
-                    if (container[moduleName] !== undefined) {
+                    if (singletons[moduleName] !== undefined) {
+                        _next(null, singletons[moduleName]);
+                    } else if (container[moduleName] !== undefined) {
                         $this.invokeAsync(container[moduleName], _next);
                     } else {
                         _next(null, null);
