@@ -419,7 +419,9 @@
                 switch(type) {
                     case 'function':
                         validatePropertyType(blueprintId, implementation, propertyName, type, errors);
-                        validateFunctionArguments(blueprintId, implementation, propertyName, propertyValue.args, errors);
+                        if (propertyValue.args) {
+                            validateFunctionArguments(blueprintId, implementation, propertyName, propertyValue.args, errors);
+                        }
                         break;
                     case 'decimal':
                         validateDecimalWithPlaces(blueprintId, implementation, propertyName, propertyValue.places, errors);

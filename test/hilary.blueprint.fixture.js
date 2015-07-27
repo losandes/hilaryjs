@@ -2,7 +2,7 @@
 /*globals describe, it*/
 (function (exports) {
     'use strict';
-    
+
     exports['hilary.blueprint.fixture'] = function (Hilary, spec) {
         // SETUP
 
@@ -44,7 +44,7 @@
                     blueprint: bp
                 };
             };
-    
+
             describe('when a Blueprint is constructed and it has the __blueprintId property', function () {
 
                 it('should maintain the value of the __blueprintId', function () {
@@ -269,9 +269,9 @@
                 });
 
             });
-            
+
             describe('when a blueprint inherits another blueprint', function () {
-                
+
                 it('should have the properties of both blueprints', function () {
                     // given
                     var bp1 = new Blueprint({
@@ -280,17 +280,57 @@
                         bp2 = new Blueprint({
                             description: 'string'
                         });
-                    
+
                     // when
                     bp2.inherits(bp1);
-                    
+
                     // then
                     expect(bp2.props.name).to.equal('string');
                     expect(bp2.props.description).to.equal('string');
                 });
-                
+
             });
-            
+
+            describe('when defining Blueprint functions', function () {
+
+                it('The args property should be optional', function () {
+                    // given
+                    var bp1 = new Blueprint({
+                            func: {
+                                type: 'function'
+                            }
+                        }),
+                        imp1 = {
+                            func: function () {}
+                        },
+                        actual;
+
+                    // when
+                    actual = bp1.syncSignatureMatches(imp1);
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                });
+
+                it('can be defined without an object literal', function () {
+                    // given
+                    var bp1 = new Blueprint({
+                            func: 'function'
+                        }),
+                        imp1 = {
+                            func: function () {}
+                        },
+                        actual;
+
+                    // when
+                    actual = bp1.syncSignatureMatches(imp1);
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                });
+
+            });
+
             describe('when registering modules', function () {
 
                 it('should be able to define the blueprint by name', function () {
@@ -313,7 +353,7 @@
                     // then
                     scope.getContext().container[moduleName].blueprint.should.equal(expected);
                 });
-                
+
                 it('should be able to define the blueprint in an array', function () {
                     // given
                     var moduleName = id.createUid(8),
@@ -338,11 +378,11 @@
                 });
 
             }); // /registering
-            
+
             spec.describe('when validating modules that are registered with blueprints', function () {
-                
+
                 it('should return a happy result if the modules implement the blueprint', function () {
-                    
+
                     // given
                     var scope = new Hilary(),
                         blueprintName = id.createUid(8),
@@ -356,7 +396,7 @@
                             return sutSetup().blueprint;
                         },
                     });
-                    
+
                     scope.register({
                         name: moduleName,
                         factory: function () {
@@ -375,16 +415,16 @@
                         },
                         blueprint: blueprintName
                     });
-                    
+
                     actual = scope.validateBlueprints();
 
                     // then
                     expect(actual.result).to.equal(true);
-                    
+
                 });
-                
+
                 it('should return a happy result if the modules implement each blueprint in the array', function () {
-                    
+
                     // given
                     var scope = new Hilary(),
                         blueprintName1 = id.createUid(8),
@@ -405,14 +445,14 @@
                             return bp1;
                         },
                     });
-                    
+
                     scope.register({
                         name: blueprintName2,
                         factory: function () {
                             return bp2;
                         },
                     });
-                    
+
                     scope.register({
                         name: moduleName,
                         factory: function () {
@@ -423,16 +463,16 @@
                         },
                         blueprint: [blueprintName1, blueprintName2]
                     });
-                    
+
                     actual = scope.validateBlueprints();
 
                     // then
                     expect(actual.result).to.equal(true);
-                    
+
                 });
-                
+
                 it('should return a sad result if the modules do NOT implement the blueprint', function () {
-                    
+
                     // given
                     var scope = new Hilary(),
                         blueprintName = id.createUid(8),
@@ -446,7 +486,7 @@
                             return sutSetup().blueprint;
                         },
                     });
-                    
+
                     scope.register({
                         name: moduleName,
                         factory: function () {
@@ -465,17 +505,17 @@
                         },
                         blueprint: blueprintName
                     });
-                    
+
                     actual = scope.validateBlueprints();
 
                     // then
                     expect(actual.result).to.equal(false);
                     expect(actual.errors).to.not.equal(null);
-                    
+
                 });
-                
+
                 it('should return a sad result if the modules do NOT implement each blueprint in the array', function () {
-                    
+
                     // given
                     var scope = new Hilary(),
                         blueprintName1 = id.createUid(8),
@@ -496,14 +536,14 @@
                             return bp1;
                         },
                     });
-                    
+
                     scope.register({
                         name: blueprintName2,
                         factory: function () {
                             return bp2;
                         },
                     });
-                    
+
                     scope.register({
                         name: moduleName,
                         factory: function () {
@@ -514,15 +554,15 @@
                         },
                         blueprint: [blueprintName1, blueprintName2]
                     });
-                    
+
                     actual = scope.validateBlueprints();
 
                     // then
                     expect(actual.result).to.equal(false);
                     expect(actual.errors).to.not.equal(null);
-                    
+
                 });
-                   
+
             }); // /validating
 
         }); // /SPEC
