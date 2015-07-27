@@ -11,19 +11,19 @@
         "url": "https://github.com/Acatar/hilaryjs.git"
     },
     "keywords": [
+        "dependency injection",
+        "inversion of control",
+        "IoC",
+        "DI",
         "dependency",
         "injection",
         "injector",
         "inversion",
         "control",
-        "IoC",
-        "DI",
         "node",
         "javascript",
         "autowire",
-        "configuration",
-        "low",
-        "ceremony"
+        "configuration"
     ],
     "author": "&y <andes.collab@gmail.com> (https://github.com/losandes)",
     "license": "MIT",
