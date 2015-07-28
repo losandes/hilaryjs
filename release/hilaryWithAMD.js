@@ -1,4 +1,4 @@
-/*! hilary-build 2015-07-24 */
+/*! hilary-build 2015-07-27 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -291,7 +291,9 @@
                 switch (type) {
                   case "function":
                     validatePropertyType(blueprintId, implementation, propertyName, type, errors);
-                    validateFunctionArguments(blueprintId, implementation, propertyName, propertyValue.args, errors);
+                    if (propertyValue.args) {
+                        validateFunctionArguments(blueprintId, implementation, propertyName, propertyValue.args, errors);
+                    }
                     break;
 
                   case "decimal":
@@ -314,13 +316,18 @@
             }
         };
         validateFunctionArguments = function(blueprintId, implementation, propertyName, propertyArguments, errors) {
-            var argumentsAreValid;
+            var argumentsAreValid, argumentsString;
             argumentsAreValid = is.array(propertyArguments);
             argumentsAreValid = argumentsAreValid && propertyArguments.length > 0;
             argumentsAreValid = argumentsAreValid && is.function(implementation[propertyName]);
             argumentsAreValid = argumentsAreValid && implementation[propertyName].length === propertyArguments.length;
             if (!argumentsAreValid) {
-                errors.push(makeErrorMessage(locale.errors.blueprint.requiresArguments, blueprintId, propertyName, propertyArguments.join(", ")));
+                try {
+                    argumentsString = propertyArguments.join(", ");
+                } catch (e) {
+                    argumentsString = propertyArguments.toString();
+                }
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresArguments, blueprintId, propertyName, argumentsString));
             }
         };
         validateDecimalWithPlaces = function(blueprintId, implementation, propertyName, places, errors) {

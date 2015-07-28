@@ -458,7 +458,8 @@
         */
         validateFunctionArguments = function (blueprintId, implementation, propertyName, propertyArguments, errors) {
             // if propertyArguments were defined as an array on the blueprint
-            var argumentsAreValid;
+            var argumentsAreValid,
+                argumentsString;
 
             argumentsAreValid = is.array(propertyArguments);
             // and the array isn't empty
@@ -470,7 +471,8 @@
 
             // then if argumentsAreValid is not true, push errors into the error array
             if (!argumentsAreValid) {
-                errors.push(makeErrorMessage(locale.errors.blueprint.requiresArguments, blueprintId, propertyName, propertyArguments.join(', ')));
+                try { argumentsString = propertyArguments.join(', '); } catch (e) { argumentsString = propertyArguments.toString(); }
+                errors.push(makeErrorMessage(locale.errors.blueprint.requiresArguments, blueprintId, propertyName, argumentsString));
             }
         };
 

@@ -1,7 +1,7 @@
 {
     "name": "hilary",
     "main": "release/hilary.min.js",
-    "version": "3.1.8",
+    "version": "3.1.9",
     "homepage": "https://github.com/Acatar/hilaryjs",
     "authors": [
         "&y <andes.collab@gmail.com> (https://github.com/losandes)"
