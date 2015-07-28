@@ -8,7 +8,7 @@
     "grunt-contrib-copy": "0.4.x",
     "grunt-contrib-uglify": "0.7.x",
     "grunt-karma": "*",
-    "grunt-mocha-test": "*",
+    "grunt-mocha": "*",
     "karma-chai": "*",
     "karma-chrome-launcher": "*",
     "karma-firefox-launcher": "*",

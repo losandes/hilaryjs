@@ -48,7 +48,7 @@ module.exports = function (grunt) {
             singleRun: false
         },
         //continuous integration mode: run tests once in PhantomJS browser.
-        continuous: {
+        headless: {
             singleRun: true,
             browsers: ['PhantomJS']
         }
