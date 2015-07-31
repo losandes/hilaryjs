@@ -17,7 +17,7 @@ module.exports = function (grunt) {
                 'test/browser/test.setup.js',
                 // hilary
                 // 'release/hilary.js',
-                'release/hilary.min.js',
+                'release/hilary.js',
                 'release/hilary.jQueryEventEmitter.min.js',
                 'release/hilary.amd.min.js',
                 // mock data
@@ -48,7 +48,7 @@ module.exports = function (grunt) {
             singleRun: false
         },
         //continuous integration mode: run tests once in PhantomJS browser.
-        headless: {
+        unit_headless: {
             singleRun: true,
             browsers: ['PhantomJS']
         }

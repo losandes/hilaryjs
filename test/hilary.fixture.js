@@ -6,7 +6,6 @@
 
         // SETUP
         var scope = new Hilary(),
-            should = spec.should,
             expect = spec.expect,
             it = spec.it,
             testModules = makeMockData(scope, generateId);
@@ -69,7 +68,6 @@
                     
                     expect(Hilary.scope('newScope2').resolve('foo')).to.eql(true);
                 });
-                                
             });
             
             spec.describe('when createChildContainer is executed, the child instance', function () {

@@ -605,74 +605,69 @@
 
     Bootstrapper = function (scope) {
         return function (bootstrapper) {
-            var compose,
-                start,
-                configureContainer,
-                configureLifecycle;
+            var composeModules,
+                composeLifecycle,
+                end;
             
             bootstrapper = bootstrapper || {};
             
             /*
             // compose the application and dependency graph
             */
-            compose = function (next) {
-                if (is.function(bootstrapper.compose) && compose.length === 1) {
-                    bootstrapper.compose(next);
-                } else if (is.function(bootstrapper.compose)) {
-                    bootstrapper.compose();
-                    next(null, scope);
-                } else {
-                    next(null, scope);
-                }
-            };
-
-            /*
-            // starts the application
-            */
-            start = function (err, scope) {
-                configureContainer(err, scope, configureLifecycle);
-
-                if (is.function(bootstrapper.start)) {
-                    bootstrapper.start(err, scope);
-                }
-            };
-            
-            /*
-            // Configure the IoC container - register singleton dependencies and what not
-            */
-            configureContainer = function (err, scope, next) {
-                scope.register({
-                    name: constants.bootstrapperRegistration,
-                    factory: function () {
-                        return {
-                            restart: function () {
-                                compose(start);
-                            }
-                        };
-                    }
-                });
+            composeModules = function (scope) {
+                var err;
                 
-                if (is.function(bootstrapper.configureContainer) && bootstrapper.configureContainer.length === 3) {
-                    bootstrapper.configureContainer(err, scope, next);
-                } else if (is.function(bootstrapper.configureContainer)) {
-                    bootstrapper.configureContainer(err, scope);
-                    next(err, scope);
+                try {
+                    scope.register({
+                        name: constants.bootstrapperRegistration,
+                        factory: function () {
+                            return {
+                                restart: function () {
+                                    // TODO: dispose blueprint matches
+
+                                    composeModules(scope);
+                                }
+                            };
+                        }
+                    });
+                } catch (e) {
+                    err = e;
+                }
+                
+                if (is.function(bootstrapper.composeModules) && bootstrapper.composeModules.length === 3) {
+                    bootstrapper.composeModules(err, scope, composeLifecycle);
+                } else if (is.function(bootstrapper.composeModules)) {
+                    bootstrapper.composeModules(err, scope);
+                    composeLifecycle(err, scope);
+                } else {
+                    composeLifecycle(err, scope);
                 }
             };
             
             /*
             // Register application lifecycle pipeline events
             */
-            configureLifecycle = function (err, scope) {
-                if (is.function(bootstrapper.configureLifecycle)) {
-                    bootstrapper.configureLifecycle(err, scope, scope.getContext().pipeline);
+            composeLifecycle = function (err, scope) {
+                if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
+                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline, end);
+                } else if (is.function(bootstrapper.composeLifecycle)) {
+                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline);
+                    end(err, scope);
+                } else {
+                    end(err, scope);
+                }
+            };
+            
+            end = function (err, scope) {
+                if (is.function(bootstrapper.onComposed)) {
+                    bootstrapper.onComposed(err, scope);
                 }
             };
             
             //////////////////////////////////////////////////
             // START IMMEDIATELY
             // note: we don't use an iffe for start, so it can be registered and the app can be restarted
-            compose(start);
+            composeModules(scope);
         };
     };
 
