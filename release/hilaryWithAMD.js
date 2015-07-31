@@ -423,8 +423,9 @@
         return function(bootstrapper) {
             var composeModules, composeLifecycle, onError, end;
             bootstrapper = bootstrapper || {};
-            onError = function(scope, err) {
-                scope.getContext().pipeline.onError(err);
+            onError = function(_scope, err) {
+                _scope = _scope || scope;
+                _scope.getContext().pipeline.onError(err);
             };
             composeLifecycle = function(scope) {
                 if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
@@ -464,6 +465,9 @@
                 }
             };
             end = function(err, scope) {
+                if (err) {
+                    onError(scope, err);
+                }
                 if (is.function(bootstrapper.onComposed)) {
                     bootstrapper.onComposed(err, scope);
                 }

@@ -612,8 +612,9 @@
             
             bootstrapper = bootstrapper || {};
             
-            onError = function (scope, err) {
-                scope.getContext().pipeline.onError(err);
+            onError = function (_scope, err) {
+                _scope = _scope || scope;
+                _scope.getContext().pipeline.onError(err);
             };
             
             /*
