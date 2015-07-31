@@ -11,9 +11,10 @@
     }
 
     var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {},
-        initializers = [], is, id, asyncHandler, Blueprint, Exceptions, async;
+        initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, async;
 
     constants = {
+        bootstrapperRegistration: 'hilary::bootstrapper',
         containerRegistration: 'hilary::container',
         parentContainerRegistration: 'hilary::parent',
         blueprintRegistration: 'hilary::Blueprint',
@@ -602,7 +603,78 @@
         return $this;
     };
 
-    //err = new Exceptions(utils);
+    Bootstrapper = function (scope) {
+        return function (bootstrapper) {
+            var compose,
+                start,
+                configureContainer,
+                configureLifecycle;
+            
+            bootstrapper = bootstrapper || {};
+            
+            /*
+            // compose the application and dependency graph
+            */
+            compose = function (next) {
+                if (is.function(bootstrapper.compose) && compose.length === 1) {
+                    bootstrapper.compose(next);
+                } else if (is.function(bootstrapper.compose)) {
+                    bootstrapper.compose();
+                    next(null, scope);
+                } else {
+                    next(null, scope);
+                }
+            };
+
+            /*
+            // starts the application
+            */
+            start = function (err, scope) {
+                configureContainer(err, scope, configureLifecycle);
+
+                if (is.function(bootstrapper.start)) {
+                    bootstrapper.start(err, scope);
+                }
+            };
+            
+            /*
+            // Configure the IoC container - register singleton dependencies and what not
+            */
+            configureContainer = function (err, scope, next) {
+                scope.register({
+                    name: constants.bootstrapperRegistration,
+                    factory: function () {
+                        return {
+                            restart: function () {
+                                compose(start);
+                            }
+                        };
+                    }
+                });
+                
+                if (is.function(bootstrapper.configureContainer) && bootstrapper.configureContainer.length === 3) {
+                    bootstrapper.configureContainer(err, scope, next);
+                } else if (is.function(bootstrapper.configureContainer)) {
+                    bootstrapper.configureContainer(err, scope);
+                    next(err, scope);
+                }
+            };
+            
+            /*
+            // Register application lifecycle pipeline events
+            */
+            configureLifecycle = function (err, scope) {
+                if (is.function(bootstrapper.configureLifecycle)) {
+                    bootstrapper.configureLifecycle(err, scope, scope.getContext().pipeline);
+                }
+            };
+            
+            //////////////////////////////////////////////////
+            // START IMMEDIATELY
+            // note: we don't use an iffe for start, so it can be registered and the app can be restarted
+            compose(start);
+        };
+    };
 
     PipelineEvents = function () {
         var $this = {};
@@ -1286,6 +1358,8 @@
                             result = result && $this.disposeOne(key);
                         }
                     }
+                    
+                    blueprintMatchPairs = [];
 
                     return result;
                 } else {
@@ -1636,6 +1710,11 @@
             prive.useAsync(async);
             return $this;
         };
+        
+        /*
+        // The Bootstrapper provides an easier way to compose your application and start it up
+        */
+        $this.Bootstrapper = new Bootstrapper($this);
 
         /*
         // Exposes read access to private context for extensibility and debugging. this is not meant
