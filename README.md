@@ -133,8 +133,6 @@ Hilary.scope('spa').register({
                 // resolved. The result of this function will be passed
                 // to any factories that depend on "someSingleton".
                 factory: function () {
-                    "use strict";
-
                     return singleton;
                 }
             });
