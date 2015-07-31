@@ -623,8 +623,6 @@
                         factory: function () {
                             return {
                                 restart: function () {
-                                    // TODO: dispose blueprint matches
-
                                     composeModules(scope);
                                 }
                             };
