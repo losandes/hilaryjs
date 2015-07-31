@@ -421,10 +421,25 @@
     };
     Bootstrapper = function(scope) {
         return function(bootstrapper) {
-            var composeModules, composeLifecycle, end;
+            var composeModules, composeLifecycle, onError, end;
             bootstrapper = bootstrapper || {};
-            composeModules = function(scope) {
-                var err;
+            onError = function(scope, err) {
+                scope.getContext().pipeline.onError(err);
+            };
+            composeLifecycle = function(scope) {
+                if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
+                    bootstrapper.composeLifecycle(null, scope, scope.getContext().pipeline, composeModules);
+                } else if (is.function(bootstrapper.composeLifecycle)) {
+                    bootstrapper.composeLifecycle(null, scope, scope.getContext().pipeline);
+                    composeModules(null, scope);
+                } else {
+                    composeModules(null, scope);
+                }
+            };
+            composeModules = function(err, scope) {
+                if (err) {
+                    onError(scope, err);
+                }
                 try {
                     scope.register({
                         name: constants.bootstrapperRegistration,
@@ -440,19 +455,9 @@
                     err = e;
                 }
                 if (is.function(bootstrapper.composeModules) && bootstrapper.composeModules.length === 3) {
-                    bootstrapper.composeModules(err, scope, composeLifecycle);
+                    bootstrapper.composeModules(err, scope, end);
                 } else if (is.function(bootstrapper.composeModules)) {
                     bootstrapper.composeModules(err, scope);
-                    composeLifecycle(err, scope);
-                } else {
-                    composeLifecycle(err, scope);
-                }
-            };
-            composeLifecycle = function(err, scope) {
-                if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
-                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline, end);
-                } else if (is.function(bootstrapper.composeLifecycle)) {
-                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline);
                     end(err, scope);
                 } else {
                     end(err, scope);
@@ -463,7 +468,7 @@
                     bootstrapper.onComposed(err, scope);
                 }
             };
-            composeModules(scope);
+            composeLifecycle(scope);
         };
     };
     PipelineEvents = function() {

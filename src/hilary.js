@@ -607,15 +607,36 @@
         return function (bootstrapper) {
             var composeModules,
                 composeLifecycle,
+                onError,
                 end;
             
             bootstrapper = bootstrapper || {};
             
+            onError = function (scope, err) {
+                scope.getContext().pipeline.onError(err);
+            };
+            
+            /*
+            // Register application lifecycle pipeline events
+            */
+            composeLifecycle = function (scope) {
+                if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
+                    bootstrapper.composeLifecycle(null, scope, scope.getContext().pipeline, composeModules);
+                } else if (is.function(bootstrapper.composeLifecycle)) {
+                    bootstrapper.composeLifecycle(null, scope, scope.getContext().pipeline);
+                    composeModules(null, scope);
+                } else {
+                    composeModules(null, scope);
+                }
+            };
+            
             /*
             // compose the application and dependency graph
             */
-            composeModules = function (scope) {
-                var err;
+            composeModules = function (err, scope) {
+                if (err) {
+                    onError(scope, err);
+                }
                 
                 try {
                     scope.register({
@@ -633,23 +654,9 @@
                 }
                 
                 if (is.function(bootstrapper.composeModules) && bootstrapper.composeModules.length === 3) {
-                    bootstrapper.composeModules(err, scope, composeLifecycle);
+                    bootstrapper.composeModules(err, scope, end);
                 } else if (is.function(bootstrapper.composeModules)) {
                     bootstrapper.composeModules(err, scope);
-                    composeLifecycle(err, scope);
-                } else {
-                    composeLifecycle(err, scope);
-                }
-            };
-            
-            /*
-            // Register application lifecycle pipeline events
-            */
-            composeLifecycle = function (err, scope) {
-                if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
-                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline, end);
-                } else if (is.function(bootstrapper.composeLifecycle)) {
-                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline);
                     end(err, scope);
                 } else {
                     end(err, scope);
@@ -665,7 +672,7 @@
             //////////////////////////////////////////////////
             // START IMMEDIATELY
             // note: we don't use an iffe for start, so it can be registered and the app can be restarted
-            composeModules(scope);
+            composeLifecycle(scope);
         };
     };
 
