@@ -664,6 +664,10 @@
             };
             
             end = function (err, scope) {
+                if (err) {
+                    onError(scope, err);
+                }
+                
                 if (is.function(bootstrapper.onComposed)) {
                     bootstrapper.onComposed(err, scope);
                 }
