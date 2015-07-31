@@ -44,6 +44,27 @@
                     blueprint: bp
                 };
             };
+            
+            it('should exist on the Hilary object', function () {
+                expect(Hilary.Blueprint).to.not.equal(undefined);
+            });
+            
+            describe('Hilary scopes', function () {
+                it('should have a hilary::Blueprint module registered on it', function (done) {
+                    // given
+                    var sutScope = new Hilary();
+                    
+                    // when
+                    sutScope.Bootstrapper({
+                        onComposed: function (err, scope) {
+                            // then
+                            expect(typeof scope.resolve('hilary::Blueprint')).to.equal('function');
+                            
+                            done();
+                        }
+                    });
+                });
+            });
 
             describe('when a Blueprint is constructed and it has the __blueprintId property', function () {
 

@@ -11,7 +11,7 @@
     }
 
     var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {},
-        initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, async;
+        initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, HilaryModule, async;
 
     constants = {
         bootstrapperRegistration: 'hilary::bootstrapper',
@@ -19,6 +19,12 @@
         parentContainerRegistration: 'hilary::parent',
         blueprintRegistration: 'hilary::Blueprint',
         notResolvable: 'hilary::handler::not::resolvable',
+        blackListedRegistrations: {
+            'hilary::bootstrapper': true,
+            'hilary::container': true,
+            'hilary::parent': true,
+            'hilary::Blueprint': true
+        },
         pipeline: {
             beforeRegister: 'hilary::before::register',
             afterRegister: 'hilary::after::register',
@@ -640,7 +646,7 @@
                 }
                 
                 try {
-                    scope.register({
+                    scope.getContext().container[constants.bootstrapperRegistration] = new HilaryModule({
                         name: constants.bootstrapperRegistration,
                         factory: function () {
                             return {
@@ -648,7 +654,10 @@
                                     composeModules(scope);
                                 }
                             };
-                        }
+                        },
+                        dependencies: undefined,
+                        blueprint: undefined,
+                        singleton: undefined
                     });
                 } catch (e) {
                     err = e;
@@ -810,9 +819,15 @@
                 getParameterNames,
                 makeSingleton,
                 STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
-                ARGUMENT_NAMES = /([^\s,]+)/g;
+                ARGUMENT_NAMES = /([^\s,]+)/g,
+                reservedModules;
+            
+            reservedModules = {};
+            reservedModules[constants.containerRegistration] = container;
+            reservedModules[constants.parentContainerRegistration] = parent ? parent.getContext().container : null;
+            reservedModules[constants.blueprintRegistration] = Blueprint;
 
-            $this.HilaryModule = function (definition) {
+            $this.HilaryModule =     HilaryModule = function (definition) {
                 var $this = this;
 
                 if (is.not.string(definition.name)) {
@@ -955,8 +970,8 @@
 
             $this.register = function (hilaryModule) {
                 pipeline.beforeRegister(hilaryModule);
-
-                if (hilaryModule.name === constants.containerRegistration || hilaryModule.name === constants.parentContainerRegistration) {
+                
+                if (constants.blackListedRegistrations[hilaryModule.name]) {
                     throw err.argumentException('The name you are trying to register is reserved', 'moduleName', hilaryModule.name);
                 }
 
@@ -1130,12 +1145,8 @@
             };
 
             $this.findResult = function (moduleName) {
-                if (moduleName === constants.containerRegistration) {
-                    return container;
-                } else if (moduleName === constants.parentContainerRegistration) {
-                    return parent.getContext().container;
-                } else if (moduleName === constants.blueprintRegistration) {
-                    return Hilary.Blueprint;
+                if (reservedModules[moduleName]) {
+                    return reservedModules[moduleName];
                 } else if (parent !== undefined) {
                     // attempt to resolve from the parent container
                     return parent.resolve(moduleName);

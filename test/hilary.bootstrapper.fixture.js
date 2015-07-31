@@ -9,6 +9,23 @@
         
         describe('Hilary Bootstrapper', function () {
             
+            describe('when executed', function () {
+                it('should register a bootstrapper on the scope', function (done) {
+                    // given
+                    var sutScope = new Hilary();
+                    
+                    // when
+                    sutScope.Bootstrapper({
+                        onComposed: function (err, scope) {
+                            // then
+                            expect(typeof scope.resolve('hilary::bootstrapper').restart).to.equal('function');
+                            
+                            done();
+                        }
+                    });
+                });
+            });
+            
             describe('when executed with a composeLifecycle function', function () {
                 it('should execute composeLifecycle when no arguments are provided', function (done) {
                     // given
