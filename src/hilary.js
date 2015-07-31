@@ -11,9 +11,10 @@
     }
 
     var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {},
-        initializers = [], is, id, asyncHandler, Blueprint, Exceptions, async;
+        initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, async;
 
     constants = {
+        bootstrapperRegistration: 'hilary::bootstrapper',
         containerRegistration: 'hilary::container',
         parentContainerRegistration: 'hilary::parent',
         blueprintRegistration: 'hilary::Blueprint',
@@ -602,7 +603,71 @@
         return $this;
     };
 
-    //err = new Exceptions(utils);
+    Bootstrapper = function (scope) {
+        return function (bootstrapper) {
+            var composeModules,
+                composeLifecycle,
+                end;
+            
+            bootstrapper = bootstrapper || {};
+            
+            /*
+            // compose the application and dependency graph
+            */
+            composeModules = function (scope) {
+                var err;
+                
+                try {
+                    scope.register({
+                        name: constants.bootstrapperRegistration,
+                        factory: function () {
+                            return {
+                                restart: function () {
+                                    composeModules(scope);
+                                }
+                            };
+                        }
+                    });
+                } catch (e) {
+                    err = e;
+                }
+                
+                if (is.function(bootstrapper.composeModules) && bootstrapper.composeModules.length === 3) {
+                    bootstrapper.composeModules(err, scope, composeLifecycle);
+                } else if (is.function(bootstrapper.composeModules)) {
+                    bootstrapper.composeModules(err, scope);
+                    composeLifecycle(err, scope);
+                } else {
+                    composeLifecycle(err, scope);
+                }
+            };
+            
+            /*
+            // Register application lifecycle pipeline events
+            */
+            composeLifecycle = function (err, scope) {
+                if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
+                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline, end);
+                } else if (is.function(bootstrapper.composeLifecycle)) {
+                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline);
+                    end(err, scope);
+                } else {
+                    end(err, scope);
+                }
+            };
+            
+            end = function (err, scope) {
+                if (is.function(bootstrapper.onComposed)) {
+                    bootstrapper.onComposed(err, scope);
+                }
+            };
+            
+            //////////////////////////////////////////////////
+            // START IMMEDIATELY
+            // note: we don't use an iffe for start, so it can be registered and the app can be restarted
+            composeModules(scope);
+        };
+    };
 
     PipelineEvents = function () {
         var $this = {};
@@ -1286,6 +1351,8 @@
                             result = result && $this.disposeOne(key);
                         }
                     }
+                    
+                    blueprintMatchPairs = [];
 
                     return result;
                 } else {
@@ -1636,6 +1703,11 @@
             prive.useAsync(async);
             return $this;
         };
+        
+        /*
+        // The Bootstrapper provides an easier way to compose your application and start it up
+        */
+        $this.Bootstrapper = new Bootstrapper($this);
 
         /*
         // Exposes read access to private context for extensibility and debugging. this is not meant

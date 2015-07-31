@@ -14,5 +14,6 @@
     exports['hilary.blueprint.fixture'](Hilary, spec);
     exports['hilary.id.fixture'](Hilary, spec);
     exports['hilary.is.fixture'](Hilary, spec);
+    exports['hilary.bootstrapper.fixture'](Hilary, spec, createGuid, makeMockData);
 
 }(window, Hilary, spec, createGuid, makeMockData, async, jQuery, mocha));

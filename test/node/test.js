@@ -22,3 +22,4 @@ require('../hilary.di.autowire.fixture.js')['hilary.di.autowire.fixture'](Hilary
 require('../hilary.blueprint.fixture.js')['hilary.blueprint.fixture'](Hilary, spec);
 require('../hilary.id.fixture.js')['hilary.id.fixture'](Hilary, spec);
 require('../hilary.is.fixture.js')['hilary.is.fixture'](Hilary, spec);
+require('../hilary.bootstrapper.fixture.js')['hilary.bootstrapper.fixture'](Hilary, spec, shortid.generate, mockData.makeMockData);

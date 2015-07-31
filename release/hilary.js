@@ -1,11 +1,12 @@
-/*! hilary-build 2015-07-27 */
+/*! hilary-build 2015-07-31 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
         return false;
     }
-    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {}, initializers = [], is, id, asyncHandler, Blueprint, Exceptions, async;
+    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {}, initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, async;
     constants = {
+        bootstrapperRegistration: "hilary::bootstrapper",
         containerRegistration: "hilary::container",
         parentContainerRegistration: "hilary::parent",
         blueprintRegistration: "hilary::Blueprint",
@@ -417,6 +418,53 @@
             return $this.dependencyException("The module cannot be resolved", moduleName);
         };
         return $this;
+    };
+    Bootstrapper = function(scope) {
+        return function(bootstrapper) {
+            var composeModules, composeLifecycle, end;
+            bootstrapper = bootstrapper || {};
+            composeModules = function(scope) {
+                var err;
+                try {
+                    scope.register({
+                        name: constants.bootstrapperRegistration,
+                        factory: function() {
+                            return {
+                                restart: function() {
+                                    composeModules(scope);
+                                }
+                            };
+                        }
+                    });
+                } catch (e) {
+                    err = e;
+                }
+                if (is.function(bootstrapper.composeModules) && bootstrapper.composeModules.length === 3) {
+                    bootstrapper.composeModules(err, scope, composeLifecycle);
+                } else if (is.function(bootstrapper.composeModules)) {
+                    bootstrapper.composeModules(err, scope);
+                    composeLifecycle(err, scope);
+                } else {
+                    composeLifecycle(err, scope);
+                }
+            };
+            composeLifecycle = function(err, scope) {
+                if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
+                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline, end);
+                } else if (is.function(bootstrapper.composeLifecycle)) {
+                    bootstrapper.composeLifecycle(err, scope, scope.getContext().pipeline);
+                    end(err, scope);
+                } else {
+                    end(err, scope);
+                }
+            };
+            end = function(err, scope) {
+                if (is.function(bootstrapper.onComposed)) {
+                    bootstrapper.onComposed(err, scope);
+                }
+            };
+            composeModules(scope);
+        };
     };
     PipelineEvents = function() {
         var $this = {};
@@ -919,6 +967,7 @@
                             result = result && $this.disposeOne(key);
                         }
                     }
+                    blueprintMatchPairs = [];
                     return result;
                 } else {
                     return false;
@@ -1083,6 +1132,7 @@
             prive.useAsync(async);
             return $this;
         };
+        $this.Bootstrapper = new Bootstrapper($this);
         $this.getContext = function() {
             return {
                 container: container,
