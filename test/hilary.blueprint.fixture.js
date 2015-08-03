@@ -44,22 +44,22 @@
                     blueprint: bp
                 };
             };
-            
+
             it('should exist on the Hilary object', function () {
                 expect(Hilary.Blueprint).to.not.equal(undefined);
             });
-            
+
             describe('Hilary scopes', function () {
                 it('should have a hilary::Blueprint module registered on it', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         onComposed: function (err, scope) {
                             // then
                             expect(typeof scope.resolve('hilary::Blueprint')).to.equal('function');
-                            
+
                             done();
                         }
                     });
@@ -585,6 +585,68 @@
                 });
 
             }); // /validating
+
+            describe('when a Blueprint has nested Blueprints', function () {
+                it('should return a happy result if both Blueprints are satisfied', function () {
+                    // given
+                    var actual,
+                        bp1 = new Blueprint({
+                            name: 'string'
+                        }),
+                        bp2 = new Blueprint({
+                            description: 'string',
+                            parent: {
+                                type: 'blueprint',
+                                blueprint: bp1
+                            }
+                        }),
+                        impl = {
+                            description: 'hello',
+                            parent: {
+                                name: 'foo'
+                            }
+                        };
+
+                    // when
+                    actual = bp2.syncSignatureMatches(impl);
+
+                    // then
+                    expect(actual.result).to.equal(true);
+                    expect(actual.errors).to.equal(null);
+
+                });
+
+                it('should return a sad result if both Blueprints are not satisfied', function () {
+                    // given
+                    var actual,
+                        bp1 = new Blueprint({
+                            name: 'string',
+                            desc: 'string',
+                            lol: 'string'
+                        }),
+                        bp2 = new Blueprint({
+                            description: 'string',
+                            parent: {
+                                type: 'blueprint',
+                                blueprint: bp1
+                            }
+                        }),
+                        impl = {
+                            description: 'hello',
+                            parent: {
+                                name: 'foo'
+                            }
+                        };
+
+                    // when
+                    actual = bp2.syncSignatureMatches(impl);
+
+                    // then
+                    expect(actual.result).to.equal(false);
+                    expect(actual.errors.length).to.equal(2);
+
+                });
+            });
 
         }); // /SPEC
     };

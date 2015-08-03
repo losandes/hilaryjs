@@ -299,6 +299,7 @@
             validateFunctionArguments,
             validateDecimalWithPlaces,
             validateBooleanArgument,
+            validateNestedBlueprint,
             makeErrorMessage,
             locale = {
                 errors: {
@@ -424,6 +425,9 @@
                 propertyValue.validate(implementation[propertyName], errors);
             } else {
                 switch(type) {
+                    case 'blueprint':
+                        validateNestedBlueprint(propertyValue.blueprint, implementation, propertyName, errors);
+                        break;
                     case 'function':
                         validatePropertyType(blueprintId, implementation, propertyName, type, errors);
                         if (propertyValue.args) {
@@ -495,6 +499,17 @@
         validateBooleanArgument = function (blueprintId, implementation, propertyName, errors) {
             if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
                 errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, 'boolean'));
+            }
+        };
+
+        validateNestedBlueprint = function (blueprint, implementation, propertyName, errors) {
+            var validationResult = blueprint.syncSignatureMatches(implementation[propertyName]),
+                i;
+
+            if (!validationResult.result) {
+                for (i = 0; i < validationResult.errors.length; i += 1) {
+                    errors.push(validationResult.errors[i]);
+                }
             }
         };
 
@@ -615,14 +630,14 @@
                 composeLifecycle,
                 onError,
                 end;
-            
+
             bootstrapper = bootstrapper || {};
-            
+
             onError = function (_scope, err) {
                 _scope = _scope || scope;
                 _scope.getContext().pipeline.onError(err);
             };
-            
+
             /*
             // Register application lifecycle pipeline events
             */
@@ -636,7 +651,7 @@
                     composeModules(null, scope);
                 }
             };
-            
+
             /*
             // compose the application and dependency graph
             */
@@ -644,7 +659,7 @@
                 if (err) {
                     onError(scope, err);
                 }
-                
+
                 try {
                     scope.getContext().container[constants.bootstrapperRegistration] = new HilaryModule({
                         name: constants.bootstrapperRegistration,
@@ -662,7 +677,7 @@
                 } catch (e) {
                     err = e;
                 }
-                
+
                 if (is.function(bootstrapper.composeModules) && bootstrapper.composeModules.length === 3) {
                     bootstrapper.composeModules(err, scope, end);
                 } else if (is.function(bootstrapper.composeModules)) {
@@ -672,17 +687,17 @@
                     end(err, scope);
                 }
             };
-            
+
             end = function (err, scope) {
                 if (err) {
                     onError(scope, err);
                 }
-                
+
                 if (is.function(bootstrapper.onComposed)) {
                     bootstrapper.onComposed(err, scope);
                 }
             };
-            
+
             //////////////////////////////////////////////////
             // START IMMEDIATELY
             // note: we don't use an iffe for start, so it can be registered and the app can be restarted
@@ -821,7 +836,7 @@
                 STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
                 ARGUMENT_NAMES = /([^\s,]+)/g,
                 reservedModules;
-            
+
             reservedModules = {};
             reservedModules[constants.containerRegistration] = container;
             reservedModules[constants.parentContainerRegistration] = parent ? parent.getContext().container : null;
@@ -970,7 +985,7 @@
 
             $this.register = function (hilaryModule) {
                 pipeline.beforeRegister(hilaryModule);
-                
+
                 if (constants.blackListedRegistrations[hilaryModule.name]) {
                     throw err.argumentException('The name you are trying to register is reserved', 'moduleName', hilaryModule.name);
                 }
@@ -1374,7 +1389,7 @@
                             result = result && $this.disposeOne(key);
                         }
                     }
-                    
+
                     blueprintMatchPairs = [];
 
                     return result;
@@ -1726,7 +1741,7 @@
             prive.useAsync(async);
             return $this;
         };
-        
+
         /*
         // The Bootstrapper provides an easier way to compose your application and start it up
         */

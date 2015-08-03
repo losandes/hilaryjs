@@ -1,4 +1,4 @@
-/*! hilary-build 2015-07-31 */
+/*! hilary-build 2015-08-03 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -216,7 +216,7 @@
         return self;
     }(is);
     Blueprint = function(utils, is, id) {
-        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, makeErrorMessage, locale = {
+        var Blueprint, signatureMatches, syncSignatureMatches, validateSignature, syncValidateSignature, validateProperty, validatePropertyWithDetails, validatePropertyType, validateFunctionArguments, validateDecimalWithPlaces, validateBooleanArgument, validateNestedBlueprint, makeErrorMessage, locale = {
             errors: {
                 blueprint: {
                     requiresImplementation: "An implementation is required to create a new instance of an interface",
@@ -296,6 +296,10 @@
                 propertyValue.validate(implementation[propertyName], errors);
             } else {
                 switch (type) {
+                  case "blueprint":
+                    validateNestedBlueprint(propertyValue.blueprint, implementation, propertyName, errors);
+                    break;
+
                   case "function":
                     validatePropertyType(blueprintId, implementation, propertyName, type, errors);
                     if (propertyValue.args) {
@@ -345,6 +349,14 @@
         validateBooleanArgument = function(blueprintId, implementation, propertyName, errors) {
             if (is.function(is.not.boolean) && is.not.boolean(implementation[propertyName])) {
                 errors.push(makeErrorMessage(locale.errors.blueprint.requiresProperty, blueprintId, propertyName, "boolean"));
+            }
+        };
+        validateNestedBlueprint = function(blueprint, implementation, propertyName, errors) {
+            var validationResult = blueprint.syncSignatureMatches(implementation[propertyName]), i;
+            if (!validationResult.result) {
+                for (i = 0; i < validationResult.errors.length; i += 1) {
+                    errors.push(validationResult.errors[i]);
+                }
             }
         };
         Blueprint = function(blueprint) {
