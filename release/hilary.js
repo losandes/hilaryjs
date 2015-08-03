@@ -980,6 +980,13 @@
                 };
                 async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
             };
+            $this.exists = function(moduleName) {
+                if (container[moduleName]) {
+                    return true;
+                } else {
+                    return false;
+                }
+            };
             $this.dispose = function(moduleName) {
                 var key, i, result;
                 if (is.string(moduleName)) {
@@ -1147,6 +1154,9 @@
         $this.autoResolve = function(index, next) {
             prive.autoResolve(index, next);
             return $this;
+        };
+        $this.exists = function(moduleName) {
+            return prive.exists(moduleName);
         };
         $this.dispose = function(moduleName) {
             return prive.dispose(moduleName);

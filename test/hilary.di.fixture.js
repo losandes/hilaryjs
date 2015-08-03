@@ -90,6 +90,38 @@
                     expect(shouldThrow).to.Throw();
                 });
 
+                it('``exists`` should return true when asked about that module', function () {
+                    // given
+                    var moduleName = generateId(),
+                        actual;
+
+
+                    scope.register({
+                        name: moduleName,
+                        factory: {
+                            val: moduleName
+                        }
+                    });
+
+                    // when
+                    actual = scope.exists(moduleName);
+
+                    // then
+                    expect(actual).to.equal(true);
+                });
+
+                it('``exists`` should return false when asked about a module that isn\'t registered', function () {
+                    // given
+                    var moduleName = generateId(),
+                        actual;
+
+                    // when
+                    actual = scope.exists(moduleName);
+
+                    // then
+                    expect(actual).to.equal(false);
+                });
+
             }); // /registering
 
             spec.describe('when resolving modules', function () {

@@ -1368,6 +1368,14 @@
                 async.parallel($this.makeAutoRegistrationTasks(index, makeTask), next);
             };
 
+            $this.exists = function (moduleName) {
+                if (container[moduleName]) {
+                    return true;
+                } else {
+                    return false;
+                }
+            };
+
             $this.dispose = function (moduleName) {
                 var key, i, result;
 
@@ -1699,6 +1707,15 @@
         $this.autoResolve = function (index, next) {
             prive.autoResolve(index, next);
             return $this;
+        };
+
+        /*
+        // Checks to see if a module exists and returns a boolean result
+        // @param moduleName (string): the qualified name that the module can be located by in the container
+        // @returns true if the module exists, otherwise false
+        */
+        $this.exists = function (moduleName) {
+            return prive.exists(moduleName);
         };
 
         /*
