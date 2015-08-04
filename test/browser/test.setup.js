@@ -1,8 +1,8 @@
 /*jslint regexp: true*/
-/*globals mocha, describe, it, chai*/
+/*globals mocha, describe, it, xdescribe, xit, chai*/
 (function (exports, mocha) {
     "use strict";
-    
+
     mocha.setup({
         ui: 'bdd'
     });
@@ -16,10 +16,11 @@
 
     exports.spec = {
         describe: describe,
+        xdescribe: xdescribe,
         it: it,
+        xit: xit,
         expect: chai.expect,
         should: chai.should()
     };
-    
-}(window, mocha));
 
+}(window, mocha));

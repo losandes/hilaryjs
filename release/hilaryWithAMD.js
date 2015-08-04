@@ -417,7 +417,6 @@
             if (data) {
                 err.data = data;
             }
-            pipeline.onError(err);
             return err;
         };
         $this.makeException = makeException;
@@ -425,15 +424,32 @@
             var msg = is.not.defined(argument) ? message : message + " (argument: " + argument + ")";
             return makeException("ArgumentException", msg, data);
         };
+        $this.throwArgumentException = function(message, argument, data) {
+            return $this.throwException($this.argumentException(message, argument, data));
+        };
         $this.dependencyException = function(message, dependencyName, data) {
             var msg = is.not.defined(dependencyName) ? message : message + " (dependency: " + dependencyName + "). If the module exists, does it return a value?";
             return makeException("DependencyException", msg, data);
         };
+        $this.throwDependencyException = function(message, dependencyName, data) {
+            return $this.throwException($this.dependencyException(message, dependencyName, data));
+        };
         $this.notImplementedException = function(message, data) {
             return makeException("NotImplementedException", message, data);
         };
+        $this.throwNotImplementedException = function(message, data) {
+            return $this.throwException($this.notImplementedException(message, data));
+        };
         $this.notResolvableException = function(moduleName) {
             return $this.dependencyException("The module cannot be resolved", moduleName);
+        };
+        $this.throwNotResolvableException = function(moduleName) {
+            return $this.throwException($this.notResolvableException(moduleName));
+        };
+        $this.throwException = function(err) {
+            var exception = is.string(err) ? $this.makeException(err) : err;
+            pipeline.trigger.on.error(exception);
+            return exception;
         };
         return $this;
     };
@@ -443,7 +459,7 @@
             bootstrapper = bootstrapper || {};
             onError = function(_scope, err) {
                 _scope = _scope || scope;
-                _scope.getContext().pipeline.onError(err);
+                _scope.getContext().pipeline.trigger.on.error(err);
             };
             composeLifecycle = function(scope) {
                 if (is.function(bootstrapper.composeLifecycle) && bootstrapper.composeLifecycle.length === 4) {
@@ -508,7 +524,7 @@
         return $this;
     };
     Pipeline = function(scope, is) {
-        var $this = {}, registerEvent, executeEvent, pipelineEvents = new PipelineEvents(), beforeRegister, afterRegister, beforeResolve, afterResolve, beforeNewChild, afterNewChild, onError;
+        var $this = {}, registerEvent, executeEvent, pipelineEvents = new PipelineEvents();
         registerEvent = function(name, callback) {
             switch (name) {
               case constants.pipeline.beforeRegister:
@@ -540,10 +556,10 @@
                 return scope;
 
               default:
-                throw new Error("the pipeline event you are trying to register is not implemented (name: " + name + ")");
+                $this.trigger.on.error("the pipeline event you are trying to register is not implemented (name: " + name + ")");
             }
         };
-        executeEvent = function(eventArray, argumentArray) {
+        executeEvent = function(eventArray, argumentArray, next) {
             var i, event;
             for (i = 0; i < eventArray.length; i += 1) {
                 event = eventArray[i];
@@ -554,37 +570,74 @@
                     event.apply(null, argumentArray);
                 }
             }
-        };
-        beforeRegister = function(moduleInfo) {
-            executeEvent($this.events.beforeRegisterEvents, [ scope, moduleInfo ]);
-        };
-        afterRegister = function(moduleInfo) {
-            executeEvent($this.events.afterRegisterEvents, [ scope, moduleInfo ]);
-        };
-        beforeResolve = function(moduleName) {
-            executeEvent($this.events.beforeResolveEvents, [ scope, moduleName ]);
-        };
-        afterResolve = function(moduleInfo) {
-            executeEvent($this.events.afterResolveEvents, [ scope, moduleInfo ]);
-        };
-        beforeNewChild = function(options) {
-            executeEvent($this.events.beforeNewChildEvents, [ scope, options ]);
-        };
-        afterNewChild = function(options, child) {
-            executeEvent($this.events.afterNewChildEvents, [ scope, options, child ]);
-        };
-        onError = function(err) {
-            executeEvent($this.events.onError, [ err ]);
+            if (is.function(next)) {
+                next(argumentArray);
+            }
         };
         $this.events = pipelineEvents;
         $this.registerEvent = registerEvent;
-        $this.onError = onError;
-        $this.beforeRegister = beforeRegister;
-        $this.afterRegister = afterRegister;
-        $this.beforeResolve = beforeResolve;
-        $this.afterResolve = afterResolve;
-        $this.beforeNewChild = beforeNewChild;
-        $this.afterNewChild = afterNewChild;
+        $this.register = {
+            before: {
+                register: function(callback) {
+                    registerEvent(constants.pipeline.beforeRegister, callback);
+                },
+                resolve: function(callback) {
+                    registerEvent(constants.pipeline.beforeResolve, callback);
+                },
+                newChild: function(callback) {
+                    registerEvent(constants.pipeline.beforeNewChild, callback);
+                }
+            },
+            after: {
+                register: function(callback) {
+                    registerEvent(constants.pipeline.afterRegister, callback);
+                },
+                resolve: function(callback) {
+                    registerEvent(constants.pipeline.afterResolve, callback);
+                },
+                newChild: function(callback) {
+                    registerEvent(constants.pipeline.afterNewChild, callback);
+                }
+            },
+            on: {
+                error: function(callback) {
+                    registerEvent(constants.pipeline.onError, callback);
+                }
+            }
+        };
+        $this.trigger = {
+            before: {
+                register: function(moduleInfo, next) {
+                    executeEvent($this.events.beforeRegisterEvents, [ scope, moduleInfo ], next);
+                },
+                resolve: function(moduleName, next) {
+                    executeEvent($this.events.beforeResolveEvents, [ scope, moduleName ], next);
+                },
+                newChild: function(options, next) {
+                    executeEvent($this.events.beforeNewChildEvents, [ scope, options ], next);
+                }
+            },
+            after: {
+                register: function(moduleInfo, next) {
+                    executeEvent($this.events.afterRegisterEvents, [ scope, moduleInfo ], next);
+                },
+                resolve: function(moduleInfo, next) {
+                    executeEvent($this.events.afterResolveEvents, [ scope, moduleInfo ], next);
+                },
+                newChild: function(options, child, next) {
+                    executeEvent($this.events.afterNewChildEvents, [ scope, options, child ], next);
+                }
+            },
+            on: {
+                error: function(err, next) {
+                    if (is.string(err)) {
+                        executeEvent($this.events.onError, [ scope.getContext().exceptionHandlers.makeException(err) ], next);
+                    } else {
+                        executeEvent($this.events.onError, [ err ], next);
+                    }
+                }
+            }
+        };
         return $this;
     };
     HilarysPrivateParts = function(is, asyncHandler) {
@@ -597,10 +650,12 @@
             $this.HilaryModule = HilaryModule = function(definition) {
                 var $this = this;
                 if (is.not.string(definition.name)) {
-                    throw err.argumentException("The module name is required", "name");
+                    err.throwArgumentException("The module name is required", "name");
+                    return;
                 }
                 if (is.not.defined(definition.factory)) {
-                    throw err.argumentException("The module factory is required", "factory");
+                    err.throwArgumentException("The module factory is required", "factory");
+                    return;
                 }
                 $this.name = definition.name;
                 $this.dependencies = definition.dependencies || undefined;
@@ -608,37 +663,44 @@
                 $this.blueprint = definition.blueprint;
                 $this.singleton = definition.singleton;
             };
-            $this.asyncHandler = function(action, next) {
+            $this.asyncHandler = function(action, next, genericErrorMessage) {
                 var _action = function() {
                     var result;
-                    try {
-                        result = action();
-                    } catch (err) {
-                        if (is.function(next)) {
-                            next(err);
-                        }
+                    result = action();
+                    if (!result && is.function(next)) {
+                        next(err.makeException(genericErrorMessage));
                         return;
                     }
                     if (is.function(next)) {
                         next(null, result);
                     }
                 };
-                if (async) {
-                    async.nextTick(_action);
-                } else {
-                    asyncHandler.runAsync(_action);
-                }
+                asyncHandler.runAsync(_action);
             };
-            $this.createChildContainer = function(scope, options) {
+            $this.createChildContainer = function(scope, options, next) {
                 options = options || {};
-                var child;
-                options.parentContainer = scope;
-                pipeline.beforeNewChild(options);
-                child = new Hilary(options);
-                if (scope.registerAsync) {
-                    child.useAsync(async);
-                }
-                pipeline.afterNewChild(options, child);
+                var child, one, two, three;
+                one = function() {
+                    options.parentContainer = scope;
+                    pipeline.trigger.before.newChild(options, two);
+                };
+                two = function() {
+                    child = new Hilary(options);
+                    if (scope.registerAsync) {
+                        child.useAsync(async);
+                    }
+                    three(child);
+                };
+                three = function(child) {
+                    if (is.function(next)) {
+                        pipeline.trigger.after.newChild(options, child, function() {
+                            next(child);
+                        });
+                    } else {
+                        pipeline.trigger.after.newChild(options, child);
+                    }
+                };
+                one();
                 return child;
             };
             autowire = function(hilaryModule) {
@@ -697,9 +759,14 @@
                 }
             };
             $this.register = function(hilaryModule) {
-                pipeline.beforeRegister(hilaryModule);
+                if (is.not.defined(hilaryModule) || is.not.string(hilaryModule.name) || is.not.defined(hilaryModule.factory)) {
+                    err.throwArgumentException("At least a name and a factory is required to register a module", "hilaryModule");
+                    return;
+                }
+                pipeline.trigger.before.register(hilaryModule);
                 if (constants.blackListedRegistrations[hilaryModule.name]) {
-                    throw err.argumentException("The name you are trying to register is reserved", "moduleName", hilaryModule.name);
+                    err.throwArgumentException("The name you are trying to register is reserved", "moduleName", hilaryModule.name);
+                    return;
                 }
                 hilaryModule = autowire(hilaryModule);
                 container[hilaryModule.name] = hilaryModule;
@@ -708,16 +775,17 @@
                     registerBlueprintMatchPair(hilaryModule);
                 }
                 $this.asyncHandler(function() {
-                    pipeline.afterRegister(hilaryModule);
+                    pipeline.trigger.after.register(hilaryModule);
                 });
                 return hilaryModule;
             };
             $this.resolve = function(moduleName) {
                 var output;
                 if (is.not.string(moduleName)) {
-                    throw err.argumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveMany.", "moduleName");
+                    err.throwArgumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveMany.", "moduleName");
+                    return;
                 }
-                pipeline.beforeResolve(moduleName);
+                pipeline.trigger.before.resolve(moduleName);
                 if (singletons[moduleName] !== undefined) {
                     return $this.returnResult({
                         name: moduleName,
@@ -741,16 +809,18 @@
                         result: output
                     }, pipeline);
                 } else {
-                    throw err.notResolvableException(moduleName);
+                    err.throwNotResolvableException(moduleName);
                 }
             };
             $this.resolveMany = function(moduleNameArray, next) {
                 var modules = [], i, current;
                 if (is.not.array(moduleNameArray)) {
-                    throw err.argumentException("The moduleNameArray is required and must be an Array", "moduleNameArray");
+                    err.throwArgumentException("The moduleNameArray is required and must be an Array", "moduleNameArray");
+                    return;
                 }
                 if (is.not.function(next)) {
-                    throw err.argumentException("The next argument is required and must be a Function", "next");
+                    err.throwArgumentException("The next argument is required and must be a Function", "next");
+                    return;
                 }
                 for (i = 0; i < moduleNameArray.length; i += 1) {
                     try {
@@ -765,19 +835,23 @@
             $this.resolveManyAsync = function(moduleNameArray, next) {
                 var moduleTasks = [], modules = {}, i, makeTask = function(moduleName) {
                     return function(callback) {
-                        try {
+                        if (scope.exists(moduleName)) {
                             modules[moduleName] = scope.resolve(moduleName);
                             callback(null, null);
-                        } catch (e) {
-                            callback(e);
+                        } else {
+                            var exception = err.notResolvableException(moduleName);
+                            err.throwException(exception);
+                            callback(exception);
                         }
                     };
                 };
                 if (is.not.array(moduleNameArray)) {
-                    throw err.argumentException("The moduleNameArray is required and must be an Array", "moduleNameArray");
+                    err.throwArgumentException("The moduleNameArray is required and must be an Array", "moduleNameArray");
+                    return;
                 }
                 if (is.not.function(next)) {
-                    throw err.argumentException("The next argument is required and must be a Function", "next");
+                    err.throwArgumentException("The next argument is required and must be a Function", "next");
+                    return;
                 }
                 for (i = 0; i < moduleNameArray.length; i += 1) {
                     moduleTasks.push(makeTask(moduleNameArray[i]));
@@ -790,13 +864,15 @@
                 var validateTask, beforeResolveTask, findAndInvokeResultTask, findResultTask, afterResultTask;
                 validateTask = function(_next) {
                     if (is.not.string(moduleName)) {
-                        _next(err.argumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveManyAsync.", "moduleName"));
+                        var exception = err.throwArgumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveManyAsync.", "moduleName");
+                        err.throwException(exception);
+                        _next(exception);
                     } else {
                         _next(null, null);
                     }
                 };
                 beforeResolveTask = function(previousTaskResult, _next) {
-                    _next(null, pipeline.beforeResolve(moduleName));
+                    _next(null, pipeline.trigger.before.resolve(moduleName));
                 };
                 findAndInvokeResultTask = function(previousTaskResult, _next) {
                     if (singletons[moduleName] !== undefined) {
@@ -816,13 +892,15 @@
                 };
                 afterResultTask = function(previousTaskResult, _next) {
                     if (previousTaskResult) {
-                        pipeline.afterResolve({
+                        pipeline.trigger.after.resolve({
                             name: moduleName,
                             result: previousTaskResult
                         });
                         _next(null, previousTaskResult);
                     } else {
-                        _next(err.notResolvableException(moduleName));
+                        var exception = err.notResolvableException(moduleName);
+                        err.throwException(exception);
+                        _next(exception);
                     }
                 };
                 async.waterfall([ validateTask, beforeResolveTask, findAndInvokeResultTask, findResultTask, afterResultTask ], next);
@@ -844,7 +922,7 @@
             };
             $this.returnResult = function(result) {
                 $this.asyncHandler(function() {
-                    pipeline.afterResolve(result);
+                    pipeline.trigger.after.resolve(result);
                 });
                 return result.result;
             };
@@ -917,7 +995,8 @@
                         tasks.push(makeTask(index[i]));
                     }
                 } else {
-                    throw err.argumentException("A index must be defined and must be a typeof object or array", "index");
+                    err.throwArgumentException("A index must be defined and must be a typeof object or array", "index");
+                    return;
                 }
                 return tasks;
             };
@@ -1057,15 +1136,29 @@
             };
             $this.useAsync = function(_async) {
                 if (!_async || !_async.nextTick || !_async.waterfall || !_async.parallel) {
-                    throw err.argumentException("The async library is required (https://www.npmjs.com/package/async)", "async");
+                    err.throwArgumentException("The async library is required (https://www.npmjs.com/package/async)", "async");
+                    return;
                 }
                 if (!async) {
                     async = _async;
                 }
                 scope.registerAsync = function(definition, next) {
-                    $this.asyncHandler(function() {
-                        return scope.register(definition);
-                    }, next);
+                    asyncHandler.runAsync(function() {
+                        var hilaryModule, result;
+                        hilaryModule = new HilaryModule(definition);
+                        if (!hilaryModule) {
+                            next(err.argumentException("Unable to register the module: " + (definition && definition.name), "definition"));
+                            return;
+                        }
+                        result = $this.register(hilaryModule);
+                        if (is.function(next)) {
+                            if (result) {
+                                next(null, result);
+                            } else {
+                                next(err.argumentException("Unable to register the module: " + (definition && definition.name), "definition"));
+                            }
+                        }
+                    });
                     return scope;
                 };
                 scope.autoRegisterAsync = function(index, next) {
@@ -1096,9 +1189,9 @@
                         _next = moduleName;
                         _moduleName = null;
                     }
-                    $this.asyncHandler(function() {
-                        return scope.dispose(_moduleName);
-                    }, _next);
+                    asyncHandler.runAsync(function() {
+                        _next(null, scope.dispose(_moduleName));
+                    });
                     return scope;
                 };
                 scope.validateBlueprintsAsync = function(next) {
@@ -1108,7 +1201,7 @@
                 scope.registerEventAsync = function(eventName, eventHandler, next) {
                     $this.asyncHandler(function() {
                         return scope.registerEvent(eventName, eventHandler);
-                    }, next);
+                    }, next, "Unable to register the event: " + eventName);
                     return scope;
                 };
                 return scope;

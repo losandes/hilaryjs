@@ -1,12 +1,11 @@
-/*jslint node: true*/
+/*jshint unused: false */
 (function (exports) {
-    "use strict";
+    'use strict';
 
     exports['hilary.di.fixture'] = function (Hilary, spec, generateId, makeMockData) {
         // SETUP
 
         var scope = new Hilary(),
-            should = spec.should,
             expect = spec.expect,
             it = spec.it,
             testModules = makeMockData(scope, generateId);
@@ -82,12 +81,28 @@
                     container[moduleName].factory.val.should.equal(expected);
                 });
 
-                it('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {
-                    var shouldThrow = function () {
-                        scope.register({});
-                    };
+                it('should trigger an error when attempting to register a module that doesn\'t meet the definition requirements', function (done) {
+                    var count = 0;
 
-                    expect(shouldThrow).to.Throw();
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.on.error(function (err) {
+                                // then
+                                expect(err.name).to.equal('ArgumentException');
+                                count += 1;
+
+                                // this should get fired twice
+                                if (count === 2) {
+                                    done();
+                                }
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            // when
+                            scope.register({});
+                        }
+                    });
                 });
 
                 it('``exists`` should return true when asked about that module', function () {
@@ -153,42 +168,64 @@
                     result.thisOut.should.equal(testModules.module3.expected);
                 });
 
-                it('should throw when attempting to resolve a module that doesn\'t exist', function () {
-                    var shouldThrow1,
-                        shouldThrow2;
-
-                    shouldThrow1 = function () {
-                        var foo = scope.resolve('icanhascheeseburger');
-                    };
-
-                    shouldThrow2 = function () {
-                        var foo = scope.resolve(function () {});
-                    };
-
-                    expect(shouldThrow1).to.Throw();
-                    expect(shouldThrow2).to.Throw();
+                it('should trigger an error when attempting to resolve a module that doesn\'t exist', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.on.error(function (err) {
+                                // then
+                                expect(err.name).to.equal('DependencyException');
+                                done();
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            // when
+                            scope.resolve('icanhascheeseburger');
+                        }
+                    });
                 });
 
-                it('should throw when attempting to resolve a module that depends on modules that don\'t exist', function () {
+                it('should throw when attempting to resolve a module with an unacceptable argument', function (done) {
                     // given
-                    var sutName = generateId(),
-                        missingDependency = generateId(),
-                        shouldTrow;
-
-                    scope.register({
-                        name: sutName,
-                        dependencies: [missingDependency],
-                        factory: function (dep) {}
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.on.error(function (err) {
+                                // then
+                                expect(err.name).to.equal('ArgumentException');
+                                done();
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            // when
+                            scope.resolve(function () {});
+                        }
                     });
+                });
 
-                    // when
-                    shouldTrow = function () {
-                        scope.resolve(sutName);
-                    };
+                it('should trigger an error when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.on.error(function (err) {
+                                // then
+                                expect(err.name).to.equal('DependencyException');
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({
+                                name: 'missingDependencySut',
+                                dependencies: ['missingDependency'],
+                                factory: function (dep) {
 
-                    // then
-                    expect(shouldTrow).to.Throw();
-
+                                }
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            // when
+                            scope.resolve('missingDependencySut');
+                        }
+                    });
                 });
 
                 it('should be able to resolve multiple modules at the same time', function (done) {
@@ -202,12 +239,41 @@
                     });
                 });
 
-                it('should return an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
-                    var sutName1 = generateId();
+                it('should trigger an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.on.error(function (err) {
+                                // then
+                                expect(err.name).to.equal('DependencyException');
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                        },
+                        onComposed: function (err, scope) {
+                            // when
+                            scope.resolveMany([testModules.module1.name, generateId()], function () {});
+                        }
+                    });
+                });
 
-                    scope.resolveMany([testModules.module1.name, sutName1], function (dep1, dep2) {
-                        expect(dep2.name).to.equal('DependencyException');
-                        done();
+                it('should maintain appropriate argument order when a dependency is not resolved', function () {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                            scope.register(testModules.module2.moduleDefinition);
+                        },
+                        onComposed: function (err, scope) {
+                            // when
+                            scope.resolveMany([testModules.module1.name, generateId(), testModules.module2.name], function (dep1, dep2, dep3) {
+                                expect(dep1).to.equal(testModules.module1.expected);
+                                expect(dep2).to.equal(undefined);
+                                expect(dep3.thisOut).to.equal(testModules.module2.expected);
+                            });
+                        }
                     });
                 });
 
@@ -413,11 +479,11 @@
 
                     actual1 = sut.resolve(sutModules.module1.name);
                     sut.dispose(sutModules.module1.name);
-                    actual2 = function () { sut.resolve(sutModules.module1.name); };
+                    actual2 = sut.exists(sutModules.module1.name);
 
                     expect(actual1).to.equal(sutModules.module1.expected);
                     expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                    expect(actual2).to.Throw();
+                    expect(actual2).to.equal(false);
                 });
 
                 it('should return false, if it does not exist', function () {
@@ -441,14 +507,14 @@
                     actual1 = sut.resolve(sutModules.module1.name);
                     actual2 = sut.resolve(sutModules.module2.name);
                     sut.dispose([sutModules.module1.name, sutModules.module2.name]);
-                    actual3 = function () { sut.resolve(sutModules.module1.name); };
-                    actual4 = function () { sut.resolve(sutModules.module2.name); };
+                    actual3 = sut.exists(sutModules.module1.name);
+                    actual4 = sut.exists(sutModules.module2.name);
 
                     expect(actual1).to.equal(sutModules.module1.expected);
                     expect(actual2.thisOut).to.equal(sutModules.module2.expected);
                     expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                    expect(actual3).to.Throw();
-                    expect(actual4).to.Throw();
+                    expect(actual3).to.equal(false);
+                    expect(actual4).to.equal(false);
                 });
 
                 it('should return false, if any do not exist', function () {
@@ -474,14 +540,14 @@
                     actual1 = sut.resolve(sutModules.module1.name);
                     actual2 = sut.resolve(sutModules.module2.name);
                     sut.dispose();
-                    actual3 = function () { sut.resolve(sutModules.module1.name); };
-                    actual4 = function () { sut.resolve(sutModules.module2.name); };
+                    actual3 = sut.exists(sutModules.module1.name);
+                    actual4 = sut.exists(sutModules.module2.name);
 
                     expect(actual1).to.equal(sutModules.module1.expected);
                     expect(actual2.thisOut).to.equal(sutModules.module2.expected);
                     expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                    expect(actual3).to.Throw();
-                    expect(actual4).to.Throw();
+                    expect(actual3).to.equal(false);
+                    expect(actual4).to.equal(false);
                 });
             });
 

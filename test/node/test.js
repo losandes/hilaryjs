@@ -1,12 +1,14 @@
 /*jslint node: true*/
-/*globals describe, it*/
+/*globals describe, it, xdescribe, xit*/
 var Hilary  = require('../../index.js'),
     shortid = require('shortid'),
     async = require('async'),
     mockData = require('../mockData'),
     spec = {
         describe: describe,
+        xdescribe: xdescribe,
         it: it,
+        xit: xit,
         expect: require('chai').expect,
         should: require('chai').should()
     };

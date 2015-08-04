@@ -1,12 +1,11 @@
-/*jslint node: true*/
+/*jshint unused: false*/
 (function (exports) {
-    "use strict";
+    'use strict';
 
     exports['hilary.di.async.fixture'] = function (Hilary, spec, generateId, makeMockData, async) {
         // SETUP
 
         var scope = new Hilary().useAsync(async),
-            should = spec.should,
             expect = spec.expect,
             it = spec.it,
             testModules = makeMockData(scope, generateId);
@@ -96,32 +95,110 @@
                     }, next);
                 });
 
-                it('should throw when attempting to register a module that doesn\'t meet the definition requirements', function () {
-                    var shouldThrow = function () {
-                        scope.register({});
-                    };
+                it('should trigger an error when attempting to register a module that doesn\'t meet the definition requirements', function (done) {
+                    // given
+                    var sutScope = new Hilary().useAsync(async),
+                        count = 0;
 
-                    expect(shouldThrow).to.Throw();
+                    sutScope.Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.on.error(function (err) {
+                                // then
+                                expect(err.name).to.equal('ArgumentException');
+                                count += 1;
+
+                                // should fire twice
+                                if (count === 2) {
+                                    done();
+                                }
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            // when
+                            scope.registerAsync({});
+                        }
+                    });
                 });
 
-                it('should throw when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
+                it('should pass an error back to the callback when attempting to register a module that doesn\'t meet the definition requirements', function (done) {
                     // given
-                    var sutName = generateId(),
-                        missingDependency = generateId(),
-                        shouldTrow;
+                    var sutScope = new Hilary().useAsync(async);
 
-                    scope.register({
-                        name: sutName,
-                        dependencies: [missingDependency],
-                        factory: function (dep) {}
+                    sutScope.Bootstrapper({
+                        composeModules: function (err, scope) {
+                            // when
+                            scope.registerAsync({}, function (err, result) {
+                                // then
+                                expect(err.name).to.equal('ArgumentException');
+                                done();
+                            });
+                        }
                     });
+                });
 
-                    // when
-                    scope.resolveAsync(sutName, function (err) {
-                        expect(err).to.be.a('object');
-                        done();
+                it('should trigger an error when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
+                    // given
+                    var sutScope = new Hilary().useAsync(async),
+                        sutName = generateId(),
+                        count = 0;
+
+                    sutScope.Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.on.error(function (err) {
+                                // then
+                                expect(err.name).to.equal('DependencyException');
+                                count += 1;
+
+                                // this should fire twice
+                                if (count === 2) {
+                                    done();
+                                }
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            // given
+                            scope.register({
+                                name: sutName,
+                                dependencies: [generateId()],
+                                factory: function (dep) {
+
+                                }
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            // when
+                            scope.resolveAsync(sutName, function (err, dep1) {
+                                // expect(err).to.be.a('object');
+                                // done();
+                            });
+                        }
                     });
+                });
 
+                it('should pass an error to the callback when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
+                    // given
+                    var sutScope = new Hilary().useAsync(async),
+                        sutName = generateId();
+
+                    sutScope.Bootstrapper({
+                        composeModules: function (err, scope) {
+                            // given
+                            scope.register({
+                                name: sutName,
+                                dependencies: [generateId()],
+                                factory: function (dep) {
+
+                                }
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            // when
+                            scope.resolveAsync(sutName, function (err) {
+                                expect(err).to.be.a('object');
+                                done();
+                            });
+                        }
+                    });
                 });
 
             }); // /registering
@@ -141,7 +218,7 @@
                     });
                 });
 
-                it('should throw when attempting to resolve a module that doesn\'t exist', function (done) {
+                it('should pass an error when attempting to resolve a module that doesn\'t exist', function (done) {
                     scope.resolveAsync(function () {}, function (err) {
                         expect(err).to.be.a('object');
 
@@ -166,7 +243,7 @@
                     });
                 });
 
-                it('should return an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
+                it('should pass an error when resolving multiple modules and any or all of the dependencies are not met', function (done) {
                     var sutName1 = generateId();
 
                     scope.resolveManyAsync([testModules.module1.name, sutName1], function (err, results) {
@@ -298,7 +375,7 @@
                     assert(mockIndex(mockRegistrationName), mockRegistrationName, done);
                 });
 
-                it('should return an error if some or all dependencies were not met', function (done) {
+                it('should pass an error if some or all dependencies were not met', function (done) {
                     var mockRegistrationName = generateId(),
                         idx = mockIndex(mockRegistrationName),
                         index;
@@ -313,7 +390,7 @@
                     });
                 });
 
-                it('should return an error if some or all dependencies of an item in the index were not met', function (done) {
+                it('should pass an error if some or all dependencies of an item in the index were not met', function (done) {
                     var mockRegistrationName = generateId(),
                         missingName = generateId(),
                         idx = mockIndex(mockRegistrationName),
@@ -343,11 +420,11 @@
 
                     actual1 = sut.resolve(sutModules.module1.name);
                     sut.disposeAsync(sutModules.module1.name, function () {
-                        actual2 = function () { sut.resolve(sutModules.module1.name); };
+                        actual2 = sut.exists(sutModules.module1.name);
 
                         expect(actual1).to.equal(sutModules.module1.expected);
                         expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                        expect(actual2).to.Throw();
+                        expect(actual2).to.equal(false);
                         done();
                     });
                 });
@@ -375,14 +452,14 @@
                     actual1 = sut.resolve(sutModules.module1.name);
                     actual2 = sut.resolve(sutModules.module2.name);
                     sut.disposeAsync([sutModules.module1.name, sutModules.module2.name], function () {
-                        actual3 = function () { sut.resolve(sutModules.module1.name); };
-                        actual4 = function () { sut.resolve(sutModules.module2.name); };
+                        actual3 = sut.exists(sutModules.module1.name);
+                        actual4 = sut.exists(sutModules.module2.name);
 
                         expect(actual1).to.equal(sutModules.module1.expected);
                         expect(actual2.thisOut).to.equal(sutModules.module2.expected);
                         expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                        expect(actual3).to.Throw();
-                        expect(actual4).to.Throw();
+                        expect(actual3).to.equal(false);
+                        expect(actual4).to.equal(false);
                         done();
                     });
                 });
@@ -412,14 +489,14 @@
                     actual1 = sut.resolve(sutModules.module1.name);
                     actual2 = sut.resolve(sutModules.module2.name);
                     sut.disposeAsync(function () {
-                        actual3 = function () { sut.resolve(sutModules.module1.name); };
-                        actual4 = function () { sut.resolve(sutModules.module2.name); };
+                        actual3 = sut.exists(sutModules.module1.name);
+                        actual4 = sut.exists(sutModules.module2.name);
 
                         expect(actual1).to.equal(sutModules.module1.expected);
                         expect(actual2.thisOut).to.equal(sutModules.module2.expected);
                         expect(sut.getContext().container[sutModules.module1.name]).to.equal(undefined);
-                        expect(actual3).to.Throw();
-                        expect(actual4).to.Throw();
+                        expect(actual3).to.equal(false);
+                        expect(actual4).to.equal(false);
                         done();
                     });
                 });
@@ -458,7 +535,7 @@
 //                var result = scope.resolve(id);
 //                next(null, result);
 //                disposeTask();
-//            };
+//            };
 //
 //            disposeTask = function () {
 //                console.log('disposing', id);
