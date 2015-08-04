@@ -203,13 +203,20 @@
                 });
 
                 it('should trigger an error when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
+                    var count = 0;
+
                     // given
                     new Hilary().Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline) {
                             pipeline.register.on.error(function (err) {
                                 // then
                                 expect(err.name).to.equal('DependencyException');
-                                done();
+                                count += 1;
+
+                                // should trigger two errors
+                                if (count === 2) {
+                                    done();
+                                }
                             });
                         },
                         composeModules: function (err, scope) {

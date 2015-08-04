@@ -1,20 +1,20 @@
 (function (exports, Hilary) {
     'use strict';
-    
+
     if (exports.AMDContainer && exports.define && exports.require) {
         // Hilary AMD was already defined; ignore this instance
         return false;
     }
-    
+
     var extension = function (Hilary) {
         var AMDContainer;
-        
+
         Hilary.extend('useAMD', function (scope) {
             var context = scope.getContext(),
                 is = context.is,
                 err = context.exceptionHandlers,
                 constants = context.constants;
-            
+
             return function () {
                 scope.define = function (moduleName, dependencies, factory) {
                     if (is.function(factory)) {
@@ -65,7 +65,7 @@
                         throw err.argumentException('A factory function was not found to define ' + moduleName, 'factory');
                     }
                 };
-                
+
                 scope.require = function (dependencies, factory) {
                     if (is.function(dependencies)) {
                         // The first argument is the factory
@@ -78,11 +78,13 @@
                         return scope.resolveMany(dependencies, factory);
                     }
                 };
-                
-                scope.registerEvent(constants.pipeline.afterNewChild, function (scope, options, child) {
-                    child.useAMD();
+
+                scope.getContext().pipeline.register.after.newChild(function (err, payload) {
+                    if (payload && payload.child && payload.child.useAMD) {
+                        payload.child.useAMD();
+                    }
                 });
-                
+
                 return scope;
             };
         });
@@ -95,7 +97,7 @@
         exports.define.amd = {};
         exports.require = AMDContainer.require;
     };
-    
+
     if (Hilary) {
         extension(Hilary);
     } else {

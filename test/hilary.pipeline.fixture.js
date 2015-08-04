@@ -15,64 +15,158 @@
 
             spec.describe('when a "before::register" event exists', function () {
 
-                var registerEvent = function (specScope, sutModuleName) {
-                    specScope.registerEvent(constants.pipeline.beforeRegister, function (scope, moduleInfo) {
-                        if (moduleInfo.name === testModules.module1.name) {
-                            // register something new
-                            var newModule = testModules.module2.moduleDefinition;
-                            newModule.name = sutModuleName;
-                            scope.register(newModule);
-
-                            // modify the registration
-                            moduleInfo.factory = function () {
-                                return sutModuleName;
-                            };
-                        }
-                    });
-                };
-
-                it('should execute that module BEFORE new modules are registered', function () {
-                    var specScope = new Hilary(),
-                        sutModuleName = generateId(),
-                        actual1,
-                        actual2;
+                it('should execute that module BEFORE new modules are registered', function (done) {
+                    var expected = generateId();
 
                     // given
-                    registerEvent(specScope, sutModuleName);
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(function (err, payload, next) {
+                                payload.moduleInfo.factory = function () {
+                                    return expected;
+                                };
 
-                    // when
-                    specScope.register(testModules.module1.moduleDefinition);
-                    actual1 = specScope.resolve(sutModuleName);
-                    actual2 = specScope.resolve(testModules.module1.name);
-
-                    // then the module that was being registered should have been modified by the event
-                    actual2.should.equal(sutModuleName);
-
-                    // then a new module should have been registered, as a result of the event
-                    actual1.thisOut.should.equal(testModules.module2.expected);
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                        },
+                        onComposed: function (err, scope) {
+                            // then
+                            expect(scope.resolve(testModules.module1.name)).to.equal(expected);
+                            done();
+                        }
+                    });
                 });
 
                 it('should execute that module BEFORE new modules are registered asynchronously', function (done) {
-                    var specScope = new Hilary().useAsync(async),
-                        sutModuleName = generateId();
+                    var expected = generateId();
 
                     // given
-                    registerEvent(specScope, sutModuleName);
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(function (err, payload, next) {
+                                payload.moduleInfo.factory = function () {
+                                    return expected;
+                                };
 
-                    // when
-                    specScope.registerAsync(testModules.module1.moduleDefinition, function () {
-                        var actual1,
-                            actual2;
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.registerAsync(testModules.module1.moduleDefinition, function () {
+                                // then
+                                expect(scope.resolve(testModules.module1.name)).to.equal(expected);
+                                done();
+                            });
+                        }
+                    });
+                });
 
-                        actual1 = specScope.resolve(sutModuleName);
-                        actual2 = specScope.resolve(testModules.module1.name);
+                it('should pass the err in a waterfall, through before.register events', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
 
-                        // then the module that was being registered should have been modified by the event
-                        actual2.should.equal(sutModuleName);
+                            pipeline.register.before.register(function (err) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                        }
+                    });
+                });
 
-                        // then a new module should have been registered, as a result of the event
-                        actual1.thisOut.should.equal(testModules.module2.expected);
-                        done();
+                it('should pass the err in a waterfall, through before.register async events', function (done) {
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.before.register(function (err, payload, next) {
+                                next(err);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.registerAsync(testModules.module1.moduleDefinition, function (err) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through before.register events', function (done) {
+                    var expected1 = generateId(),
+                        expected2 = generateId();
+
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(function (err, payload, next) {
+                                payload.moduleInfo.factory = {
+                                    expected1: expected1
+                                };
+
+                                next(err, payload);
+                            });
+
+                            pipeline.register.before.register(function (err, payload, next) {
+                                payload.moduleInfo.factory.expected2 = expected2;
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                        },
+                        onComposed: function (err, scope) {
+                            // then
+                            var actual = scope.resolve(testModules.module1.name);
+                            expect(actual.expected1).to.equal(expected1);
+                            expect(actual.expected2).to.equal(expected2);
+                            done();
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through before.register async events', function (done) {
+                    var expected1 = generateId(),
+                        expected2 = generateId();
+
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(function (err, payload, next) {
+                                payload.moduleInfo.factory = {
+                                    expected1: expected1
+                                };
+
+                                next(err, payload);
+                            });
+
+                            pipeline.register.before.register(function (err, payload, next) {
+                                payload.moduleInfo.factory.expected2 = expected2;
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.registerAsync(testModules.module1.moduleDefinition, function (err, actual) {
+                                // then
+                                expect(actual.factory.expected1).to.equal(expected1);
+                                expect(actual.factory.expected2).to.equal(expected2);
+                                done();
+                            });
+                        }
                     });
                 });
 
@@ -80,154 +174,494 @@
 
             spec.describe('when an "after::register" event exists', function () {
 
-                var registerEvent = function (specScope, done) {
-                    specScope.registerEvent(constants.pipeline.afterRegister, function (scope, moduleInfo) {
-                        if (moduleInfo.name === testModules.module1.name) {
-                            // then
-                            var actual = specScope.resolve(testModules.module1.name);
-                            expect(actual).to.equal(testModules.module1.expected);
-                            expect(scope).to.not.equal(undefined);
-                            expect(scope.useAsync).to.not.equal(undefined);
-                            done();
-                        }
-                    });
-                };
-
                 it('should execute that module AFTER new modules are registered', function (done) {
                     // given
-                    var specScope = new Hilary();
-                    registerEvent(specScope, done);
-
-                    // when
-                    specScope.register(testModules.module1.moduleDefinition);
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.register(function () {
+                                // then
+                                expect(scope.resolve(testModules.module1.name)).to.equal(testModules.module1.expected);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                        }
+                    });
                 });
 
                 it('should execute that module AFTER new modules are registered asynchronously', function (done) {
                     // given
-                    var specScope = new Hilary().useAsync(async);
-                    registerEvent(specScope, done);
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.register(function () {
+                                // then
+                                expect(scope.resolve(testModules.module1.name)).to.equal(testModules.module1.expected);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.registerAsync(testModules.module1.moduleDefinition);
+                        }
+                    });
+                });
 
-                    // when
-                    specScope.registerAsync(testModules.module1.moduleDefinition);
+                it('should pass the err in a waterfall, through after.register events', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.register(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.after.register(function (err) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: 'foo', factory: function () {} });
+                        }
+                    });
+                });
+
+                it('should pass the err in a waterfall, through after.register async events', function (done) {
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.register(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.after.register(function (err, payload, next) {
+                                next(err);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.registerAsync({ name: 'foo', factory: function () {} }, function (err) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through after.register events', function (done) {
+                    var expected1 = generateId(),
+                        expected2 = generateId();
+
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.register(function (err, payload, next) {
+                                payload.moduleInfo.factory = {
+                                    expected1: expected1
+                                };
+
+                                next(err, payload);
+                            });
+
+                            pipeline.register.after.register(function (err, payload, next) {
+                                payload.moduleInfo.factory.expected2 = expected2;
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                        },
+                        onComposed: function (err, scope) {
+                            // then
+                            var actual = scope.resolve(testModules.module1.name);
+                            expect(actual.expected1).to.equal(expected1);
+                            expect(actual.expected2).to.equal(expected2);
+                            done();
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through after.register async events', function (done) {
+                    var expected1 = generateId(),
+                        expected2 = generateId();
+
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.register(function (err, payload, next) {
+                                payload.moduleInfo.factory = {
+                                    expected1: expected1
+                                };
+
+                                next(err, payload);
+                            });
+
+                            pipeline.register.after.register(function (err, payload, next) {
+                                payload.moduleInfo.factory.expected2 = expected2;
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.registerAsync(testModules.module1.moduleDefinition, function (err, actual) {
+                                // then
+                                expect(actual.factory.expected1).to.equal(expected1);
+                                expect(actual.factory.expected2).to.equal(expected2);
+                                done();
+                            });
+                        }
+                    });
                 });
 
             }); // /after::register
 
             spec.describe('when a "before::resolve" event exists', function () {
 
-                var registerEvent = function (specScope, done) {
-                    specScope.registerEvent(constants.pipeline.beforeResolve, function (scope, moduleName) {
-                        expect(moduleName).to.equal(testModules.module1.name);
-                        expect(scope).to.not.equal(undefined);
-                        expect(scope.useAsync).to.not.equal(undefined);
-                        done();
-                    });
-                };
-
                 it('should execute that module BEFORE new modules are resolved', function (done) {
                     // given
-                    var specScope = new Hilary();
-                    specScope.register(testModules.module1.moduleDefinition);
-                    registerEvent(specScope, done);
-
-                    // when
-                    specScope.resolve(testModules.module1.name);
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.resolve(function (err, payload) {
+                                payload.moduleName = testModules.module1.name;
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                            scope.register(testModules.module2.moduleDefinition);
+                        },
+                        onComposed: function (err, scope) {
+                            // then
+                            expect(scope.resolve(testModules.module2.name)).to.equal(testModules.module1.expected);
+                            done();
+                        }
+                    });
                 });
 
                 it('should execute that module BEFORE new modules are resolved asynchronously', function (done) {
                     // given
-                    var specScope = new Hilary().useAsync(async);
-                    specScope.register(testModules.module1.moduleDefinition);
-                    registerEvent(specScope, done);
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.resolve(function (err, payload) {
+                                payload.moduleName = testModules.module1.name;
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
+                            scope.register(testModules.module2.moduleDefinition);
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolveAsync(testModules.module2.name, function (err, actual) {
+                                // then
+                                expect(err).to.equal(null);
+                                expect(actual).to.equal(testModules.module1.expected);
+                                done();
+                            });
+                        }
+                    });
+                });
 
-                    // when
-                    specScope.resolveAsync(testModules.module1.name);
+                it('should pass the err in a waterfall, through before.resolve events', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.resolve(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.before.resolve(function (err, payload) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolve(name);
+                        }
+                    });
+                });
+
+                it('should pass the err in a waterfall, through before.resolve async events', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.resolve(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.before.resolve(function (err, payload, next) {
+                                next(err);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolveAsync(name, function (err) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through before.resolve events', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.resolve(function (err, payload, next) {
+                                next(null, { newResult: true });
+                            });
+
+                            pipeline.register.before.resolve(function (err, payload) {
+                                // then
+                                expect(payload.newResult).to.equal(true);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolve(name);
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through before.resolve async events', function (done) {
+                    var name = generateId(),
+                        expected = generateId(),
+                        name2 = generateId(),
+                        expected2 = generateId();
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.resolve(function (err, payload, next) {
+                                payload.moduleName = name2;
+                                next(null, payload);
+                            });
+
+                            pipeline.register.before.resolve(function (err, payload, next) {
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                            scope.register({ name: name2, factory: function () { return expected2; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolveAsync(name, function (err, payload) {
+                                // then
+                                expect(payload).to.equal(expected2);
+                                done();
+                            });
+                        }
+                    });
                 });
 
             }); // /before::resolve
 
             spec.describe('when a "after::resolve" event exists', function () {
 
-                var registerEvent = function (specScope, done) {
-                    specScope.registerEvent(constants.pipeline.afterResolve, function (scope, moduleInfo) {
-                        expect(moduleInfo.name).to.equal(testModules.module1.name);
-                        expect(moduleInfo.result).to.equal(testModules.module1.expected);
-                        expect(scope).to.not.equal(undefined);
-                        expect(scope.useAsync).to.not.equal(undefined);
-                        done();
-                    });
-                };
-
                 it('should execute that module AFTER new modules are resolved', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
                     // given
-                    var specScope = new Hilary();
-                    specScope.register(testModules.module1.moduleDefinition);
-                    registerEvent(specScope, done);
-
-                    // when
-                    specScope.resolve(testModules.module1.name);
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.resolve(function (err, payload) {
+                                // then
+                                expect(err).to.equal(null);
+                                expect(payload.result).to.equal(expected);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolve(name);
+                        }
+                    });
                 });
 
                 it('should execute that module AFTER new modules are resolved asynchronously', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
                     // given
-                    var specScope = new Hilary().useAsync(async);
-                    specScope.register(testModules.module1.moduleDefinition);
-                    registerEvent(specScope, done);
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.resolve(function (err, payload) {
+                                // then
+                                expect(err).to.equal(null);
+                                expect(payload.result).to.equal(expected);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolveAsync(name, function() {});
+                        }
+                    });
+                });
 
-                    // when
-                    specScope.resolveAsync(testModules.module1.name);
+                it('should pass the err in a waterfall, through after.resolve events', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.resolve(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.after.resolve(function (err, payload) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolve(name);
+                        }
+                    });
+                });
+
+                it('should pass the err in a waterfall, through after.resolve async events', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.resolve(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.after.resolve(function (err, payload, next) {
+                                next(err);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolveAsync(name, function (err) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through after.resolve events', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.resolve(function (err, payload, next) {
+                                next(null, { newResult: true });
+                            });
+
+                            pipeline.register.after.resolve(function (err, payload) {
+                                // then
+                                expect(payload.newResult).to.equal(true);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolve(name);
+                        }
+                    });
+                });
+
+                it('should pass the result in a waterfall, through after.resolve async events', function (done) {
+                    var name = generateId(),
+                        expected = generateId();
+                    // given
+                    new Hilary().useAsync(async).Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.resolve(function (err, payload, next) {
+                                next(null, { result: { newResult: true } });
+                            });
+
+                            pipeline.register.after.resolve(function (err, payload, next) {
+                                next(err, payload);
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name, factory: function () { return expected; }});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolveAsync(name, function (err, payload) {
+                                // then
+                                expect(payload.newResult).to.equal(true);
+                                done();
+                            });
+                        }
+                    });
                 });
 
             }); // /after::resolve
 
             spec.describe('when a "before::new::child" event exists', function () {
-
-                var registerEvent = function (specScope, done) {
-                    specScope.registerEvent(constants.pipeline.beforeNewChild, function (scope, options) {
-                        expect(options).to.not.equal(undefined);
-                        expect(options.parentContainer).to.not.equal(undefined);
-                        expect(scope).to.not.equal(undefined);
-                        expect(scope.useAsync).to.not.equal(undefined);
-                        done();
-                    });
-                };
-
                 it('should execute that module BEFORE new child containers are created', function (done) {
                     // given
-                    var specScope = new Hilary();
-                    registerEvent(specScope, done);
-
-                    // when
-                    specScope.createChildContainer();
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.newChild(function (err, payload) {
+                                expect(payload.options).to.not.equal(undefined);
+                                expect(payload.options.parentContainer).to.not.equal(undefined);
+                                expect(payload.scope).to.not.equal(undefined);
+                                expect(payload.scope.useAsync).to.not.equal(undefined);
+                                done();
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            scope.createChildContainer();
+                        }
+                    });
                 });
-
             }); // /before::new::child
 
             spec.describe('when a "after::new::child" event exists', function () {
-
-                var registerEvent = function (specScope, done) {
-                    specScope.registerEvent(constants.pipeline.afterNewChild, function (scope, options, child) {
-                        expect(options).to.not.equal(undefined);
-                        expect(options.parentContainer).to.not.equal(undefined);
-                        expect(child).to.not.equal(undefined);
-                        expect(child.register).to.be.a('function');
-                        expect(child.resolve).to.be.a('function');
-                        expect(scope).to.not.equal(undefined);
-                        expect(scope.useAsync).to.not.equal(undefined);
-
-                        done();
-                    });
-                };
-
                 it('should execute that module AFTER new child containers are created', function (done) {
                     // given
-                    var specScope = new Hilary();
-                    registerEvent(specScope, done);
-
-                    // when
-                    specScope.createChildContainer();
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.newChild(function (err, payload) {
+                                expect(payload.options).to.not.equal(undefined);
+                                expect(payload.options.parentContainer).to.not.equal(undefined);
+                                expect(payload.child).to.not.equal(undefined);
+                                expect(payload.child.register).to.be.a('function');
+                                expect(payload.child.resolve).to.be.a('function');
+                                expect(payload.scope).to.not.equal(undefined);
+                                expect(payload.scope.useAsync).to.not.equal(undefined);
+                                done();
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            scope.createChildContainer();
+                        }
+                    });
                 });
-
             }); // /after::new::child
 
             spec.describe('when a "hilary::error" event exists', function () {
@@ -256,36 +690,29 @@
             });
 
             spec.describe('when a pipeline event has multiple registered handlers (i.e. an array of before register handlers)', function () {
-                var registerEvent = function (specScope, sutModuleName) {
-                    specScope.registerEvent(constants.pipeline.beforeRegister, function (scope, moduleInfo) {
-                        if (moduleInfo.name === testModules.module1.name) {
-                            // register something new
-                            var newModule = testModules.module2.moduleDefinition;
-                            newModule.name = sutModuleName;
-                            scope.register(newModule);
+                it('also see the "waterfall" specs in before::register, after::register, before::resolve and after::resolve', function (done) {
+                    // pass
+                    done();
+                });
+
+                it('should execute each one of them', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.before.register(function (err) {
+                                // then
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register(testModules.module1.moduleDefinition);
                         }
                     });
-                };
-
-                it('should execute each one of them', function () {
-                    var specScope = new Hilary(),
-                        sutModuleName1 = generateId(),
-                        sutModuleName2 = generateId(),
-                        actual1,
-                        actual2;
-
-                    // given
-                    registerEvent(specScope, sutModuleName1);
-                    registerEvent(specScope, sutModuleName2);
-
-                    // when
-                    specScope.register(testModules.module1.moduleDefinition);
-                    actual1 = specScope.resolve(sutModuleName1);
-                    actual2 = specScope.resolve(sutModuleName2);
-
-                    // then
-                    expect(actual1.thisOut).to.equal(testModules.module2.expected);
-                    expect(actual2.thisOut).to.equal(testModules.module2.expected);
                 });
             });
 

@@ -746,6 +746,7 @@
         var $this = {},
             registerEvent,
             executeEvent,
+            makeEventTasks,
             pipelineEvents = new PipelineEvents();
 
         registerEvent = function (name, callback) {
@@ -776,24 +777,53 @@
             }
         };
 
-        executeEvent = function (eventArray, argumentArray, next) {
+        makeEventTasks = function (pipeline, last) {
             var i,
-                event;
+                tasks = [],
+                makeTask,
+                executeTask;
 
-            for (i = 0; i < eventArray.length; i += 1) {
-                event = eventArray[i];
-
-                if (event.once) {
-                    eventArray.splice(i, 1);
+            executeTask = function (i, err, data) {
+                if (pipeline[i].length === 3) {
+                    pipeline[i](err, data, makeTask(i + 1));
+                } else {
+                    pipeline[i](err, data);
+                    makeTask(i + 1)(err, data);
                 }
 
-                if (is.function(event)) {
-                    event.apply(null, argumentArray);
+                if (pipeline[i].once) {
+                    pipeline.splice(i, 1);
                 }
+            };
+
+            makeTask = function (i) {
+                return  function (err, data) {
+                    if (pipeline.length === i) {
+                        if (is.function(last)) {
+                            last(err, data);
+                        }
+                    } else if (is.function(pipeline[i])) {
+                        executeTask(i, err, data);
+                    } else {
+                        makeTask(i + 1);
+                    }
+                };
+            };
+
+            for (i = 0; i < pipeline.length; i += 1) {
+                tasks.push(makeTask(i));
             }
 
-            if (is.function(next)) {
-                next(argumentArray);
+            return tasks;
+        };
+
+        executeEvent = function (eventArray, data, next) {
+            var eventTasks = makeEventTasks(eventArray, next);
+
+            if (eventTasks.length > 0) {
+                eventTasks[0](null, data);
+            } else if (is.function(next)) {
+                next(null, data);
             }
         };
 
@@ -842,40 +872,59 @@
             before: {
                 // hilary::before::register (scope, moduleName, moduleDefinition)
                 register: function (moduleInfo, next) {
-                    executeEvent($this.events.beforeRegisterEvents, [scope, moduleInfo], next);
+                    executeEvent($this.events.beforeRegisterEvents, { scope: scope, moduleInfo: moduleInfo }, next);
                 },
                 // hilary::before::resolve (scope, moduleName)
                 resolve: function (moduleName, next) {
-                    executeEvent($this.events.beforeResolveEvents, [scope, moduleName], next);
+                    executeEvent($this.events.beforeResolveEvents, { scope: scope, moduleName: moduleName }, next);
                 },
                 // hilary::before::new::child (scope, options)
                 newChild: function (options, next) {
-                    executeEvent($this.events.beforeNewChildEvents, [scope, options], next);
+                    executeEvent($this.events.beforeNewChildEvents, { scope: scope, options: options }, next);
                 }
             },
             after: {
                 // hilary::after::register (scope, moduleName, moduleDefinition)
                 register: function (moduleInfo, next) {
-                    executeEvent($this.events.afterRegisterEvents, [scope, moduleInfo], next);
+                    executeEvent($this.events.afterRegisterEvents, { scope: scope, moduleInfo: moduleInfo }, next);
                 },
                 // hilary::after::resolve (scope, moduleName)
                 resolve: function (moduleInfo, next) {
-                    executeEvent($this.events.afterResolveEvents, [scope, moduleInfo], next);
+                    var result = {
+                        scope: scope,
+                        name: moduleInfo && moduleInfo.name,
+                        result: moduleInfo && moduleInfo.result
+                    };
+                    executeEvent($this.events.afterResolveEvents, result, next);
                 },
                 // hilary::after::new::child (scope, options, child)
                 newChild: function (options, child, next) {
-                    executeEvent($this.events.afterNewChildEvents, [scope, options, child], next);
+                    executeEvent($this.events.afterNewChildEvents, { scope: scope, options: options, child: child }, next);
                 }
             },
             on: {
                 // hilary::error (err)
                 error: function (err, next) {
-                    if (is.string(err)) {
-                        executeEvent($this.events.onError, [scope.getContext().exceptionHandlers.makeException(err)], next);
-                    } else {
-                        executeEvent($this.events.onError, [err], next);
+                    var exception = is.string(err) ? scope.getContext().exceptionHandlers.makeException(err) : err,
+                        eventArray = $this.events.onError,
+                        event,
+                        i = 0;
+
+                    for (i = 0; i < eventArray.length; i += 1) {
+                        event = eventArray[i];
+
+                        if (event.once) {
+                            eventArray.splice(i, 1);
+                        }
+
+                        if (is.function(event)) {
+                            event(exception);
+                        }
                     }
 
+                    if (is.function(next)) {
+                        next(exception);
+                    }
                 }
             }
         };
@@ -904,6 +953,8 @@
                 registerBlueprintMatchPair,
                 getParameterNames,
                 makeSingleton,
+                registerTasks,
+                resolveTasks,
                 STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg,
                 ARGUMENT_NAMES = /([^\s,]+)/g,
                 reservedModules;
@@ -1068,73 +1119,187 @@
                 }
             };
 
+            registerTasks = function () {
+                var self = {
+                        start: undefined,
+                        startAsync: undefined,
+                        output: undefined
+                    },
+                    validate,
+                    validateAsync,
+                    before,
+                    beforeAsync,
+                    main,
+                    mainAsync,
+                    after,
+                    afterAsync,
+                    lastAsync;
+
+                validate = function(hilaryModule, next) {
+                    var exception;
+
+                    if (is.not.defined(hilaryModule) || is.not.string(hilaryModule.name) || is.not.defined(hilaryModule.factory)) {
+                        exception = err.throwArgumentException('At least a name and a factory is required to register a module', 'hilaryModule');
+                    }
+
+                    if (constants.blackListedRegistrations[hilaryModule.name]) {
+                        exception = err.throwArgumentException('The name you are trying to register is reserved', 'moduleName', hilaryModule.name);
+                    }
+
+                    if (exception && is.function (lastAsync)) {
+                        lastAsync(exception);
+                        return;
+                    }
+
+                    next(hilaryModule);
+                };
+
+                validateAsync = function (hilaryModule, last) {
+                    $this.asyncHandler(function () {
+                        if (is.function (last)) {
+                            lastAsync = last;
+                        } else {
+                            // make a dummy
+                            lastAsync = function () {};
+                        }
+                        validate(hilaryModule, beforeAsync);
+                    });
+                };
+
+                before = function (hilaryModule) {
+                    pipeline.trigger.before.register(hilaryModule, main);
+                };
+
+                beforeAsync = function (hilaryModule) {
+                    $this.asyncHandler(function () {
+                        pipeline.trigger.before.register(hilaryModule, mainAsync);
+                    });
+                };
+
+                main = function (exception, payload, next) {
+                    var _next = next || after;
+
+                    if (exception) {
+                        _next(exception);
+                        return;
+                    }
+
+                    if (!payload || !payload.moduleInfo) {
+                        _next(err.argumentException('The before.register pipeline did not return the module information', 'payload'));
+                        return;
+                    }
+
+                    try {
+                        var autoWiredModule = autowire(payload.moduleInfo);
+
+                        container[autoWiredModule.name] = autoWiredModule;
+
+                        // register singletons that have no dependencies
+                        makeSingleton(autoWiredModule);
+
+                        if (is.defined(autoWiredModule.blueprint)) {
+                            registerBlueprintMatchPair(autoWiredModule);
+                        }
+
+                        _next(null, autoWiredModule);
+                    } catch (e) {
+                        _next(e);
+                    }
+                };
+
+                mainAsync = function (exception, payload) {
+                    $this.asyncHandler(function () {
+                        main(exception, payload, afterAsync);
+                    });
+                };
+
+                after = function (exception, affectedModule) {
+                    if (exception) {
+                        err.throwException(exception);
+                    }
+
+                    pipeline.trigger.after.register(affectedModule, function (err, payload) {
+                        self.output = payload && payload.moduleInfo;
+                    });
+                };
+
+                afterAsync = function (exception, affectedModule) {
+                    if (exception) {
+                        err.throwException(exception);
+                        lastAsync(exception);
+                        return;
+                    }
+
+                    pipeline.trigger.after.register(affectedModule, function (err, payload) {
+                        lastAsync(err, payload && payload.moduleInfo);
+                    });
+                };
+
+                self.start = function (hilaryModule) { validate(hilaryModule, before); };
+                self.startAsync = validateAsync;
+
+                return self;
+            };
+
             $this.register = function (hilaryModule) {
-                if (is.not.defined(hilaryModule) || is.not.string(hilaryModule.name) || is.not.defined(hilaryModule.factory)) {
-                    err.throwArgumentException('At least a name and a factory is required to register a module', 'hilaryModule');
-                    return;
-                }
-
-                pipeline.trigger.before.register(hilaryModule);
-
-                if (constants.blackListedRegistrations[hilaryModule.name]) {
-                    err.throwArgumentException('The name you are trying to register is reserved', 'moduleName', hilaryModule.name);
-                    return;
-                }
-
-                hilaryModule = autowire(hilaryModule);
-                container[hilaryModule.name] = hilaryModule;
-
-                // register singletons that have no dependencies
-                makeSingleton(hilaryModule);
-
-                if (is.defined(hilaryModule.blueprint)) {
-                    registerBlueprintMatchPair(hilaryModule);
-                }
-
-                $this.asyncHandler(function () {
-                    pipeline.trigger.after.register(hilaryModule);
-                });
-
-                return hilaryModule;
+                var tasks = registerTasks();
+                tasks.start(hilaryModule);
+                return tasks.output;
             };
 
             $this.resolve = function (moduleName) {
-                var output;
+                var before, main, after, output;
 
                 if (is.not.string(moduleName)) {
                     err.throwArgumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveMany.', 'moduleName');
                     return;
                 }
 
-                pipeline.trigger.before.resolve(moduleName);
+                before = function () {
+                    pipeline.trigger.before.resolve(moduleName, main);
+                };
 
-                if (singletons[moduleName] !== undefined) {
-                    return $this.returnResult({
-                        name: moduleName,
-                        result: singletons[moduleName]
-                    }, pipeline);
-                }
-
-                if (container[moduleName] !== undefined) {
-                    output = $this.invoke(container[moduleName]);
-
-                    if (container[moduleName].singleton === true) {
-                        makeSingleton(container[moduleName], output);
+                main = function (exception, payload) {
+                    if (exception) {
+                        err.throwException(exception);
+                        return;
                     }
 
-                    return $this.returnResult({
-                        name: moduleName,
-                        result: output
-                    }, pipeline);
-                }
+                    if (is.not.defined(payload) || is.not.string(payload.moduleName)) {
+                        err.throwArgumentException('The moduleName was not passed through by the before.resolve pipeline.', 'moduleName');
+                        return;
+                    }
 
-                output = $this.findResult(moduleName);
+                    var moduleName = payload.moduleName;
+
+                    if (singletons[moduleName] !== undefined) {
+                        after(singletons[moduleName]);
+                    } else if (container[moduleName] !== undefined) {
+                        var result = $this.invoke(container[moduleName]);
+
+                        if (container[moduleName].singleton === true) {
+                            makeSingleton(container[moduleName], result);
+                        }
+
+                        after(result);
+                    } else {
+                        after($this.findResult(moduleName));
+                    }
+                };
+
+                after = function (found) {
+                    pipeline.trigger.after.resolve({
+                        name: moduleName,
+                        result: found
+                    }, function (err, payload) {
+                        output = payload && payload.result;
+                    });
+                };
+
+                before();
 
                 if (output) {
-                    return $this.returnResult({
-                        name: moduleName,
-                        result: output
-                    }, pipeline);
+                    return output;
                 } else {
                     // otherwise, throw notResolvableException
                     err.throwNotResolvableException(moduleName);
@@ -1208,56 +1373,76 @@
                 var validateTask,
                     beforeResolveTask,
                     findAndInvokeResultTask,
-                    findResultTask,
                     afterResultTask;
 
-                validateTask = function (_next) {
-                    if (is.not.string(moduleName)) {
-                        var exception = err.throwArgumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveManyAsync.', 'moduleName');
-                        err.throwException(exception);
-                        _next(exception);
-                    } else {
-                        _next(null, null);
-                    }
+                validateTask = function () {
+                    $this.asyncHandler(function () {
+                        var exception;
+
+                        if (is.not.string(moduleName)) {
+                            exception = err.throwArgumentException('The moduleName must be a string. If you are trying to resolve an array, use resolveManyAsync.', 'moduleName');
+                            err.throwException(exception);
+                            next(exception);
+                        } else if (is.not.function (next)) {
+                            exception = err.throwArgumentException('The next function (callback) is required. If you are trying to resolve an array, use resolveManyAsync.', 'next');
+                            err.throwException(exception);
+                        } else {
+                            beforeResolveTask();
+                        }
+                    });
                 };
 
-                beforeResolveTask = function (previousTaskResult, _next) {
-                    _next(null, pipeline.trigger.before.resolve(moduleName));
+                beforeResolveTask = function () {
+                    $this.asyncHandler(function () {
+                        pipeline.trigger.before.resolve(moduleName, findAndInvokeResultTask);
+                    });
                 };
 
-                findAndInvokeResultTask = function (previousTaskResult, _next) {
-                    if (singletons[moduleName] !== undefined) {
-                        _next(null, singletons[moduleName]);
-                    } else if (container[moduleName] !== undefined) {
-                        $this.invokeAsync(container[moduleName], _next);
-                    } else {
-                        _next(null, null);
-                    }
+                findAndInvokeResultTask = function (exception, payload) {
+                    $this.asyncHandler(function () {
+                        if (exception) {
+                            err.throwException(exception);
+                            next(exception);
+                            return;
+                        }
+
+                        if (is.not.defined(payload) || is.not.string(payload.moduleName)) {
+                            var e = err.throwArgumentException('The moduleName was not passed through by the before.resolve pipeline.', 'moduleName');
+                            next(e);
+                            return;
+                        }
+
+                        var moduleName = payload.moduleName;
+
+                        if (singletons[moduleName] !== undefined) {
+                            afterResultTask(null, singletons[moduleName]);
+                        } else if (container[moduleName] !== undefined) {
+                            $this.invokeAsync(container[moduleName], afterResultTask);
+                        } else {
+                            afterResultTask(null, $this.findResult(moduleName));
+                        }
+                    });
                 };
 
-                findResultTask = function (previousTaskResult, _next) {
-                    if (previousTaskResult) {
-                        _next(null, previousTaskResult);
-                    } else {
-                        _next(null, $this.findResult(moduleName));
-                    }
+                afterResultTask = function (exception, result) {
+                    $this.asyncHandler(function () {
+                        if (result) {
+                            pipeline.trigger.after.resolve({
+                                name: moduleName,
+                                result: result
+                            }, function (err, payload) {
+                                next(err, payload && payload.result);
+                            });
+                        } else {
+                            var exception = err.notResolvableException(moduleName);
+                            err.throwException(exception);
+                            next(exception);
+                        }
+                    });
                 };
 
-                afterResultTask = function (previousTaskResult, _next) {
-                    if (previousTaskResult) {
-                        pipeline.trigger.after.resolve({
-                            name: moduleName,
-                            result: previousTaskResult
-                        });
-                        _next(null, previousTaskResult);
-                    } else {
-                        var exception = err.notResolvableException(moduleName);
-                        err.throwException(exception);
-                        _next(exception);
-                    }
-                };
-
-                async.waterfall([validateTask, beforeResolveTask, findAndInvokeResultTask, findResultTask, afterResultTask], next);
+                validateTask();
+                return scope;
             };
 
             $this.findResult = function (moduleName) {
@@ -1277,14 +1462,6 @@
                     // attempt to resolve from Window
                     return exports[moduleName];
                 }
-            };
-
-            $this.returnResult = function (result) {
-                $this.asyncHandler(function () {
-                    pipeline.trigger.after.resolve(result);
-                });
-
-                return result.result;
             };
 
             $this.invoke = function (theModule) {
@@ -1593,7 +1770,7 @@
                 */
                 scope.registerAsync = function (definition, next) {
                     asyncHandler.runAsync(function () {
-                        var hilaryModule, result;
+                        var hilaryModule;
 
                         hilaryModule = new HilaryModule(definition);
 
@@ -1602,18 +1779,30 @@
                             return;
                         }
 
-                        result = $this.register(hilaryModule);
-
-                        if (is.function(next)) {
-                            if (result) {
-                                next(null, result);
-                            } else {
-                                next(err.argumentException('Unable to register the module: ' + (definition && definition.name), 'definition'));
-                            }
-                        }
+                        registerTasks().startAsync(hilaryModule, next);
                     });
 
                     return scope;
+                    // asyncHandler.runAsync(function () {
+                    //     var hilaryModule, result;
+                    //
+                    //     hilaryModule = new HilaryModule(definition);
+                    //
+                    //     if (!hilaryModule) {
+                    //         next(err.argumentException('Unable to register the module: ' + (definition && definition.name), 'definition'));
+                    //         return;
+                    //     }
+                    //
+                    //     result = $this.register(hilaryModule);
+                    //
+                    //     if (is.function(next)) {
+                    //         if (result) {
+                    //             next(null, result);
+                    //         } else {
+                    //             next(err.argumentException('Unable to register the module: ' + (definition && definition.name), 'definition'));
+                    //         }
+                    //     }
+                    // });
                 };
 
                 /*

@@ -1,4 +1,4 @@
-/*! hilary-build 2015-08-03 */
+/*! hilary-build 2015-08-04 */
 (function(exports, Hilary) {
     "use strict";
     if (exports.AMDContainer && exports.define && exports.require) {
@@ -57,8 +57,10 @@
                         return scope.resolveMany(dependencies, factory);
                     }
                 };
-                scope.registerEvent(constants.pipeline.afterNewChild, function(scope, options, child) {
-                    child.useAMD();
+                scope.getContext().pipeline.register.after.newChild(function(err, payload) {
+                    if (payload && payload.child && payload.child.useAMD) {
+                        payload.child.useAMD();
+                    }
                 });
                 return scope;
             };

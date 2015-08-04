@@ -1,7 +1,7 @@
 /*globals createGuid, makeMockData*/
 (function (exports, Hilary, spec, createGuid, makeMockData, async, $) {
     'use strict';
-    
+
     exports['hilary.fixture'](Hilary, spec, createGuid, makeMockData, async);
     exports['hilary.browser.fixture']();
     exports['hilary.di.fixture'](Hilary, spec, createGuid, makeMockData);

@@ -1,45 +1,27 @@
-/*! hilary-build 2015-08-03 */
+/*! hilary-build 2015-08-04 */
 (function(Hilary, $) {
     "use strict";
-    Hilary.onInit(function(scope, config) {
-        scope.registerEvent("hilary::before::register", function(scope, moduleInfo) {
-            $(document).trigger("hilary::before::register", [ {
-                scope: scope,
-                moduleInfo: moduleInfo
-            } ]);
+    Hilary.onInit(function(scope) {
+        var pipeline = scope.getContext().pipeline;
+        pipeline.register.before.register(function(err, payload) {
+            $(document).trigger("hilary::before::register", [ payload ]);
         });
-        scope.registerEvent("hilary::after::register", function(scope, moduleInfo) {
-            $(document).trigger("hilary::after::register", [ {
-                scope: scope,
-                moduleInfo: moduleInfo
-            } ]);
+        pipeline.register.after.register(function(err, payload) {
+            $(document).trigger("hilary::after::register", [ payload ]);
         });
-        scope.registerEvent("hilary::before::resolve", function(scope, moduleName) {
-            $(document).trigger("hilary::before::resolve", [ {
-                scope: scope,
-                moduleName: moduleName
-            } ]);
+        pipeline.register.before.resolve(function(err, payload) {
+            $(document).trigger("hilary::before::resolve", [ payload ]);
         });
-        scope.registerEvent("hilary::after::resolve", function(scope, moduleInfo) {
-            $(document).trigger("hilary::after::resolve", [ {
-                scope: scope,
-                moduleInfo: moduleInfo
-            } ]);
+        pipeline.register.after.resolve(function(err, payload) {
+            $(document).trigger("hilary::after::resolve", [ payload ]);
         });
-        scope.registerEvent("hilary::before::new::child", function(scope, options) {
-            $(document).trigger("hilary::before::new::child", [ {
-                scope: scope,
-                options: options
-            } ]);
+        pipeline.register.before.newChild(function(err, payload) {
+            $(document).trigger("hilary::before::new::child", [ payload ]);
         });
-        scope.registerEvent("hilary::after::new::child", function(scope, options, child) {
-            $(document).trigger("hilary::after::new::child", [ {
-                scope: scope,
-                options: options,
-                child: child
-            } ]);
+        pipeline.register.after.newChild(function(err, payload) {
+            $(document).trigger("hilary::after::new::child", [ payload ]);
         });
-        scope.registerEvent("hilary::error", function(err) {
+        pipeline.register.on.error(function(err) {
             $(document).trigger("hilary::error", [ {
                 err: err
             } ]);
