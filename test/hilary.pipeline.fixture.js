@@ -639,6 +639,48 @@
                         }
                     });
                 });
+
+                it('should pass the err in a waterfall, through before.newChild events', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.newChild(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.before.newChild(function (err, payload) {
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            scope.createChildContainer();
+                        }
+                    });
+                });
+
+                it('should pass the options in a waterfall, through before.newChild events', function (done) {
+                    var expected = generateId();
+
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.newChild(function (err, payload, next) {
+                                payload.options.name = expected;
+                                next(null, payload);
+                            });
+
+                            pipeline.register.before.newChild(function (err, payload, next) {
+                                next(err, payload);
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            var child = scope.createChildContainer();
+                            expect(child.getContext().namedScope).to.equal(expected);
+                            done();
+                        }
+                    });
+                });
             }); // /before::new::child
 
             spec.describe('when a "after::new::child" event exists', function () {
@@ -654,6 +696,47 @@
                                 expect(payload.child.resolve).to.be.a('function');
                                 expect(payload.scope).to.not.equal(undefined);
                                 expect(payload.scope.useAsync).to.not.equal(undefined);
+                                done();
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            scope.createChildContainer();
+                        }
+                    });
+                });
+
+                it('should pass the err in a waterfall, through after.newChild events', function (done) {
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.newChild(function (err, payload, next) {
+                                next({ status: 500 });
+                            });
+
+                            pipeline.register.after.newChild(function (err) {
+                                expect(err.status).to.equal(500);
+                                done();
+                            });
+                        },
+                        onComposed: function (err, scope) {
+                            scope.createChildContainer();
+                        }
+                    });
+                });
+
+                it('should pass the child in a waterfall, through after.newChild events', function (done) {
+                    var expected = generateId();
+
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.after.newChild(function (err, payload, next) {
+                                payload.child.sut = expected;
+                                next(null, payload);
+                            });
+
+                            pipeline.register.after.newChild(function (err, payload) {
+                                expect(payload.child.sut).to.equal(expected);
                                 done();
                             });
                         },

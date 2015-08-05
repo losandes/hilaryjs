@@ -139,20 +139,14 @@
                 it('should trigger an error when attempting to resolve a module that depends on modules that don\'t exist', function (done) {
                     // given
                     var sutScope = new Hilary().useAsync(async),
-                        sutName = generateId(),
-                        count = 0;
+                        sutName = generateId();
 
                     sutScope.Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline) {
                             pipeline.register.on.error(function (err) {
                                 // then
                                 expect(err.name).to.equal('DependencyException');
-                                count += 1;
-
-                                // this should fire twice
-                                if (count === 2) {
-                                    done();
-                                }
+                                done();
                             });
                         },
                         composeModules: function (err, scope) {

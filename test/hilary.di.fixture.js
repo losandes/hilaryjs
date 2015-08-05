@@ -186,13 +186,19 @@
                 });
 
                 it('should throw when attempting to resolve a module with an unacceptable argument', function (done) {
+                    var count = 0;
                     // given
                     new Hilary().Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline) {
                             pipeline.register.on.error(function (err) {
                                 // then
-                                expect(err.name).to.equal('ArgumentException');
-                                done();
+                                expect(err).to.not.equal(undefined);
+                                count += 1;
+
+                                // this should fire twice
+                                if (count === 2) {
+                                    done();
+                                }
                             });
                         },
                         onComposed: function (err, scope) {

@@ -905,48 +905,147 @@
                 tasks.start(hilaryModule);
                 return tasks.output;
             };
-            $this.resolve = function(moduleName) {
-                var before, main, after, output;
-                if (is.not.string(moduleName)) {
-                    err.throwArgumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveMany.", "moduleName");
-                    return;
-                }
-                before = function() {
+            resolveTasks = function() {
+                var self = {
+                    start: undefined,
+                    startAsync: undefined,
+                    output: undefined
+                }, validateModuleName, validate, validateAsync, before, beforeAsync, main, mainAsync, after, afterAsync, lastAsync;
+                validateModuleName = function(moduleName) {
+                    if (is.string(moduleName)) {
+                        return true;
+                    }
+                    return err.argumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveMany.", "moduleName");
+                };
+                validate = function(moduleName, next) {
+                    var validationResult = validateModuleName(moduleName);
+                    if (validationResult !== true) {
+                        err.throwException(validationResult);
+                        return;
+                    }
+                    next(moduleName);
+                };
+                validateAsync = function(moduleName, last) {
+                    $this.asyncHandler(function() {
+                        if (is.function(last)) {
+                            lastAsync = last;
+                        } else {
+                            lastAsync = function() {};
+                        }
+                        var validationResult = validateModuleName(moduleName);
+                        if (validationResult !== true) {
+                            err.throwException(validationResult);
+                            lastAsync(validationResult);
+                            return;
+                        }
+                        beforeAsync(moduleName);
+                    });
+                };
+                before = function(moduleName) {
                     pipeline.trigger.before.resolve(moduleName, main);
                 };
-                main = function(exception, payload) {
+                beforeAsync = function(moduleName) {
+                    $this.asyncHandler(function() {
+                        pipeline.trigger.before.resolve(moduleName, mainAsync);
+                    });
+                };
+                main = function(exception, payload, next) {
+                    var _next = next || after, moduleName, result;
+                    if (exception) {
+                        _next(exception);
+                        return;
+                    }
+                    if (is.not.defined(payload) || is.not.string(payload.moduleName)) {
+                        _next(err.argumentException("The moduleName was not passed through by the before.resolve pipeline.", "moduleName"));
+                        return;
+                    }
+                    moduleName = payload.moduleName;
+                    if (singletons[moduleName] !== undefined) {
+                        _next(null, {
+                            name: moduleName,
+                            result: singletons[moduleName]
+                        });
+                    } else if (container[moduleName] !== undefined && next) {
+                        $this.invokeAsync(container[moduleName], function(e, found) {
+                            if (e) {
+                                _next(e);
+                            } else if (found) {
+                                if (container[moduleName].singleton === true) {
+                                    makeSingleton(container[moduleName], found);
+                                }
+                                _next(e, {
+                                    name: moduleName,
+                                    result: found
+                                });
+                            } else {
+                                var exception = err.notResolvableException(moduleName);
+                                _next(exception);
+                            }
+                        });
+                    } else if (container[moduleName] !== undefined) {
+                        result = $this.invoke(container[moduleName]);
+                        if (container[moduleName].singleton === true) {
+                            makeSingleton(container[moduleName], result);
+                        }
+                        _next(null, {
+                            name: moduleName,
+                            result: result
+                        });
+                    } else {
+                        _next(null, {
+                            name: moduleName,
+                            result: $this.findResult(moduleName)
+                        });
+                    }
+                };
+                mainAsync = function(exception, payload) {
+                    $this.asyncHandler(function() {
+                        main(exception, payload, afterAsync);
+                    });
+                };
+                after = function(exception, found) {
                     if (exception) {
                         err.throwException(exception);
                         return;
                     }
-                    if (is.not.defined(payload) || is.not.string(payload.moduleName)) {
-                        err.throwArgumentException("The moduleName was not passed through by the before.resolve pipeline.", "moduleName");
-                        return;
-                    }
-                    var moduleName = payload.moduleName;
-                    if (singletons[moduleName] !== undefined) {
-                        after(singletons[moduleName]);
-                    } else if (container[moduleName] !== undefined) {
-                        var result = $this.invoke(container[moduleName]);
-                        if (container[moduleName].singleton === true) {
-                            makeSingleton(container[moduleName], result);
-                        }
-                        after(result);
-                    } else {
-                        after($this.findResult(moduleName));
-                    }
-                };
-                after = function(found) {
                     pipeline.trigger.after.resolve({
-                        name: moduleName,
-                        result: found
+                        name: found.name,
+                        result: found.result
                     }, function(err, payload) {
-                        output = payload && payload.result;
+                        self.output = payload && payload.result;
                     });
                 };
-                before();
-                if (output) {
-                    return output;
+                afterAsync = function(exception, found) {
+                    $this.asyncHandler(function() {
+                        if (exception) {
+                            err.throwException(exception);
+                            lastAsync(exception);
+                            return;
+                        }
+                        if (!found.result) {
+                            var e = err.notResolvableException(found.name);
+                            lastAsync(e);
+                            return;
+                        }
+                        pipeline.trigger.after.resolve({
+                            name: found.name,
+                            result: found.result
+                        }, function(err, payload) {
+                            lastAsync(err, payload && payload.result);
+                        });
+                    });
+                };
+                self.start = function(moduleName) {
+                    validate(moduleName, before);
+                };
+                self.startAsync = validateAsync;
+                return self;
+            };
+            $this.resolve = function(moduleName) {
+                var tasks = resolveTasks();
+                tasks.start(moduleName);
+                if (tasks.output) {
+                    return tasks.output;
                 } else {
                     err.throwNotResolvableException(moduleName);
                 }
@@ -1000,66 +1099,7 @@
                 });
             };
             $this.resolveAsync = function(moduleName, next) {
-                var validateTask, beforeResolveTask, findAndInvokeResultTask, afterResultTask;
-                validateTask = function() {
-                    $this.asyncHandler(function() {
-                        var exception;
-                        if (is.not.string(moduleName)) {
-                            exception = err.throwArgumentException("The moduleName must be a string. If you are trying to resolve an array, use resolveManyAsync.", "moduleName");
-                            err.throwException(exception);
-                            next(exception);
-                        } else if (is.not.function(next)) {
-                            exception = err.throwArgumentException("The next function (callback) is required. If you are trying to resolve an array, use resolveManyAsync.", "next");
-                            err.throwException(exception);
-                        } else {
-                            beforeResolveTask();
-                        }
-                    });
-                };
-                beforeResolveTask = function() {
-                    $this.asyncHandler(function() {
-                        pipeline.trigger.before.resolve(moduleName, findAndInvokeResultTask);
-                    });
-                };
-                findAndInvokeResultTask = function(exception, payload) {
-                    $this.asyncHandler(function() {
-                        if (exception) {
-                            err.throwException(exception);
-                            next(exception);
-                            return;
-                        }
-                        if (is.not.defined(payload) || is.not.string(payload.moduleName)) {
-                            var e = err.throwArgumentException("The moduleName was not passed through by the before.resolve pipeline.", "moduleName");
-                            next(e);
-                            return;
-                        }
-                        var moduleName = payload.moduleName;
-                        if (singletons[moduleName] !== undefined) {
-                            afterResultTask(null, singletons[moduleName]);
-                        } else if (container[moduleName] !== undefined) {
-                            $this.invokeAsync(container[moduleName], afterResultTask);
-                        } else {
-                            afterResultTask(null, $this.findResult(moduleName));
-                        }
-                    });
-                };
-                afterResultTask = function(exception, result) {
-                    $this.asyncHandler(function() {
-                        if (result) {
-                            pipeline.trigger.after.resolve({
-                                name: moduleName,
-                                result: result
-                            }, function(err, payload) {
-                                next(err, payload && payload.result);
-                            });
-                        } else {
-                            var exception = err.notResolvableException(moduleName);
-                            err.throwException(exception);
-                            next(exception);
-                        }
-                    });
-                };
-                validateTask();
+                resolveTasks().startAsync(moduleName, next);
                 return scope;
             };
             $this.findResult = function(moduleName) {
@@ -1421,7 +1461,8 @@
                 constants: constants,
                 is: is,
                 id: id,
-                exceptionHandlers: err
+                exceptionHandlers: err,
+                namedScope: config.name
             };
         };
         for (ext.count = 0; ext.count < extensions.length; ext.count += 1) {
@@ -1457,6 +1498,8 @@
         if (scopes[name]) {
             return scopes[name];
         } else {
+            options = options || {};
+            options.name = name;
             scopes[name] = new Hilary(options);
             return scopes[name];
         }
