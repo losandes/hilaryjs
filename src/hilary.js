@@ -2088,7 +2088,7 @@
         };
 
         /*
-        // Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
+        // (DEPRECATED) Register an event in the pipeline (beforeRegister, afterRegister, beforeResolve, afterResolve, etc.)
         // @param eventName (string): the name of the event to register the handler for
         // @param eventHandler (function): the callback function that will be called when the event is triggered
         // @returns this (the Hilary scope)
