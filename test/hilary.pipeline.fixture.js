@@ -817,6 +817,53 @@
                     expect(count).to.equal(1);
                 });
             });
+
+            spec.describe('when a pipeline event has the remove property', function () {
+                it('should remove the pipeline event when remove returns true', function (done) {
+                    // given
+                    var handler1Count = 0,
+                        handler2Count = 0,
+                        name1 = generateId(),
+                        name2 = generateId();
+
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            var handler1,
+                                handler2;
+
+                            handler1 = function () {
+                                handler1Count += 1;
+                            };
+
+                            handler2 = function () {
+                                handler2Count += 1;
+                            };
+
+                            handler2.remove = function (err, data) {
+                                if (data.moduleName === name2) {
+                                    return true;
+                                }
+                            };
+
+                            pipeline.register.before.resolve(handler1);
+                            pipeline.register.before.resolve(handler2);
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({ name: name1, factory: function () {}});
+                            scope.register({ name: name2, factory: function () {}});
+                        },
+                        onComposed: function (err, scope) {
+                            scope.resolve(name1);
+                            scope.resolve(name2);
+                            scope.resolve(name2);
+                            scope.resolve(name1);
+                            expect(handler1Count).to.equal(4);
+                            expect(handler2Count).to.equal(2);
+                            done();
+                        }
+                    });
+                });
+            });
         });
 
     }; // /eports

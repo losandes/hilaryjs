@@ -1,4 +1,4 @@
-/*! hilary-build 2015-08-04 */
+/*! hilary-build 2015-08-05 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -562,13 +562,16 @@
         makeEventTasks = function(pipeline, last) {
             var i, tasks = [], makeTask, executeTask;
             executeTask = function(i, err, data) {
-                if (pipeline[i].length === 3) {
-                    pipeline[i](err, data, makeTask(i + 1));
+                var event = pipeline[i];
+                if (event.length === 3) {
+                    event(err, data, makeTask(i + 1));
                 } else {
-                    pipeline[i](err, data);
+                    event(err, data);
                     makeTask(i + 1)(err, data);
                 }
-                if (pipeline[i].once) {
+                if (event.once) {
+                    pipeline.splice(i, 1);
+                } else if (is.function(event.remove) && event.remove(err, data)) {
                     pipeline.splice(i, 1);
                 }
             };
@@ -679,6 +682,8 @@
                     for (i = 0; i < eventArray.length; i += 1) {
                         event = eventArray[i];
                         if (event.once) {
+                            eventArray.splice(i, 1);
+                        } else if (is.function(event.remove) && event.remove(err)) {
                             eventArray.splice(i, 1);
                         }
                         if (is.function(event)) {

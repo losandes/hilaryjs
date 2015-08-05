@@ -406,10 +406,6 @@
         // validates a single property from the blueprint
         */
         validateProperty = function (blueprintId, implementation, propertyName, propertyValue, errors) {
-//            if (propertyValue === 'bool') {
-//                validateBooleanArgument(implementation, propertyName, errors);
-//            } else
-
             if (is.string(propertyValue)) {
                 validatePropertyType(blueprintId, implementation, propertyName, propertyValue, errors);
             } else if (is.object(propertyValue)) {
@@ -784,14 +780,18 @@
                 executeTask;
 
             executeTask = function (i, err, data) {
-                if (pipeline[i].length === 3) {
-                    pipeline[i](err, data, makeTask(i + 1));
+                var event = pipeline[i];
+
+                if (event.length === 3) {
+                    event(err, data, makeTask(i + 1));
                 } else {
-                    pipeline[i](err, data);
+                    event(err, data);
                     makeTask(i + 1)(err, data);
                 }
 
-                if (pipeline[i].once) {
+                if (event.once) {
+                    pipeline.splice(i, 1);
+                } else if (is.function(event.remove) && event.remove(err, data)) {
                     pipeline.splice(i, 1);
                 }
             };
@@ -914,6 +914,8 @@
                         event = eventArray[i];
 
                         if (event.once) {
+                            eventArray.splice(i, 1);
+                        } else if (is.function(event.remove) && event.remove(err)) {
                             eventArray.splice(i, 1);
                         }
 
