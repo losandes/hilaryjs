@@ -4,7 +4,7 @@
     if (exports.Hilary) {
         return false;
     }
-    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {}, initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, HilaryModule, async;
+    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, PipelineEvent, constants, extensions = [], scopes = {}, initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, HilaryModule, async;
     constants = {
         bootstrapperRegistration: "hilary::bootstrapper",
         containerRegistration: "hilary::container",
@@ -697,6 +697,26 @@
             }
         };
         return $this;
+    };
+    PipelineEvent = function(is, err) {
+        return function(event) {
+            var self;
+            event = event || {};
+            if (is.not.function(event.eventHandler)) {
+                self = function() {
+                    err.throwException("PipelineEvent eventHandler is missing. Did you register an empty PipelineEvent?");
+                };
+            } else {
+                self = event.eventHandler;
+            }
+            if (is.boolean(event.once)) {
+                self.once = event.once;
+            }
+            if (is.function(event.remove)) {
+                self.remove = event.remove;
+            }
+            return self;
+        };
     };
     HilarysPrivateParts = function(is, asyncHandler) {
         return function(scope, container, singletons, pipeline, parent, err) {
@@ -1455,6 +1475,7 @@
             return $this;
         };
         $this.Bootstrapper = new Bootstrapper($this);
+        $this.PipelineEvent = new PipelineEvent(is, err);
         $this.getContext = function() {
             return {
                 container: container,

@@ -10,7 +10,7 @@
         return false;
     }
 
-    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, constants, extensions = [], scopes = {},
+    var Hilary, HilarysPrivateParts, PipelineEvents, Pipeline, PipelineEvent, constants, extensions = [], scopes = {},
         initializers = [], is, id, asyncHandler, Blueprint, Exceptions, Bootstrapper, HilaryModule, async;
 
     constants = {
@@ -944,6 +944,31 @@
         // $this.afterNewChild = $this.trigger.after.newChild;
 
         return $this;
+    };
+
+    PipelineEvent = function (is, err) {
+        return function (event) {
+            var self;
+            event = event || {};
+
+            if (is.not.function(event.eventHandler)) {
+                self = function () {
+                    err.throwException('PipelineEvent eventHandler is missing. Did you register an empty PipelineEvent?');
+                };
+            } else {
+                self = event.eventHandler;
+            }
+
+            if (is.boolean(event.once)) {
+                self.once = event.once;
+            }
+
+            if (is.function(event.remove)) {
+                self.remove = event.remove;
+            }
+
+            return self;
+        };
     };
 
     HilarysPrivateParts = (function (is, asyncHandler) {
@@ -2097,6 +2122,12 @@
         // The Bootstrapper provides an easier way to compose your application and start it up
         */
         $this.Bootstrapper = new Bootstrapper($this);
+
+        /*
+        // The PipelineEvent provides a constructor for creating event handlers that do more than
+        // fire (i.e. if you're using the "once" or "remove" features).
+        */
+        $this.PipelineEvent = new PipelineEvent(is, err);
 
         /*
         // Exposes read access to private context for extensibility and debugging. this is not meant

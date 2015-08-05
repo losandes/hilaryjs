@@ -800,21 +800,30 @@
             });
 
             spec.describe('when a pipeline event has the once property', function () {
-                it('should only execute one time', function () {
-                    var eventHandler,
-                        count = 0;
+                it('should only execute one time', function (done) {
+                    var count = 0;
 
-                    eventHandler = function () {
-                        count += 1;
-                    };
-                    eventHandler.once = true;
+                    // given
+                    new Hilary().Bootstrapper({
+                        composeLifecycle: function (err, scope, pipeline) {
+                            pipeline.register.before.register(new scope.PipelineEvent({
+                                eventHandler: function () {
+                                    count += 1;
+                                },
+                                once: true
+                            }));
+                        },
+                        composeModules: function (err, scope) {
+                            // when
+                            scope.register(testModules.module1.moduleDefinition);
+                            scope.register(testModules.module2.moduleDefinition);
+                            scope.register(testModules.module3.moduleDefinition);
 
-                    fixtureScope.registerEvent(constants.pipeline.beforeRegister, eventHandler);
-
-                    fixtureScope.register(testModules.module1.moduleDefinition);
-                    fixtureScope.register(testModules.module2.moduleDefinition);
-
-                    expect(count).to.equal(1);
+                            // then
+                            expect(count).to.equal(1);
+                            done();
+                        }
+                    });
                 });
             });
 
@@ -828,35 +837,33 @@
 
                     new Hilary().Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline) {
-                            var handler1,
-                                handler2;
-
-                            handler1 = function () {
+                            pipeline.register.before.resolve(function () {
                                 handler1Count += 1;
-                            };
+                            });
 
-                            handler2 = function () {
-                                handler2Count += 1;
-                            };
-
-                            handler2.remove = function (err, data) {
-                                if (data.moduleName === name2) {
-                                    return true;
+                            pipeline.register.before.resolve(new scope.PipelineEvent({
+                                eventHandler: function () {
+                                    handler2Count += 1;
+                                },
+                                remove: function (err, data) {
+                                    if (data.moduleName === name2) {
+                                        return true;
+                                    }
                                 }
-                            };
-
-                            pipeline.register.before.resolve(handler1);
-                            pipeline.register.before.resolve(handler2);
+                            }));
                         },
                         composeModules: function (err, scope) {
                             scope.register({ name: name1, factory: function () {}});
                             scope.register({ name: name2, factory: function () {}});
                         },
                         onComposed: function (err, scope) {
+                            // when
                             scope.resolve(name1);
                             scope.resolve(name2);
                             scope.resolve(name2);
                             scope.resolve(name1);
+
+                            // then
                             expect(handler1Count).to.equal(4);
                             expect(handler2Count).to.equal(2);
                             done();
