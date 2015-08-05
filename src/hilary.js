@@ -892,7 +892,7 @@
                 resolve: function (moduleInfo, next) {
                     var result = {
                         scope: scope,
-                        name: moduleInfo && moduleInfo.name,
+                        moduleName: moduleInfo && moduleInfo.name,
                         result: moduleInfo && moduleInfo.result
                     };
                     executeEvent($this.events.afterResolveEvents, result, next);

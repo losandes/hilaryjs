@@ -65,7 +65,7 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
             it('should trigger the hilary::after::resolve event on the DOM', function (done) {
                 var then = function (data) {
                     expect(data.scope).to.be.a('object');
-                    expect(data.name).to.be.a('string');
+                    expect(data.moduleName).to.be.a('string');
                     expect(data.result).to.be.a('string');
                     done();
                 };
