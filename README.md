@@ -49,7 +49,7 @@ var Hilary = require('hilary');
 Hilary.scope('app').Bootstrapper({
     // Compose the lifecycle (listen to events)
     composeLifecycle: function (err, scope, pipeline) {
-        pipeline.register.on.err(function (err) {
+        pipeline.register.on.error(function (err) {
             console.log(err);
         });
     },
@@ -129,7 +129,7 @@ Hilary.scope('spa').register({
     spa.Bootstrapper({
         // Compose the lifecycle (listen to events)
         composeLifecycle: function (err, scope, pipeline) {
-            pipeline.register.on.err(function (err) {
+            pipeline.register.on.error(function (err) {
                 if (err.message) {
                     throw err;
                 } else {
