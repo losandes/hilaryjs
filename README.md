@@ -26,14 +26,14 @@ Note that we're not referencing Hilary yet. We're going to do that in the next s
 module.exports.name = 'server';
 module.exports.factory = function (http) {
     'use strict';
-    
+
     http.createServer(function (req, res) {
         res.writeHead(200, {'Content-Type': 'text/plain'});
         res.end('Hello World\n');
     }).listen(1337, '127.0.0.1');
 
     console.log('Server running at http://127.0.0.1:1337/');
-    
+
     return http;
 };
 ```
@@ -47,6 +47,12 @@ Now create a bootstrapper/startup file. We'll call it ``startup.js``. Then we'll
 var Hilary = require('hilary');
 
 Hilary.scope('app').Bootstrapper({
+    // Compose the lifecycle (listen to events)
+    composeLifecycle: function (err, scope, pipeline) {
+        pipeline.register.on.err(function (err) {
+            console.log(err);
+        });
+    },
     // Compose the dependency graph
     // and register things like singletons
     composeModules: function (err, scope) {
@@ -76,7 +82,7 @@ Hilary.scope('app').Bootstrapper({
         if (!err) {
             throw err;
         }
-        
+
         // Usually, resolving module(s) will result in
         // your application starting up
         scope.resolve('server');
@@ -119,8 +125,18 @@ Hilary.scope('spa').register({
 // bootstrapper.js
 (function (spa) {
     'use strict';
-    
+
     spa.Bootstrapper({
+        // Compose the lifecycle (listen to events)
+        composeLifecycle: function (err, scope, pipeline) {
+            pipeline.register.on.err(function (err) {
+                if (err.message) {
+                    throw err;
+                } else {
+                    throw new Error(err);
+                }
+            });
+        },
         // Compose the dependency graph
         // and register things like singletons
         composeModules: function (err, scope) {
@@ -141,12 +157,12 @@ Hilary.scope('spa').register({
             if (err) {
                 throw err;
             }
-        
+
             // Usually, resolving module(s) will result in
             // your application starting up
             spa.resolve('myRouteEngine');
         }
     });
-    
+
 }(Hilary.scope('spa')));
 ```
