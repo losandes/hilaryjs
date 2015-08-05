@@ -1,36 +1,36 @@
 (function (exports) {
     'use strict';
-    
+
     exports['hilary.bootstrapper.fixture'] = function (Hilary, spec, generateId, makeMockData) {
-    
+
         var describe = spec.describe,
             it = spec.it,
             expect = spec.expect;
-        
+
         describe('Hilary Bootstrapper', function () {
-            
+
             describe('when executed', function () {
                 it('should register a bootstrapper on the scope', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         onComposed: function (err, scope) {
                             // then
                             expect(typeof scope.resolve('hilary::bootstrapper').restart).to.equal('function');
-                            
+
                             done();
                         }
                     });
                 });
             });
-            
+
             describe('when executed with a composeLifecycle function', function () {
                 it('should execute composeLifecycle when no arguments are provided', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeLifecycle: function () {
@@ -39,11 +39,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive the scope as the second argument, if composeModules is not defined', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeLifecycle: function (err, scope) {
@@ -53,11 +53,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive the scope as the second argument, if composeModules passes it in', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeModules: function (err, scope, next) {
@@ -70,11 +70,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive the Hilary pipeline as the third argument', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline) {
@@ -84,26 +84,26 @@
                         }
                     });
                 });
-                
+
                 it('should allow the pipelines to be affected by the bootstrapper', function (done) {
                     // given
-                    var sutScope = new Hilary(),
-                        expected = 'pipelineTest';
-                    
+                    var expected = 'pipelineTest';
+
                     // when
-                    sutScope.Bootstrapper({
+                    new Hilary().Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline) {
-                            pipeline.registerEvent('hilary::before::register', function (scope, moduleInfo) {
+                            pipeline.register.before.register(function (err, payload) {
                                 // then
-                                expect(moduleInfo.name).to.equal(expected);
+                                expect(payload.moduleInfo.name).to.equal(expected);
                                 done();
                             });
+                        },
+                        composeModules: function (err, scope) {
+                            scope.register({
+                                name: expected,
+                                factory: function () {}
+                            });
                         }
-                    });
-                    
-                    sutScope.register({
-                        name: expected,
-                        factory: function () {}
                     });
                 });
             }); // /composeModules
@@ -112,7 +112,7 @@
                 it('should execute composeModules when no arguments are provided', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeModules: function () {
@@ -121,11 +121,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive an error as the first argument, if composeLifecycle passes one in', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline, next) {
@@ -138,11 +138,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive the scope as the second argument', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeModules: function (err, scope) {
@@ -152,11 +152,11 @@
                         }
                     });
                 });
-                
+
                 it('should pass in a function with 2 arguments for the next parameter if it is declared', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeModules: function (err, scope, next) {
@@ -167,12 +167,12 @@
                         }
                     });
                 });
-                
+
                 it('should allow the scope to be affected by the bootstrapper', function (done) {
                     // given
                     var sutScope = new Hilary(),
                         expected = 'containerTest';
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeModules: function (err, scope) {
@@ -191,12 +191,12 @@
                     });
                 });
             }); // /composeModules
-            
+
             describe('when executed with a onComposed function', function () {
                 it('should execute onComposed when no arguments are provided', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         onComposed: function () {
@@ -205,11 +205,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive an error as the first argument, if composeLifecycle passes one in', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline, next) {
@@ -222,11 +222,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive the scope as the second argument, if composeLifecycle is not defined', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         onComposed: function (err, scope) {
@@ -236,11 +236,11 @@
                         }
                     });
                 });
-                
+
                 it('should receive the scope as the second argument, if composeLifecycle passes it in', function (done) {
                     // given
                     var sutScope = new Hilary();
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeLifecycle: function (err, scope, pipeline, next) {
@@ -259,7 +259,7 @@
                     var sutScope = new Hilary(),
                         expected1 = 'containerTest1',
                         expected2 = 'containerTest2';
-                    
+
                     // when
                     sutScope.Bootstrapper({
                         composeModules: function (err, scope) {
@@ -277,9 +277,9 @@
                     });
                 });
             }); // /start
-            
+
         });
-        
+
     };
 
 }((typeof module !== 'undefined' && module.exports) ? module.exports : window));
