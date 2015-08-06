@@ -681,7 +681,16 @@
             },
             on: {
                 error: function(err, next) {
-                    var exception = is.string(err) ? scope.getContext().exceptionHandlers.makeException(err) : err, eventArray = $this.events.onError, event, i = 0;
+                    var exception, eventArray = $this.events.onError, event, i = 0;
+                    if (is.object(err) && err.stack) {
+                        exception = err;
+                    } else if (is.object(err)) {
+                        exception = scope.getContext().exceptionHandlers.makeException(err.name, err.message || "Hilary Error - see err.data", err);
+                    } else if (is.string(err)) {
+                        exception = scope.getContext().exceptionHandlers.makeException(err);
+                    } else {
+                        exception = err;
+                    }
                     for (i = 0; i < eventArray.length; i += 1) {
                         event = eventArray[i];
                         if (event.once) {
