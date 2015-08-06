@@ -1,6 +1,6 @@
 {
     "name": "hilary",
-    "version": "4.1.0",
+    "version": "4.1.1",
     "description": "a simple Dependency Injection (DI) library that provides Inversion of Control (IoC) capabilities in Node.js and the browser",
     "main": "index.js",
     "scripts": {

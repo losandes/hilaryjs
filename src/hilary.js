@@ -831,41 +831,47 @@
         $this.events = pipelineEvents;
         $this.registerEvent = registerEvent;
 
-        $this.register = {
-            before: {
-                // hilary::before::register (scope, moduleName, moduleDefinition)
-                register: function (callback) {
-                    registerEvent(constants.pipeline.beforeRegister, callback);
-                },
-                // hilary::before::resolve (scope, moduleName)
-                resolve: function (callback) {
-                    registerEvent(constants.pipeline.beforeResolve, callback);
-                },
-                // hilary::before::new::child (scope, options)
-                newChild: function (callback) {
-                    registerEvent(constants.pipeline.beforeNewChild, callback);
-                }
+        $this.before = {
+            // hilary::before::register (scope, moduleName, moduleDefinition)
+            register: function (callback) {
+                registerEvent(constants.pipeline.beforeRegister, callback);
             },
-            after: {
-                // hilary::after::register (scope, moduleName, moduleDefinition)
-                register: function (callback) {
-                    registerEvent(constants.pipeline.afterRegister, callback);
-                },
-                // hilary::after::resolve (scope, moduleName)
-                resolve: function (callback) {
-                    registerEvent(constants.pipeline.afterResolve, callback);
-                },
-                // hilary::after::new::child (scope, options, child)
-                newChild: function (callback) {
-                    registerEvent(constants.pipeline.afterNewChild, callback);
-                }
+            // hilary::before::resolve (scope, moduleName)
+            resolve: function (callback) {
+                registerEvent(constants.pipeline.beforeResolve, callback);
             },
-            on: {
-                // hilary::error (err)
-                error: function (callback) {
-                    registerEvent(constants.pipeline.onError, callback);
-                }
+            // hilary::before::new::child (scope, options)
+            newChild: function (callback) {
+                registerEvent(constants.pipeline.beforeNewChild, callback);
             }
+        };
+
+        $this.after = {
+            // hilary::after::register (scope, moduleName, moduleDefinition)
+            register: function (callback) {
+                registerEvent(constants.pipeline.afterRegister, callback);
+            },
+            // hilary::after::resolve (scope, moduleName)
+            resolve: function (callback) {
+                registerEvent(constants.pipeline.afterResolve, callback);
+            },
+            // hilary::after::new::child (scope, options, child)
+            newChild: function (callback) {
+                registerEvent(constants.pipeline.afterNewChild, callback);
+            }
+        };
+
+        $this.on = {
+            // hilary::error (err)
+            error: function (callback) {
+                registerEvent(constants.pipeline.onError, callback);
+            }
+        };
+
+        $this.register = {
+            before: $this.before,
+            after: $this.after,
+            on: $this.on
         };
 
         $this.trigger = {
@@ -930,18 +936,6 @@
                 }
             }
         };
-
-        // Backwards compatibility
-        // $this.onError = $this.trigger.on.error;
-        // $this.beforeRegister = $this.trigger.before.register;
-        // $this.afterRegister = $this.trigger.after.register;
-        //
-        // $this.beforeResolve = $this.trigger.before.resolve;
-        // $this.afterResolve = $this.trigger.after.resolve;
-        //
-        // // CONTAINERS
-        // $this.beforeNewChild = $this.trigger.before.newChild;
-        // $this.afterNewChild = $this.trigger.after.newChild;
 
         return $this;
     };

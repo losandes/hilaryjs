@@ -1,4 +1,4 @@
-/*! hilary-build 2015-08-05 */
+/*! hilary-build 2015-08-06 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -603,34 +603,37 @@
         };
         $this.events = pipelineEvents;
         $this.registerEvent = registerEvent;
-        $this.register = {
-            before: {
-                register: function(callback) {
-                    registerEvent(constants.pipeline.beforeRegister, callback);
-                },
-                resolve: function(callback) {
-                    registerEvent(constants.pipeline.beforeResolve, callback);
-                },
-                newChild: function(callback) {
-                    registerEvent(constants.pipeline.beforeNewChild, callback);
-                }
+        $this.before = {
+            register: function(callback) {
+                registerEvent(constants.pipeline.beforeRegister, callback);
             },
-            after: {
-                register: function(callback) {
-                    registerEvent(constants.pipeline.afterRegister, callback);
-                },
-                resolve: function(callback) {
-                    registerEvent(constants.pipeline.afterResolve, callback);
-                },
-                newChild: function(callback) {
-                    registerEvent(constants.pipeline.afterNewChild, callback);
-                }
+            resolve: function(callback) {
+                registerEvent(constants.pipeline.beforeResolve, callback);
             },
-            on: {
-                error: function(callback) {
-                    registerEvent(constants.pipeline.onError, callback);
-                }
+            newChild: function(callback) {
+                registerEvent(constants.pipeline.beforeNewChild, callback);
             }
+        };
+        $this.after = {
+            register: function(callback) {
+                registerEvent(constants.pipeline.afterRegister, callback);
+            },
+            resolve: function(callback) {
+                registerEvent(constants.pipeline.afterResolve, callback);
+            },
+            newChild: function(callback) {
+                registerEvent(constants.pipeline.afterNewChild, callback);
+            }
+        };
+        $this.on = {
+            error: function(callback) {
+                registerEvent(constants.pipeline.onError, callback);
+            }
+        };
+        $this.register = {
+            before: $this.before,
+            after: $this.after,
+            on: $this.on
         };
         $this.trigger = {
             before: {
