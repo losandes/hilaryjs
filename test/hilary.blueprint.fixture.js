@@ -235,6 +235,7 @@
 
                     // when
                     bp.signatureMatches(implementation, function (err, result) {
+                        expect(result).to.equal(true);
                         /*ingore: we're making sure the validate function was actually called*/
                     });
                 });
@@ -261,6 +262,68 @@
                     });
                 });
 
+            });
+
+            describe('when a Blueprint property is an object and the required property is set', function () {
+
+                it('should not validate that property when it is not defined and required is false', function () {
+                    // given
+                    var bp = new Blueprint({
+                            prop1: 'number',
+                            prop: {
+                                type: 'string',
+                                required: false
+                            }
+                        }),
+                        implementation = {
+                            prop1: 42
+                        };
+
+                    // when
+                    bp.signatureMatches(implementation, function (err, result) {
+                        expect(result).to.equal(true);
+                    });
+                });
+
+                it('should validate that property when it is not defined and required is true', function () {
+                    // given
+                    var bp = new Blueprint({
+                            prop1: 'number',
+                            prop: {
+                                type: 'string',
+                                required: true
+                            }
+                        }),
+                        implementation = {
+                            prop1: 42
+                        };
+
+                    // when
+                    bp.signatureMatches(implementation, function (err, result) {
+                        expect(Array.isArray(err)).to.equal(true);
+                        expect(err.length).to.equal(1);
+                    });
+                });
+
+                it('should validate that property when it is defined and required is true', function () {
+                    // given
+                    var bp = new Blueprint({
+                            prop1: 'number',
+                            prop: {
+                                type: 'string',
+                                required: true
+                            }
+                        }),
+                        implementation = {
+                            prop1: 42,
+                            prop: 'hello world!'
+                        };
+
+                    // when
+                    bp.signatureMatches(implementation, function (err, result) {
+                        expect(result).to.equal(true);
+                    });
+                });
             });
 
             describe('when the sync version of signatureMatches is used', function () {

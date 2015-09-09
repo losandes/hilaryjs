@@ -279,9 +279,9 @@
                 setTimeout(func, 0);
             }
 
-//            else if (is.defined(setImmediate)) {
-//                setImmediate(func);
-//            }
+        //    else if (is.defined(setImmediate)) {
+        //        setImmediate(func);
+        //    }
         };
 
         return self;
@@ -417,7 +417,10 @@
         // validates blueprint properties that have additional details set, such as function arguments and decimal places
         */
         validatePropertyWithDetails = function (blueprintId, implementation, propertyName, propertyValue, type, errors) {
-            if (is.function(propertyValue.validate)) {
+            if (propertyValue.required === false && (is.not.defined(implementation[propertyName]) || implementation[propertyName] === null)) {
+                // the property isn't required and isn't defined, so there is nothing to validate
+                return;
+            } else if (is.function(propertyValue.validate)) {
                 propertyValue.validate(implementation[propertyName], errors);
             } else {
                 switch(type) {
