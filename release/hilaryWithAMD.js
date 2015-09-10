@@ -1,4 +1,4 @@
-/*! hilary-build 2015-09-08 */
+/*! hilary-build 2015-09-10 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -295,7 +295,7 @@
             if (propertyValue.required === false && (is.not.defined(implementation[propertyName]) || implementation[propertyName] === null)) {
                 return;
             } else if (is.function(propertyValue.validate)) {
-                propertyValue.validate(implementation[propertyName], errors);
+                propertyValue.validate(implementation[propertyName], errors, implementation);
             } else {
                 switch (type) {
                   case "blueprint":

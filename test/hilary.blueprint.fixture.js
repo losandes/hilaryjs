@@ -218,6 +218,30 @@
 
             describe('when a Blueprint property is an object and has a validate function', function () {
 
+                it('should receive three arguments', function (done) {
+                    // given
+                    var bp = new Blueprint({
+                            prop: {
+                                validate: function (implementationProperty, errorArray, implementation) {
+                                    // then
+                                    expect(implementationProperty).to.equal(42);
+                                    expect(Array.isArray(errorArray)).to.equal(true);
+                                    expect(implementation.prop).to.equal(42);
+                                    done();
+                                }
+                            }
+                        }),
+                        implementation = {
+                            prop: 42
+                        };
+
+                    // when
+                    bp.signatureMatches(implementation, function (err, result) {
+                        expect(result).to.equal(true);
+                        /*ingore: we're making sure the validate function was actually called*/
+                    });
+                });
+
                 it('should execute the validate function instead of using the built in validation', function (done) {
                     // given
                     var bp = new Blueprint({

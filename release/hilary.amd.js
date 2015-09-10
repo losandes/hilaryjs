@@ -1,4 +1,4 @@
-/*! hilary-build 2015-09-08 */
+/*! hilary-build 2015-09-10 */
 (function(exports, Hilary) {
     "use strict";
     if (exports.AMDContainer && exports.define && exports.require) {

@@ -421,7 +421,7 @@
                 // the property isn't required and isn't defined, so there is nothing to validate
                 return;
             } else if (is.function(propertyValue.validate)) {
-                propertyValue.validate(implementation[propertyName], errors);
+                propertyValue.validate(implementation[propertyName], errors, implementation);
             } else {
                 switch(type) {
                     case 'blueprint':
