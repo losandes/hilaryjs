@@ -47,6 +47,7 @@
                 string: undefined,
                 bool: undefined,
                 boolean: undefined,
+                date: undefined,
                 datetime: undefined,
                 regexp: undefined,
                 number: undefined,
@@ -62,6 +63,7 @@
                     string: undefined,
                     bool: undefined,
                     boolean: undefined,
+                    date: undefined,
                     datetime: undefined,
                     regexp: undefined,
                     number: undefined,
@@ -175,12 +177,15 @@
         };
 
         self.datetime = function (obj) {
-            return self.getType(obj) === 'date';
+            return self.getType(obj) === 'date' && !isNaN(obj.getTime());
         };
 
         self.not.datetime = function (obj) {
             return self.datetime(obj) === false;
         };
+
+        self.date = self.datetime;
+        self.not.date = self.not.datetime;
 
         self.regexp = function (obj) {
             return self.getType(obj) === 'regexp';

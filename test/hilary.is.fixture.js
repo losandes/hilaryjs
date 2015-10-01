@@ -1,7 +1,7 @@
 /*jshint mocha: true*/
 (function (exports) {
     'use strict';
-    
+
     exports['hilary.is.fixture'] = function (Hilary, spec) {
         // SETUP
 
@@ -10,7 +10,7 @@
             it = spec.it,
             describe = spec.describe,
             is = scope.getContext().is;
-        
+
         describe('is, ', function () {
 
         //{
@@ -22,6 +22,7 @@
         //    string: undefined,
         //    boolean: undefined,
         //    datetime: undefined,
+        //    date: undefined,
         //    number: undefined,
         //    nullOrWhitespace: undefined,
         //    money: undefined,
@@ -34,6 +35,7 @@
         //        string: undefined,
         //        boolean: undefined,
         //        datetime: undefined,
+        //        date: undefined,
         //        number: undefined,
         //        nullOrWhitespace: undefined,
         //        money: undefined,
@@ -434,6 +436,18 @@
                     expect(actual).to.equal(false);
                 });
 
+                it('should return false if the object is an invalid Date', function () {
+                    // given
+                    var sut = new Date('adadsdf'),
+                        actual;
+
+                    // when
+                    actual = is.datetime(sut);
+
+                    // then
+                    expect(actual).to.equal(false);
+                });
+
                 it('should have a "not" prefix that reverses the results', function () {
                     // given
                     var happySut = 42,
@@ -444,6 +458,62 @@
                     // when
                     happyActual = is.not.datetime(happySut);
                     sadActual = is.not.datetime(sadSut);
+
+                    // then
+                    expect(happyActual).to.equal(true);
+                    expect(sadActual).to.equal(false);
+                });
+
+            });
+
+            describe('when checking is.date', function () {
+
+                it('should return true if the object is a Date', function () {
+                    // given
+                    var sut = new Date(),
+                        actual;
+
+                    // when
+                    actual = is.date(sut);
+
+                    // then
+                    expect(actual).to.equal(true);
+                });
+
+                it('should return false if the object is NOT a Date', function () {
+                    // given
+                    var sut = 42,
+                        actual;
+
+                    // when
+                    actual = is.date(sut);
+
+                    // then
+                    expect(actual).to.equal(false);
+                });
+
+                it('should return false if the object is an invalid Date', function () {
+                    // given
+                    var sut = new Date('adadsdf'),
+                        actual;
+
+                    // when
+                    actual = is.date(sut);
+
+                    // then
+                    expect(actual).to.equal(false);
+                });
+
+                it('should have a "not" prefix that reverses the results', function () {
+                    // given
+                    var happySut = 42,
+                        sadSut = new Date(),
+                        happyActual,
+                        sadActual;
+
+                    // when
+                    happyActual = is.not.date(happySut);
+                    sadActual = is.not.date(sadSut);
 
                     // then
                     expect(happyActual).to.equal(true);
@@ -798,8 +868,8 @@
             });
 
         });
-        
-        
+
+
     };
-        
+
 }((typeof module !== 'undefined' && module.exports) ? module.exports : window));

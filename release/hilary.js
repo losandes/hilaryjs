@@ -1,4 +1,4 @@
-/*! hilary-build 2015-09-10 */
+/*! hilary-build 2015-10-01 */
 (function(exports, nodeRequire) {
     "use strict";
     if (exports.Hilary) {
@@ -38,6 +38,7 @@
             string: undefined,
             bool: undefined,
             "boolean": undefined,
+            date: undefined,
             datetime: undefined,
             regexp: undefined,
             number: undefined,
@@ -53,6 +54,7 @@
                 string: undefined,
                 bool: undefined,
                 "boolean": undefined,
+                date: undefined,
                 datetime: undefined,
                 regexp: undefined,
                 number: undefined,
@@ -134,11 +136,13 @@
             return self.boolean(obj) === false;
         };
         self.datetime = function(obj) {
-            return self.getType(obj) === "date";
+            return self.getType(obj) === "date" && !isNaN(obj.getTime());
         };
         self.not.datetime = function(obj) {
             return self.datetime(obj) === false;
         };
+        self.date = self.datetime;
+        self.not.date = self.not.datetime;
         self.regexp = function(obj) {
             return self.getType(obj) === "regexp";
         };
