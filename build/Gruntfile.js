@@ -14,7 +14,8 @@ module.exports = function (grunt) {
     os = grunt.option('os') || 'osx';
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify:debug', 'uglify:release', 'mochaTest', 'karma:unit_' + os, 'copy']);
+    grunt.registerTask('default', ['help']);
+    grunt.registerTask('package', ['uglify:debug', 'uglify:release', 'mochaTest', 'karma:unit_' + os, 'copy']);
     grunt.registerTask('build', ['uglify:debug', 'uglify:release']);
     grunt.registerTask('test-node', ['mochaTest']);
     grunt.registerTask('test-browser', ['uglify', 'karma:unit_' + os]);
