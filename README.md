@@ -9,8 +9,7 @@ Also check out [generator-hilary](https://github.com/losandes/generator-hilary),
 
 > If the bootstrapper in the examples that follow looks foreign to you, consider reading about the [composition root pattern](http://blog.ploeh.dk/2011/07/28/CompositionRoot/).
 
-Creating your First Node App with Hilary
-========
+## Creating your First Node App with Hilary
 Install Hilary:
 
 ```
@@ -90,8 +89,7 @@ Hilary.scope('app').Bootstrapper({
 });
 ```
 
-Creating your First Browser App with Hilary
-========
+## Creating your First Browser App with Hilary
 You can either install Hilary with bower or download it from the [latest Release](https://github.com/Acatar/hilaryjs/releases), and reference the appropriate files in the release folder.
 
 ```Shell
@@ -101,7 +99,7 @@ bower install --save hilary
 Add a script reference to Hilary before you load your modules:
 
 ```HTML
-<script src="hilary.min.js"></script>
+<script src="[PATH]/release/hilary.min.js"></script>
 ```
 
 Then register modules on a named scope, and finally compose your app:
@@ -166,3 +164,31 @@ Hilary.scope('spa').register({
 
 }(Hilary.scope('spa')));
 ```
+
+### Optionally use module.exports
+The following is an adaptation of the above example for getting started with Hilary, that uses the [module.exports](https://github.com/losandes/hilaryjs/wiki/Registering-Modules-::-Using-module.exports) syntax:
+
+```HTML
+<script src="[PATH]/release/hilary.min.js"></script>
+<script src="[PATH]/release/hilary.moduleExports.min.js"></script>
+```
+
+Then register modules on a named scope, and finally compose your app:
+
+```JavaScript
+// myRouteEngine.js
+module.exports = {
+    scope: 'spa',
+    // other modules can depend on this one by name
+    name: 'myRouteEngine',
+    // Hilary will try to resolve "someSingleton" by
+    // looking for registrations by that name
+    factory: function (someSingleton) {
+        "use strict";
+
+        console.log(someSingleton);
+    }
+};
+```
+
+... The Bootstrapper is the same
