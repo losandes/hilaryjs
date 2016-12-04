@@ -47,8 +47,8 @@ module.exports = function (grunt) {
         printHeader('Examples');
         printExample('$ grunt -os windows');
         printExample('$ grunt build');
-        printExample('$ grunt test_node');
-        printExample('$ grunt test_browser -os windows');
+        printExample('$ grunt test-node');
+        printExample('$ grunt test-browser -os windows');
         console.log('');
     });
 };

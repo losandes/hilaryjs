@@ -1,7 +1,8 @@
 (function (Hilary) {
     'use strict';
 
-    var newModule;
+    var newModule,
+        warn;
 
     if (
         typeof module !== 'undefined' ||
@@ -14,18 +15,22 @@
 
     newModule = {};
 
+    warn = function (err) {
+        var log = console.warn || console.log;
+        log(err.message, err);
+    };
+
     Object.defineProperty(newModule, 'exports', {
         get: function () {
-            return null;
+            return null; //newModule.exports;
         },
         set: function (val) {
-            if (!val || !val.scope) {
+            if (!val) {
                 return;
             }
 
             if (!val.scope) {
-                console.log('WARNING: you should always declare a scope when registering Hilary modules in a browser');
-                return;
+                warn(new Error('WARNING: you should always declare a scope when registering Hilary modules in a browser (module: ' + val.name + ')'));
             }
 
             val.scope = val.scope || 'default';
@@ -44,7 +49,7 @@
         },
         set: function () {
             var err = new Error('module (as in module.exports) is read only. You probably have two libraries that are trying to set module, on window.');
-            console.log(err);
+            warn(err);
             return err;
         },
         // this property should show up when this object's property names are enumerated
