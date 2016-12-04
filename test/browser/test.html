@@ -11,12 +11,13 @@
     <script src="bower_components/chai/chai.js"></script>
     <script src="bower_components/mocha/mocha.js"></script>
     <script src="test.setup.js"></script>
-    
+
     <script src="../../release/hilary.min.js"></script>
 <!--    <script src="../../src/hilary.js"></script>-->
     <script src="../../release/hilary.jQueryEventEmitter.min.js"></script>
     <script src="../../release/hilary.amd.min.js"></script>
-    
+    <script src="../../release/hilary.moduleExports.min.js"></script>
+
     <script src="../mockData.js"></script>
     <script src="../hilary.fixture.js"></script>
     <script src="hilary.browser.fixture.js"></script>
@@ -31,10 +32,11 @@
     <script src="../hilary.bootstrapper.fixture.js"></script>
     <script src="hilary.browser.jQueryEventEmitter.fixture.js"></script>
     <script src="hilary.browser.amd.fixture.js"></script>
-    
+    <script src="hilary.browser.moduleExports.fixture.js"></script>
+
     <!-- run mocha after all test are loaded -->
     <script src="test.js"></script>
-    
+
     <script>
         // Only tests run in real browser, injected script run if options.run == true
         if (navigator.userAgent.indexOf('PhantomJS') < 0) {

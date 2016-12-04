@@ -11,6 +11,7 @@
     exports['hilary.pipeline.fixture'](Hilary, spec, createGuid, makeMockData, async);
     exports['hilary.browser.jQueryEventEmitter.fixture'](Hilary, spec, $);
     exports['hilary.browser.amd.fixture']();
+    exports['hilary.browser.moduleExports.fixture'](Hilary, spec, createGuid);
     exports['hilary.blueprint.fixture'](Hilary, spec);
     exports['hilary.id.fixture'](Hilary, spec);
     exports['hilary.is.fixture'](Hilary, spec);

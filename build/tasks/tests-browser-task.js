@@ -20,6 +20,7 @@ module.exports = function (grunt) {
                 'release/hilary.js',
                 'release/hilary.jQueryEventEmitter.min.js',
                 'release/hilary.amd.min.js',
+                'release/hilary.moduleExports.js',
                 // mock data
                 'test/mockData.js',
                 // specs

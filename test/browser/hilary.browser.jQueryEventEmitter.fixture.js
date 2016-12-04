@@ -1,6 +1,6 @@
 /*jslint plusplus: true */
 window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $) {
-    "use strict";
+    'use strict';
 
     var scope = new Hilary(),
         it = spec.it,
@@ -30,12 +30,12 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
         scope.createChildContainer();
     };
 
-    spec.describe("Hilary jQuery Event Emitter", function () {
+    spec.describe('Hilary jQuery Event Emitter', function () {
         spec.describe('when events are fired', function () {
             it('should trigger the hilary::before::register event on the DOM', function (done) {
                 var then = function (data) {
-                    expect(data.scope).to.be.a('object');
-                    expect(data.moduleInfo).to.be.a('object');
+                    expect(typeof data.scope).to.equal('object');
+                    expect(typeof data.moduleInfo).to.equal('object');
                     done();
                 };
 
@@ -44,8 +44,8 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
 
             it('should trigger the hilary::after::register event on the DOM', function (done) {
                 var then = function (data) {
-                    expect(data.scope).to.be.a('object');
-                    expect(data.moduleInfo).to.be.a('object');
+                    expect(typeof data.scope).to.equal('object');
+                    expect(typeof data.moduleInfo).to.equal('object');
                     done();
                 };
 
@@ -54,8 +54,8 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
 
             it('should trigger the hilary::before::resolve event on the DOM', function (done) {
                 var then = function (data) {
-                    expect(data.scope).to.be.a('object');
-                    expect(data.moduleName).to.be.a('string');
+                    expect(typeof data.scope).to.equal('object');
+                    expect(typeof data.moduleName).to.equal('string');
                     done();
                 };
 
@@ -64,9 +64,9 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
 
             it('should trigger the hilary::after::resolve event on the DOM', function (done) {
                 var then = function (data) {
-                    expect(data.scope).to.be.a('object');
-                    expect(data.moduleName).to.be.a('string');
-                    expect(data.result).to.be.a('string');
+                    expect(typeof data.scope).to.equal('object');
+                    expect(typeof data.moduleName).to.equal('string');
+                    expect(typeof data.result).to.equal('string');
                     done();
                 };
 
@@ -75,8 +75,8 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
 
             it('should trigger the hilary::before::new::child event on the DOM', function (done) {
                 var then = function (data) {
-                    expect(data.scope).to.be.a('object');
-                    expect(data.options).to.be.a('object');
+                    expect(typeof data.scope).to.equal('object');
+                    expect(typeof data.options).to.equal('object');
                     done();
                 };
 
@@ -85,9 +85,9 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
 
             it('should trigger the hilary::after::new::child event on the DOM', function (done) {
                 var then = function (data) {
-                    expect(data.scope).to.be.a('object');
-                    expect(data.options).to.be.a('object');
-                    expect(data.child).to.be.a('object');
+                    expect(typeof data.scope).to.equal('object');
+                    expect(typeof data.options).to.equal('object');
+                    expect(typeof data.child).to.equal('object');
                     done();
                 };
 
@@ -96,7 +96,7 @@ window['hilary.browser.jQueryEventEmitter.fixture'] = function (Hilary, spec, $)
 
             it('should trigger the hilary::error event on the DOM', function (done) {
                 var then = function (data) {
-                    expect(data.err).to.be.a('object');
+                    expect(typeof data.err).to.equal('object');
                     done();
                 };
 
