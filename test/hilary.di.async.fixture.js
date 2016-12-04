@@ -188,7 +188,7 @@
                         onComposed: function (err, scope) {
                             // when
                             scope.resolveAsync(sutName, function (err) {
-                                expect(err).to.be.a('object');
+                                expect(typeof err).to.equal('object');
                                 done();
                             });
                         }
@@ -214,10 +214,10 @@
 
                 it('should pass an error when attempting to resolve a module that doesn\'t exist', function (done) {
                     scope.resolveAsync(function () {}, function (err) {
-                        expect(err).to.be.a('object');
+                        expect(typeof err).to.equal('object');
 
                         scope.resolveAsync('icanhascheeseburger', function (err) {
-                            expect(err).to.be.a('object');
+                            expect(typeof err).to.equal('object');
                             done();
                         });
                     });
@@ -241,7 +241,7 @@
                     var sutName1 = generateId();
 
                     scope.resolveManyAsync([testModules.module1.name, sutName1], function (err, results) {
-                        expect(err).to.be.a('object');
+                        expect(typeof err).to.equal('object');
                         done();
                     });
                 });
@@ -291,7 +291,7 @@
                         newScope = new Hilary().useAsync(async);
 
                     newScope.autoRegisterAsync(index, function (err) {
-                        expect(err).to.be.a('object');
+                        expect(typeof err).to.equal('object');
 
                         done();
                     });
@@ -378,7 +378,7 @@
                     index = [idx.mock3, idx.mock2, idx.mock1];
 
                     scope.autoResolveAsync(index, function (err) {
-                        expect(err).to.be.a('object');
+                        expect(typeof err).to.equal('object');
 
                         done();
                     });
@@ -394,7 +394,7 @@
                     index = [idx.mock3, idx.mock2, idx.mock1];
 
                     scope.autoResolveAsync(index, function (err) {
-                        expect(err).to.be.a('object');
+                        expect(typeof err).to.equal('object');
 
                         done();
                     });

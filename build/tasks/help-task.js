@@ -30,7 +30,7 @@ module.exports = function (grunt) {
         console.log('');
 
         printHeader('Commands');
-        printDefinition('default', 'uglifies hilary, then runs the unit tests on the uglified code, and finally copies the uglified files to example directories if the unit tests pass', '-os');
+        printDefinition('package', 'uglifies hilary, then runs the unit tests on the uglified code, and finally copies the uglified files to example directories if the unit tests pass', '-os');
         printDefinition('build', 'uglifies hilary');
         printDefinition('test-node', 'runs the node (server side) developer tests');
         printDefinition('test-browser', 'runs the browser side (karma) developer tests.', '-os');
