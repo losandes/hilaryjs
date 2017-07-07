@@ -1,0 +1,21 @@
+{
+  "name": "hello-world-browser",
+  "homepage": "https://github.com/losandes/hilaryjs",
+  "authors": [
+    "&y <andes.collab@gmail.com>"
+  ],
+  "description": "A hello world example of using hilary in the browser",
+  "main": "index.html",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "hilary": "^5.0.0"
+  }
+}
