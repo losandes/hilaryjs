@@ -32,11 +32,8 @@
                 hilary.scope(val.scope).register(val);
             } else {
                 warn(new Error('WARNING: you should always declare a scope when registering hilary modules in a browser (module: ' + val.name + ')'));
+                hilary.register(val);
             }
-
-            val.scope = val.scope || 'default';
-
-
         },
         // this property should show up when this object's property names are enumerated
         enumerable: true,

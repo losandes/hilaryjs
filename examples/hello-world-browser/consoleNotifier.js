@@ -5,7 +5,7 @@ module.exports = {
         'use strict';
 
         return {
-            notify: function (message) {
+            notify: message => {
                 console.log(message);
             }
         };

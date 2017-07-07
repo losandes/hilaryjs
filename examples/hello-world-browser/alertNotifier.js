@@ -6,7 +6,7 @@ module.exports = {
         'use strict';
 
         return {
-            notify: function (message) {
+            notify: message => {
                 alert(message);
             }
         };

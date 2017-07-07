@@ -16,9 +16,18 @@ Install Hilary:
 npm install --save hilary
 ```
 
-To get started, we'll create a module. In this example, it's an HTTP module, `api.js`, which will simply return "Hello World" when we navigate to `localhost:3000`. We need to export a name and a factory at a minimum. Checkout [Registering Modules](https://github.com/losandes/hilaryjs/wiki/Registering-Modules) for more detailed instructions.
 
-> Note that we're not referencing Hilary, yet. There is no need to couple Hilary to your modules.
+In this example, we'll produce the following files:
+
+* **api.js**: our web server
+* **http.js**: a platform specific HTTP implementation
+* **app.js**: our composition root / bootstrapper
+
+Let's start with the web server, `api.js`, which will simply return "Hello World" when we navigate to `localhost:3000`.
+
+> > Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](https://github.com/losandes/hilaryjs/wiki/Registering-Modules) for more detailed instructions. 
+
+> Note that we're not referencing Hilary, yet. There is no need to couple Hilary to your modules. Hilary just expects your modules to export specific properties, such as name, dependencies, and factory.
 
 ```JavaScript
 // api.js
@@ -66,11 +75,7 @@ var hilary = require('../../index.js'), //require('hilary');
     http = require('./http.js'),
     api = require('./api.js');
 
-hilary.scope('myApp', {
-    log: {
-        level: 'trace'
-    }
-}).bootstrap([
+hilary.scope('myApp').bootstrap([
     function (scope, next) {
         console.log('registering modules');
 
@@ -95,3 +100,142 @@ We can now run our example: `node app`, and navigate to `localhost:3000` to see 
 
 
 ## Getting Started with the Browser
+Let's say we're building a simple Hello World bot, that asks for your name, and says hello to you. We also want to be able to choose between two notifiers: alerts, and console logs.
+
+In this example, we'll produce the following files:
+
+* **alertNotifier.js**: notifies the user with JavaScript alerts
+* **consoleNotifier.js**: notifies the user with console logs
+* **bot.js**: says hello
+* **viewModel.js**: binds to the DOM
+* **app.js**: our composition root / bootstrapper
+* **index.html**: the markup
+
+We'll start with the alert notifier:
+
+> Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](https://github.com/losandes/hilaryjs/wiki/Registering-Modules) for more detailed instructions. When using a shim, like `module.exports`, the `scope` is also required.
+
+```JavaScript
+// alertNotifier.js
+module.exports = {
+    scope: 'myApp',
+    name: 'alertNotifier',
+    factory: function () {
+        'use strict';
+
+        return {
+            notify: function (message) {
+                alert(message);
+            }
+        };
+    }
+};
+```
+
+Then, we'll add a console notifier:
+```JavaScript
+// consoleNotifier.js
+module.exports = {
+    scope: 'myApp',
+    name: 'consoleNotifier',
+    factory: function () {
+        'use strict';
+
+        return {
+            notify: function (message) {
+                console.log(message);
+            }
+        };
+    }
+};
+```
+
+Next, we'll add a bot module that depends on `notifier`, to say hello:
+
+> Note that the interface of notifier matches both the alertNotifier, and the consoleNotifier, but neither have the name, "notifier". We'll register the module we want to use later.
+
+```JavaScript
+// bot.js
+module.exports = {
+    scope: 'myApp',
+    name: 'bot',
+    dependencies: ['notifier'],
+    factory: function (notifier) {
+        'use strict';
+
+        return {
+            sayHello: function (name) {
+                notifier.notify('Hello, ' + name);
+            }
+        };
+    }
+};
+```
+
+Since this is a web app, we need to bind to the DOM. Let's create a view model that binds to a text input, and a button:
+
+```JavaScript
+// viewModel.js
+module.exports = {
+    scope: 'myApp',
+    name: 'viewModel',
+    dependencies: ['bot'],
+    factory: function (bot) {
+        'use strict';
+
+        document.getElementById('submit').addEventListener('click', function() {
+            bot.sayHello(document.getElementById('name').value);
+        }, false);
+    }
+};
+```
+
+Finally, we'll compose/bootstrap these modules. We need to register the chosen `notifier`, and resolve `viewModel` to bind to the DOM, starting the app:
+
+```JavaScript
+// app.js
+hilary.scope('myApp').bootstrap([
+    function (scope, next) {
+        scope.register({
+            name: 'notifier',
+            factory: scope.resolve('alertNotifier')
+        });
+
+        next(null, scope);
+    }
+], function (err, scope) {
+    if (err) {
+        throw err;
+    }
+
+    scope.resolve('viewModel');
+    console.log('ready');
+});
+```
+
+And here's the markup:
+
+```HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>hilary | Hello World</title>
+</head>
+<body>
+    <label>What is your name?</label>
+    <input id="name" type="text" />
+    <input id="submit" type="submit" value="submit" />
+
+    <script src="bower_components/polyn/release/polyn.min.js"></script>
+    <script src="bower_components/hilary/release/hilary.min.js"></script>
+    <script src="bower_components/hilary/release/hilary-browser-module-shim.js"></script>
+    <script src="alertNotifier.js"></script>
+    <script src="consoleNotifier.js"></script>
+    <script src="bot.js"></script>
+    <script src="viewModel.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
+```
