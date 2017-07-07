@@ -1,40 +1,44 @@
 {
-    "name": "hilary",
-    "main": "release/hilary.min.js",
-    "version": "4.4.0",
-    "homepage": "https://github.com/Acatar/hilaryjs",
-    "authors": [
-        "&y <andes.collab@gmail.com> (https://github.com/losandes)"
-    ],
-    "description": "a simple Dependency Injection (DI) library that provides Inversion of Control (IoC) capabilities in Node.js and the browser",
-    "moduleType": [
-        "amd",
-        "globals",
-        "node"
-    ],
-    "keywords": [
-        "dependency",
-        "injection",
-        "injector",
-        "inversion",
-        "control",
-        "IoC",
-        "DI",
-        "node",
-        "javascript",
-        "autowire",
-        "configuration",
-        "low",
-        "ceremony"
-    ],
-    "license": "MIT",
-    "ignore": [
-        "build",
-        "examples",
-        "node_modules",
-        "bower_components",
-        "src",
-        "test",
-        "index.js"
-    ]
+  "name": "hilary",
+  "main": "release/hilary.js",
+  "version": "5.0.0",
+  "homepage": "https://github.com/Acatar/hilaryjs",
+  "authors": [
+    "&y <andes.collab@gmail.com> (https://github.com/losandes)"
+  ],
+  "description": "a simple Dependency Injection (DI) library that provides Inversion of Control (IoC) capabilities in Node.js and the browser",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "dependency",
+    "injection",
+    "injector",
+    "inversion",
+    "control",
+    "IoC",
+    "DI",
+    "node",
+    "javascript",
+    "autowire",
+    "configuration",
+    "low",
+    "ceremony"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "build-tasks",
+    "node_modules",
+    "bower_components",
+    "src",
+    "tests",
+    "index.js",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "polyn": "^1.10.1"
+  }
 }
