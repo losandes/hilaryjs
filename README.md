@@ -25,7 +25,7 @@ In this example, we'll produce the following files:
 
 Let's start with the web server, `api.js`, which will simply return "Hello World" when we navigate to `localhost:3000`.
 
-> > Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](https://github.com/losandes/hilaryjs/wiki/Registering-Modules) for more detailed instructions. 
+> > Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](https://github.com/losandes/hilaryjs/wiki/Registering-Modules) for more detailed instructions.
 
 > Note that we're not referencing Hilary, yet. There is no need to couple Hilary to your modules. Hilary just expects your modules to export specific properties, such as name, dependencies, and factory.
 
@@ -238,4 +238,41 @@ And here's the markup:
 
 </body>
 </html>
+```
+
+### What if I already have another `module.exports` shim?
+These examples use a module.exports shim, which isn't required. If you are using another module.exports implementation, you can replace this:
+
+```JavaScript
+module.exports = {
+    scope: 'myApp',
+    name: 'myModule',
+    factory: function () {}
+}
+```
+
+with this:
+```JavaScript
+Hilary.scope('myApp').register({
+    scope: 'myApp',
+    name: 'myModule',
+    factory: function () {}
+});
+```
+
+You also could write your own shim, if you don't want to couple your modules to hilary (recommended):
+
+```JavaScript
+window.customRegister = function (val) {
+    if (!val) {
+        return;
+    }
+
+    if (val.scope) {
+        hilary.scope(val.scope).register(val);
+    } else {
+        console.log(new Error('WARNING: you should always declare a scope when registering hilary modules in a browser (module: ' + val.name + ')'));
+        hilary.register(val);
+    }
+}
 ```
