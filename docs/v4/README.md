@@ -5,7 +5,7 @@
 3. [Referencing Hilary in the Browser](Referencing-Hilary-in-the-Browser.md)
 4. [Creating Containers (scopes) and Child Containers](Creating-Containers-(scopes)-and-Child-Containers.md)
 5. [Registering Modules](Registering-Modules.md)
-    * [Auto Registration](Registering-Modules-::-Auto-Registration-in-Node.js.md)
+    * [Auto Registration](Registering-Modules---Auto-Registration-in-Node.js.md)
     * [Using module.exports](Registering-Modules-::-Using-module.exports.md)
     * [Using AMD define](Registering-Modules-::-Using-AMD-define.md)
     * [Async](Registering-Modules-::-Async.md)
@@ -23,6 +23,3 @@
 * [Extending Hilary](Extending-Hilary.md)
 * [AMD](Extensions-::-AMD.md)
 * [jQuery Event Emitter](Extensions-::-jQuery-Event-Emitter.md)
-
-##Version 1 (deprecated)
-[TOC](Version-1.md)
