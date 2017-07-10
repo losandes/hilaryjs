@@ -188,8 +188,6 @@
 
             function resolveOne (moduleName, relyingModuleName, callback) {
                 var ctx = {
-                        context: context,
-                        config: config,
                         name: moduleName,
                         relyingName: relyingModuleName,
                         theModule: undefined,

@@ -36,7 +36,7 @@
             function findModule (ctx, next) {
                 var parsed = parseDependencyName(ctx.name);
 
-                if (ctx.context.singletonContainer.exists(ctx.name)) {
+                if (context.singletonContainer.exists(ctx.name)) {
                     // singleton exists
                     logger.trace('found singleton for:', ctx.name);
                     ctx.resolved = context.singletonContainer
