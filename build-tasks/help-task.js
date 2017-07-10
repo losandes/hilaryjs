@@ -33,7 +33,8 @@ module.exports = function (grunt) {
         printDefinition('build', 'prepares release candidates, runs all tests, and prepares release if they pass', '-os');
         printDefinition('package', 'prepares release candidates, runs all tests, and prepares release if they pass', '-os');
         printDefinition('test', 'prepares release candidates, runs all tests, and prepares release if they pass', '-os');
-        printDefinition('test-node', 'runs the node (server side) developer tests');
+        printDefinition('test-node', 'runs the node (server side) developer tests', '--grep');
+        printDefinition('test-node --grep=something', 'runs any node (server side) test that matches the grep text developer tests', '--grep');
         printDefinition('test-browser', 'runs the browser side (karma) developer tests.', '-os');
         printDefinition('debug-browser', 'runs the browser side (karma) developer tests in debug mode.', '-os');
         console.log('');
