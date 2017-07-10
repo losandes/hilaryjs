@@ -665,8 +665,19 @@
                         var memberMatches = /\{([^}]+)\}/.exec(dependencyName), members = [];
                         if (memberMatches) {
                             dependencyName = dependencyName.split("{")[0].trim();
-                            members = memberMatches[1].split(",").map(function(member) {
-                                return member.trim();
+                            members = memberMatches[1].split(",").map(function(item) {
+                                var member = item.trim(), withAlias = member.split(" ");
+                                if (withAlias.length === 3 && withAlias[1].toLowerCase() === "as") {
+                                    return {
+                                        member: withAlias[0],
+                                        alias: withAlias[2]
+                                    };
+                                } else {
+                                    return {
+                                        member: member,
+                                        alias: member
+                                    };
+                                }
                             });
                         }
                         return {
@@ -730,16 +741,16 @@
                         return next(null, ctx);
                     }
                     if (ctx.members.length === 1) {
-                        if (!ctx.resolved.hasOwnProperty(ctx.members[0])) {
+                        if (!ctx.resolved.hasOwnProperty(ctx.members[0].member)) {
                             logger.trace("the following dependency was NOT reduced to chosen members:", ctx.name);
                         }
                         logger.trace("the following dependency was reduced to chosen members:", ctx.name);
-                        ctx.resolved = ctx.resolved[ctx.members[0]];
+                        ctx.resolved = ctx.resolved[ctx.members[0].member];
                         return next(null, ctx);
                     }
                     reduced = {};
-                    ctx.members.forEach(function(member) {
-                        reduced[member] = ctx.resolved[member];
+                    ctx.members.forEach(function(item) {
+                        reduced[item.alias] = ctx.resolved[item.member];
                     });
                     logger.trace("the following dependency was reduced to chosen members:", ctx.name);
                     ctx.resolved = reduced;
