@@ -26,6 +26,12 @@
                     'it should log and return an exception': registerPrimitiveBooleanWithDependencies
                 }
             },
+            'when an array is registered,': {
+                'it should be resolvable': registerArray
+            },
+            'when an array of modules is registered,': {
+                'they should be resolvable': registerArrayOfModules
+            },
             'when a scope is present on the registration,': {
                 'and that scope already exists,': {
                     'it should register the module on that scope': registerWithExistingScope
@@ -112,6 +118,54 @@
                 dependencies: ['arg1'],
                 factory: false
             }).isException).to.equal(true);
+        }
+
+        // factory: []
+        function registerArray () {
+            // when
+            var registration = hilary.register({
+                name: 'testarr',
+                factory: [1,2,3]
+            });
+
+            // then
+            expect(registration.isException).to.equal(undefined);
+            expect(hilary.resolve('testarr')[0]).to.equal(1);
+            expect(hilary.resolve('testarr')[1]).to.equal(2);
+            expect(hilary.resolve('testarr')[2]).to.equal(3);
+        }
+
+        function registerArrayOfModules () {
+            // when
+            var registration = hilary.register([
+                {
+                    name: 'modulearr1',
+                    factory: 42
+                },
+                {
+                    name: 'modulearr2',
+                    factory: function (modulearr1) {
+                        return { f1: modulearr1 };
+                    }
+                },
+                {
+                    name: 'modulearr3',
+                    factory: function (modulearr1, modulearr2) {
+                        return {
+                            f1: modulearr1,
+                            f2: modulearr2
+                        };
+                    }
+                }
+            ]);
+
+            // and when
+            var actual = hilary.resolve('modulearr3');
+
+            // then
+            expect(registration.isException).to.equal(undefined);
+            expect(actual.f1).to.equal(42);
+            expect(actual.f2.f1).to.equal(42);
         }
 
         function registerWithExistingScope () {
