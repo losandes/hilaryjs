@@ -71,7 +71,7 @@ Finally, we'll start the app. In `app.js` (filename is your preference), we'll `
 // app.js
 'use strict';
 
-var hilary = require('../../index.js'), //require('hilary');
+var hilary = require('hilary');
     http = require('./http.js'),
     api = require('./api.js');
 
