@@ -167,34 +167,50 @@
             var scope = hilary.scope(id.createUid(8));
 
             scope.register({
-                name: 'something',
-                factory: {
-                    foo: 'bar',
-                    baz: 'fizz',
-                    raz: 'amataz'
-                }
-            });
-
-            scope.register({
-                name: 'dependOnMember',
-                dependencies: ['something { foo as one, baz as two }'],
-                factory: function (foo) {
-                    return {
-                        value: foo
-                    };
+                name: 'dependOnAlias',
+                dependencies: ['http { METHODS, STATUS_CODES as CODES }'],
+                factory: function (http) {
+                    return http;
                 }
             });
 
             // when
-            var actual = scope.resolve('dependOnMember');
+            var actual = scope.resolve('dependOnAlias');
 
             // then
             expect(actual.isException).to.equal(undefined);
-            expect(actual.value.one).to.equal('bar');
-            expect(actual.value.two).to.equal('fizz');
-            expect(actual.value.foo).to.equal(undefined);
-            expect(actual.value.baz).to.equal(undefined);
-            expect(actual.value.raz).to.equal(undefined);
+            expect(actual.get).to.equal(undefined);
+            expect(actual.STATUS_CODES).to.equal(undefined);
+            expect(typeof actual.METHODS).to.equal('object');
+            expect(typeof actual.CODES).to.equal('object');
+
+            // given (2)
+            scope.register({
+                name: 'numbers',
+                factory: {
+                    one: 'one',
+                    two: 'two',
+                    three: 'three'
+                }
+            });
+
+            scope.register({
+                name: 'uno',
+                dependencies: ['numbers { one as uno, two }'],
+                factory: function (numbers) {
+                    return numbers;
+                }
+            });
+
+            // when (2)
+            var actual2 = scope.resolve('uno');
+
+            // then (2)
+            expect(actual2.isException).to.equal(undefined);
+            expect(actual2.one).to.equal(undefined);
+            expect(actual2.uno).to.equal('one');
+            expect(actual2.two).to.equal('two');
+            expect(actual2.three).to.equal(undefined);
         }
 
         function isRegisteredAsSingleton () {

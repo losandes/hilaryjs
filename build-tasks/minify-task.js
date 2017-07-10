@@ -10,6 +10,7 @@ module.exports = function (grunt) {
             './src/Context.js',
             './src/HilaryModule.js',
             './src/Logger.js',
+            './src/ResolveTasks.js',
             './src/HilaryApi.js',
             './src/index.js'
         ],
