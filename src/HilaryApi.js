@@ -722,7 +722,11 @@
         if (typeof module !== 'undefined' && module.exports && require) {
             // attempt to resolve from node's require
             try {
-                return require(moduleName);
+                if (require.main && typeof require.main.require === 'function') {
+                    return require.main.require(moduleName);
+                } else {
+                    return require(moduleName);
+                }
             } catch (e) {
                 return null;
             }

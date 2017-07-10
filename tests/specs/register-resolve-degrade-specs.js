@@ -13,6 +13,9 @@
                 'it should NOT register degraded module as a singleton (node)': ifNode(degradeToRequireNoSingleton),
                 'it should gracefully degrade to window': ifBrowser(degradeToWindow),
                 'it should NOT register degraded module as a singleton (browser)': ifBrowser(degradeToWindowNoSingleton)
+            },
+            'when degrading to require': {
+                'it should support filepaths': ifNode(degradeToRequireFilePaths)
             }
         };
 
@@ -36,6 +39,28 @@
 
             // then
             expect(typeof actual.http.request).to.equal('function');
+        }
+
+        function degradeToRequireFilePaths () {
+            // given
+            var scope = hilary.scope(),
+                actual;
+
+            // a module that depends on a module that is included in Node.js
+            // or installed dependencies
+            scope.register({
+                name: 'foo',
+                dependencies: [__dirname + '/z-mock-module.js'],
+                factory: function (mock) {
+                    this.mock = mock;
+                }
+            });
+
+            // when
+            actual = scope.resolve('foo');
+
+            // then
+            expect(actual.mock.foo).to.equal('bar');
         }
 
         function degradeToWindow () {
