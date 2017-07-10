@@ -26,6 +26,9 @@
                 'and an error was encountered in the tasks': {
                     'the final function should produce a fatal log': bootstrapErrorWithoutCallback
                 }
+            },
+            'when makeRegistrationTask is used to populate the startup array': {
+                'it should register the modules that are presented': makeRegistrationTasks
             }
         };
 
@@ -135,6 +138,31 @@
                 }
             ]);
         }
+
+        function makeRegistrationTasks (done) {
+            // given
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}}),
+                module1, module2, module3;
+
+            module1 = { name: 'module1', factory: { id: 1 } };
+            module2 = { name: 'module2', factory: { id: 2 } };
+            module3 = { name: 'module3', factory: { id: 3 } };
+
+            // when
+            scope.bootstrap([
+                scope.makeRegistrationTask(module1),
+                scope.makeRegistrationTask(module2),
+                scope.makeRegistrationTask(module3)
+            ], function (err, scope) {
+                expect(err).to.equal(null);
+                expect(scope.__isHilaryScope).to.equal(true);
+                expect(scope.resolve('module1').id).to.equal(1);
+                expect(scope.resolve('module2').id).to.equal(2);
+                expect(scope.resolve('module3').id).to.equal(3);
+                done();
+            });
+        }
+
     } // /Spec
 
 }(function (registration) {

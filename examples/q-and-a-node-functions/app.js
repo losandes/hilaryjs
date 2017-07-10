@@ -1,19 +1,12 @@
 'use strict';
 
 var hilary = require('../../index.js'), //require('hilary');
+    scope = hilary.scope('myApp'),
     qAndA = require('./q-and-a'),
     questions = require('./questions.js');
 
-hilary.scope('myApp', {
-    log: {
-        level: 'trace'
-    }
-}).bootstrap([
-    function (scope, next) {
-        scope.register(qAndA);
-
-        next(null, scope);
-    }
+scope.bootstrap([
+    scope.makeRegistrationTask(qAndA)
 ], function (err, scope) {
     if (err) {
         throw err;

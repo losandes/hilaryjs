@@ -43,6 +43,7 @@
                 context: context,
                 HilaryModule: HilaryModule,
                 register: register,
+                makeRegistrationTask: makeRegistrationTask,
                 resolve: resolve,
                 exists: exists,
                 dispose: dispose,
@@ -174,6 +175,21 @@
 
                     return output;
                 }
+            }
+
+            /*
+            // make a registration task that can be added to a bootstrapper startup array
+            */
+            function makeRegistrationTask (moduleOrArray) {
+                return function (scope, done) {
+                    register(moduleOrArray, function (err) {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        done(null, scope);
+                    });
+                };
             }
 
             /*

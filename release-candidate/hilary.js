@@ -517,7 +517,7 @@
             }
             function findModule(ctx, next) {
                 var parsed = parseDependencyName(ctx.name);
-                if (ctx.context.singletonContainer.exists(ctx.name)) {
+                if (context.singletonContainer.exists(ctx.name)) {
                     logger.trace("found singleton for:", ctx.name);
                     ctx.resolved = context.singletonContainer.resolve(ctx.name).factory;
                     ctx.isResolved = true;
@@ -754,6 +754,7 @@
                 context: context,
                 HilaryModule: HilaryModule,
                 register: register,
+                makeRegistrationTask: makeRegistrationTask,
                 resolve: resolve,
                 exists: exists,
                 dispose: dispose,
@@ -846,14 +847,22 @@
                     return output;
                 }
             }
+            function makeRegistrationTask(moduleOrArray) {
+                return function(scope, done) {
+                    register(moduleOrArray, function(err) {
+                        if (err) {
+                            return done(err);
+                        }
+                        done(null, scope);
+                    });
+                };
+            }
             function resolve(moduleName, callback) {
                 logger.trace("resolving:", moduleName);
                 return resolveOne(moduleName, moduleName, callback);
             }
             function resolveOne(moduleName, relyingModuleName, callback) {
                 var ctx = {
-                    context: context,
-                    config: config,
                     name: moduleName,
                     relyingName: relyingModuleName,
                     theModule: undefined,
