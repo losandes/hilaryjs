@@ -124,6 +124,8 @@
             expect(actual.isException).to.equal(undefined);
             expect(actual.one).to.equal('bar');
             expect(actual.two).to.equal('fizz');
+            expect(actual.foo).to.equal(undefined);
+            expect(actual.baz).to.equal(undefined);
             expect(actual.raz).to.equal(undefined);
         }
 
@@ -175,7 +177,7 @@
 
             scope.register({
                 name: 'dependOnMember',
-                dependencies: ['something { foo, baz as bar }'],
+                dependencies: ['something { foo as one, baz as two }'],
                 factory: function (foo) {
                     return {
                         value: foo
@@ -188,8 +190,10 @@
 
             // then
             expect(actual.isException).to.equal(undefined);
-            expect(actual.value.foo).to.equal('bar');
-            expect(actual.value.bar).to.equal('fizz');
+            expect(actual.value.one).to.equal('bar');
+            expect(actual.value.two).to.equal('fizz');
+            expect(actual.value.foo).to.equal(undefined);
+            expect(actual.value.baz).to.equal(undefined);
             expect(actual.value.raz).to.equal(undefined);
         }
 
