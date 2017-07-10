@@ -1,25 +1,27 @@
-module.exports.name = 'listener';
+module.exports.name = 'Listener';
 module.exports.dependencies = false;
-module.exports.factory = (answer) => {
-    'use strict';
+module.exports.factory = class {
 
-    return {
-        listen: listen
-    };
+    constructor (answer) {
+        this.answer = answer;
+    }
 
-    function listen () {
+    listen () {
+        var self = this;
+
         process.stdin.once('data', function (data) {
-            test(data.toString().trim());
+            self.test(data.toString().trim(), self.answer);
         });
     }
 
-    function test (input) {
+    test (input, answer) {
         if (input === answer) {
             console.log('Correct!');
             process.exit(0);
         } else {
             console.log('Sorry, try again!');
-            listen();
+            this.listen();
         }
     }
+
 };

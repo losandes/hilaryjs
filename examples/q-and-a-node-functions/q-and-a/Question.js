@@ -1,14 +1,12 @@
-module.exports.name = 'Question';
-module.exports.dependencies = ['printer', 'Listener'];
-module.exports.factory = function (printer, Listener) {
+module.exports.name = 'question';
+module.exports.dependencies = ['printer', 'listener'];
+module.exports.factory = function (printer, listener) {
     'use strict';
 
-    return function (question, answer) {
-        return {
-            ask: function () {
-                printer.print(question);
-                new Listener(answer).listen();
-            }
-        };
+    return {
+        ask: function (question, answer) {
+            printer.print(question);
+            listener.listen(answer);
+        }
     };
 };

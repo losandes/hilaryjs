@@ -19,7 +19,7 @@ hilary.scope('myApp', {
         throw err;
     }
 
-    var question = scope.resolve('question'),
+    var question = scope.resolve('Question'),
         selected = questions[Math.floor(Math.random() * questions.length)];
 
     question.ask(selected.q, selected.a);
