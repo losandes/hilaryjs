@@ -24,6 +24,7 @@
         testRunner.run(require('./specs/register-resolve-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-class-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-function-specs')(hilary, chai.expect, polyn.id, skip));
+        testRunner.run(require('./specs/register-resolve-lambda-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-degrade-specs')(hilary, chai.expect, polyn.id, ifBrowser, ifNode, skip));
         testRunner.run(require('./specs/register-resolve-error-async-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-error-specs')(hilary, chai.expect, polyn.id, skip));

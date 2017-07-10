@@ -322,7 +322,7 @@
                                 return next(err);
                             }
 
-                            ctx.resolved = new (Function.prototype.bind.apply(ctx.theModule.factory, [null].concat(dependencies)))();
+                            ctx.resolved = invoke(ctx.theModule.factory, dependencies);
                             ctx.registerSingleton = ctx.theModule.singleton;
                             ctx.isResolved = true;
 
@@ -331,7 +331,7 @@
                         });
                     } else if (is.function(ctx.theModule.factory) && ctx.theModule.factory.length === 0) {
                         logger.trace('the factory is a function and takes no arguments, returning the result of executing it:', ctx.name);
-                        ctx.resolved = new (Function.prototype.bind.apply(ctx.theModule.factory, [null]))();
+                        ctx.resolved = invoke(ctx.theModule.factory);
                     } else {
                         // the module takes arguments and has no dependencies, this must be a factory
                         logger.trace('the factory takes arguments and has no dependencies, returning the function as-is:', ctx.name);
@@ -741,6 +741,31 @@
         Object.seal(scope.context);
         Object.seal(scope.context.container);
         Object.seal(scope.context.singletonContainer);
+    }
+
+    function invoke (factory, args) {
+        if (isConstructor(factory)) {
+            if (args) {
+                args = [null].concat(args);
+            } else {
+                args = [null];
+            }
+
+            return new (Function.prototype.bind.apply(factory, args))();
+        } else {
+            return factory.apply(null, args);
+        }
+    }
+
+    function isConstructor (func) {
+        try {
+            new func();
+            return true;
+        } catch (e) {
+            if (e.message.indexOf('is not a constructor')) {
+              return false;
+            }
+        }
     }
 
 }(function (registration) {
