@@ -6,7 +6,7 @@
         Spec: Spec
     });
 
-    function Spec (hilary, expect, id) {
+    function Spec (hilary, expect, id, ifBrowser, ifNode) {
         return {
             'when a module is resolved with a single member declaration (i.e. `polyn { is }`)': {
                 'it should return the value of that member': resolveSingleMember
@@ -21,6 +21,12 @@
                 'and uses aliases in the member declaration (i.e. `polyn { is as test, Immutable }`)': {
                     'it should use the aliases as the member names that are passed to the factory': dependOnAliases
                 },
+                '(degrade to require) and uses aliases in the member declaration (i.e. `polyn { is as test, Immutable }`)': {
+                    'it should use the aliases as the member names that are passed to the factory': ifNode(dependOnAliasesInNode)
+                },
+                '(degrade to window) and uses aliases in the member declaration (i.e. `polyn { is as test, Immutable }`)': {
+                    'it should use the aliases as the member names that are passed to the factory': ifBrowser(dependOnAliasesOnWindow)
+                }
             },
             'when a module is resolved with a multiple member declaration (i.e. `polyn { is, Immutable }`)': {
                 'it should only return the desired members': resolveMultipleMembers
@@ -167,25 +173,6 @@
             var scope = hilary.scope(id.createUid(8));
 
             scope.register({
-                name: 'dependOnAlias',
-                dependencies: ['http { METHODS, STATUS_CODES as CODES }'],
-                factory: function (http) {
-                    return http;
-                }
-            });
-
-            // when
-            var actual = scope.resolve('dependOnAlias');
-
-            // then
-            expect(actual.isException).to.equal(undefined);
-            expect(actual.get).to.equal(undefined);
-            expect(actual.STATUS_CODES).to.equal(undefined);
-            expect(typeof actual.METHODS).to.equal('object');
-            expect(typeof actual.CODES).to.equal('object');
-
-            // given (2)
-            scope.register({
                 name: 'numbers',
                 factory: {
                     one: 'one',
@@ -202,15 +189,60 @@
                 }
             });
 
-            // when (2)
-            var actual2 = scope.resolve('uno');
+            // when
+            var actual = scope.resolve('uno');
 
-            // then (2)
-            expect(actual2.isException).to.equal(undefined);
-            expect(actual2.one).to.equal(undefined);
-            expect(actual2.uno).to.equal('one');
-            expect(actual2.two).to.equal('two');
-            expect(actual2.three).to.equal(undefined);
+            // then
+            expect(actual.isException).to.equal(undefined);
+            expect(actual.one).to.equal(undefined);
+            expect(actual.uno).to.equal('one');
+            expect(actual.two).to.equal('two');
+            expect(actual.three).to.equal(undefined);
+        }
+
+        function dependOnAliasesInNode () {
+            // given
+            var scope = hilary.scope(id.createUid(8));
+
+            scope.register({
+                name: 'dependOnAlias',
+                dependencies: ['http { METHODS, STATUS_CODES as CODES }'],
+                factory: function (http) {
+                    return http;
+                }
+            });
+
+            // when
+            var actual = scope.resolve('dependOnAlias');
+
+            // then
+            expect(actual.isException).to.equal(undefined);
+            expect(actual.get).to.equal(undefined);
+            expect(actual.STATUS_CODES).to.equal(undefined);
+            expect(typeof actual.METHODS).to.equal('object');
+            expect(typeof actual.CODES).to.equal('object');
+        }
+
+        function dependOnAliasesOnWindow () {
+            // given
+            var scope = hilary.scope(id.createUid(8));
+
+            scope.register({
+                name: 'dependOnAlias',
+                dependencies: ['console { log as write, error }'],
+                factory: function (console) {
+                    return console;
+                }
+            });
+
+            // when
+            var actual = scope.resolve('dependOnAlias');
+
+            // then
+            expect(actual.isException).to.equal(undefined);
+            expect(typeof actual.write).to.equal('function');
+            expect(typeof actual.error).to.equal('function');
+            expect(actual.log).to.equal(undefined);
         }
 
         function isRegisteredAsSingleton () {
