@@ -26,8 +26,8 @@ Getting Started With Node.js
     * [Async Disposal](#async-disposal)
 * [Scopes](#scopes)
 * [Exceptions](#exceptions)
-    * [Synchronous Exceptions](synchronous-exceptions)
-    * [Asynchronous Exceptions](asynchronous-exceptions)
+    * [Synchronous Exceptions](#synchronous-exceptions)
+    * [Asynchronous Exceptions](#asynchronous-exceptions)
 
 ## Hello World
 For the Hello World, checkout the main [README](https://github.com/losandes/hilaryjs), and [examples/hello-world-node](../examples/hello-world-node).
@@ -328,7 +328,7 @@ module.exports.factory = (printer, listener) => {
 ### Importing Members
 If we want to depend, only on a subset of the members (properties), that a given interface exports, the syntax is similar to that of ES6 imports, supports aliasing, but is not exactly the same.
 
-> also see [examples/registering-importing-members](../examples/registering-importing-members)
+> also see [examples/importing-members-registration](../examples/importing-members-registration)
 
 Let's say we have a module that returns the numbers 1-3 in english
 ```JavaScript
@@ -497,7 +497,7 @@ question
 ### Reducing Members
 Using the same conventions as [importing members](#importing-members) as dependencies, we can reduce and alias the members (properties) of a module, when resolving it.
 
-> also see [examples/resolving-importing-members](../examples/resolving-importing-members)
+> also see [examples/importing-members-resolution](../examples/importing-members-resolution)
 
 Let's say we have a module that returns the numbers 1-3 in english
 ```JavaScript
