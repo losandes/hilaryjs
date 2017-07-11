@@ -5,7 +5,7 @@ Hilary is an easy to use JavaScript Inversion of Control (IoC) container written
 
 Also check out [generator-hilary](https://github.com/losandes/generator-hilary), our Yeoman generator, and [Gidget](https://github.com/Acatar/gidget) our route/app engine.
 
-> You can find documentation and examples on the [documentation](https://github.com/Acatar/hilaryjs/docs). Below is just a quick-start. There are also lots of [examples](https://github.com/Acatar/hilaryjs/examples)
+> You can find documentation and examples on the [documentation](https://github.com/losandes/hilaryjs/tree/master/docs). Below is just a quick-start. There are also lots of [examples](https://github.com/losandes/hilaryjs/tree/master/examples)
 
 > If the bootstrapper in the examples that follow looks foreign to you, consider reading about the [composition root pattern](http://blog.ploeh.dk/2011/07/28/CompositionRoot/).
 
@@ -25,7 +25,7 @@ In this example, we'll produce the following files:
 
 Let's start with the web server, `api.js`, which will simply return "Hello World" when we navigate to `localhost:3000`.
 
-> > Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](docs/Getting-Started---With-Node.md#registering-modules) for more detailed instructions.
+> Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](docs/Getting-Started---With-Node.md#registering-modules) for more detailed instructions.
 
 > Note that we're not referencing Hilary, yet. There is no need to couple Hilary to your modules. Hilary just expects your modules to export specific properties, such as name, dependencies, and factory.
 
