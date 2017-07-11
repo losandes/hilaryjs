@@ -30,7 +30,8 @@
                 PARENT_CONTAINER_ARG: 'setParentScope expects the name of the parent scope, or an instance of Hilary'
             },
             bootstrap: {
-                TASKS_ARRAY: 'bootstrap expects the first argument to be an array of functions'
+                TASKS_ARRAY: 'bootstrap expects the first argument to be an array of functions',
+                INVALID_TASK_ARGUMENT: 'The task expected a first argument of scope, and a callback as the second argument'
             }
         }
     });

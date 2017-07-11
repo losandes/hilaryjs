@@ -181,7 +181,18 @@
             // make a registration task that can be added to a bootstrapper startup array
             */
             function makeRegistrationTask (moduleOrArray) {
+                logger.trace('making a registration task for:', moduleOrArray);
+
                 return function (scope, done) {
+                    if (!scope || !scope.__isHilaryScope || is.not.function(done)) {
+                        return arguments[arguments.length-1](new Exception({
+                            type: locale.errorTypes.INVALID_REGISTRATION,
+                            error: new Error(locale.bootstrap.INVALID_TASK_ARGUMENT),
+                            messages: [locale.bootstrap.INVALID_TASK_ARGUMENT],
+                            data: moduleOrArray
+                        }));
+                    }
+
                     register(moduleOrArray, function (err) {
                         if (err) {
                             return done(err);

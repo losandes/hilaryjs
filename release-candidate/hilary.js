@@ -1,4 +1,4 @@
-/*! hilary 2017-07-10 */
+/*! hilary 2017-07-11 */
 
 (function(register) {
     "use strict";
@@ -29,7 +29,8 @@
                 PARENT_CONTAINER_ARG: "setParentScope expects the name of the parent scope, or an instance of Hilary"
             },
             bootstrap: {
-                TASKS_ARRAY: "bootstrap expects the first argument to be an array of functions"
+                TASKS_ARRAY: "bootstrap expects the first argument to be an array of functions",
+                INVALID_TASK_ARGUMENT: "The task expected a first argument of scope, and a callback as the second argument"
             }
         }
     });
@@ -848,7 +849,16 @@
                 }
             }
             function makeRegistrationTask(moduleOrArray) {
+                logger.trace("making a registration task for:", moduleOrArray);
                 return function(scope, done) {
+                    if (!scope || !scope.__isHilaryScope || is.not.function(done)) {
+                        return arguments[arguments.length - 1](new Exception({
+                            type: locale.errorTypes.INVALID_REGISTRATION,
+                            error: new Error(locale.bootstrap.INVALID_TASK_ARGUMENT),
+                            messages: [ locale.bootstrap.INVALID_TASK_ARGUMENT ],
+                            data: moduleOrArray
+                        }));
+                    }
                     register(moduleOrArray, function(err) {
                         if (err) {
                             return done(err);

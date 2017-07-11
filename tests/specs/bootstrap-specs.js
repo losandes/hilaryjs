@@ -28,7 +28,13 @@
                 }
             },
             'when makeRegistrationTask is used to populate the startup array': {
-                'it should register the modules that are presented': makeRegistrationTasks
+                'it should register the modules that are presented': makeRegistrationTasks,
+                'and the first argument is not `scope`': {
+                    'it should throw an error': makeRegistrationTasksFirstArgError
+                },
+                'and the second argument is not the callback': {
+                    'it should throw an error': makeRegistrationTasksSecondArgError
+                }
             }
         };
 
@@ -159,6 +165,44 @@
                 expect(scope.resolve('module1').id).to.equal(1);
                 expect(scope.resolve('module2').id).to.equal(2);
                 expect(scope.resolve('module3').id).to.equal(3);
+                done();
+            });
+        }
+
+        function makeRegistrationTasksFirstArgError (done) {
+            // given
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}}),
+                module1;
+
+            module1 = { name: 'module1', factory: { id: 1 } };
+
+            // when
+            scope.bootstrap([
+                function (scope, next) {
+                    next(null, 1, 2, 3);
+                },
+                scope.makeRegistrationTask(module1)
+            ], function (err) {
+                expect(err.isException).to.equal(true);
+                done();
+            });
+        }
+
+        function makeRegistrationTasksSecondArgError (done) {
+            // given
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}}),
+                module1;
+
+            module1 = { name: 'module1', factory: { id: 1 } };
+
+            // when
+            scope.bootstrap([
+                function (scope, next) {
+                    next(null, scope, 2, 3);
+                },
+                scope.makeRegistrationTask(module1)
+            ], function (err) {
+                expect(err.isException).to.equal(true);
                 done();
             });
         }
