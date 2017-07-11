@@ -1,8 +1,0 @@
-{
-    "name": "hilary-express-example",
-    "dependencies": {
-        "jquery": "*",
-        "hilary": "*"
-    },
-    "devDependencies": {}
-}
