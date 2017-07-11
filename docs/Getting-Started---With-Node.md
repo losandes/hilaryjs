@@ -10,18 +10,22 @@ Getting Started With Node.js
     * [Defining Arrow Functions](#defining-arrow-functions)
     * [Importing Members](#importing-members)
     * [Async Registration](#async-registration)
+    * [Handling Exceptions](#registration-exceptions)
 * [Resolving Modules](#resolving-modules)
     * [Resolution Hierarchy](#resolution-hierarchy)
     * [When To Resolve](#when-to-resolve)
     * [Resolving in the Composition Root](#resolving-in-the-composition-root)
     * [Async Resolution](#async-resolution)
+    * [Handling Exceptions](#resolution-exceptions)
 * [Bootstrapping Your App](#bootstrapping-your-app)
     * [Bootstrapping Your App With `hilary.bootstrap`](#bootstrapping-your-app-with-hilarybootstrap)
     * [Bootstrapping Your App With async.js](#bootstrapping-your-app-with-asyncjs)
+    * [Handling Exceptions](#bootstrap-exceptions)
 * [Logging & Debugging](#logging--debugging)
     * [Log Levels](#log-levels)
     * [Customizing the Log Output](#customizing-the-log-output)
 * [Disposing Modules](#disposing-modules)
+    * [Async Disposal](#async-disposal)
 * [Scopes](#scopes)
 
 ## Hello World
@@ -359,6 +363,14 @@ scope.register('qAndA', function (err, result) {
 });
 ```
 
+### Registration Exceptions
+When registering a module synchronously, hilary returns either the module that was registered, or an exception. We can anticipate, and handle exceptions by checking for the `isException` property on the result of the registration:
+
+```JavaScript
+
+```
+
+
 
 ## Resolving Modules
 
@@ -458,6 +470,11 @@ You can check to see if a module exists using `exists`, which returns a boolean:
 // given that scope is `hilary` or hilary.scope('myScope')
 scope.exists('myModule');
 ```
+
+### Resolution Exceptions
+
+TODO
+
 
 
 ## Bootstrapping Your App
@@ -594,6 +611,13 @@ function makeRegistrationTask (moduleOrArray) {
 > Note that this example takes advantage of async's `parallel` function. If we make sure not to resolve anything before the callback, then it should be safe for our registration array to execute in any order.
 
 
+### Bootstrap Exceptions
+
+TODO
+
+
+
+
 ## Logging & Debugging
 
 ### Log Levels
@@ -688,3 +712,146 @@ scope.register({
     factory: 42
 });
 ```
+
+
+## Disposing Modules
+Modules can be disposed in hilary, as well as the entire container. Modules are disposed by name.
+
+To dispose a single module:
+```JavaScript
+var actual = scope.dispose('moduleName');
+assert.equal(actual.isException, undefined, 'it should not return an error');
+assert.equal(actual, true, 'it should return true');
+```
+
+To dispose multiple modules:
+```JavaScript
+var actual = scope.dispose(['module1', 'module2', 'module3']);
+assert.equal(actual.isException, undefined, 'it should not return an error');
+assert.equal(actual.result, true, 'it should return true');
+assert.equal(actual.disposed.length, 3, 'it should dispose 3 modules');
+```
+
+To dispose **all** modules:
+```JavaScript
+var actual = scope.dispose();
+assert.equal(actual.isException, undefined, 'it should not return an error');
+assert.equal(actual, true, 'it should return true');
+```
+
+### Async Disposal
+All of these can be executed async, as well.
+
+To dispose a single module:
+```JavaScript
+scope.dispose('moduleName', function (err, actual) {
+    assert.equal(err, null, 'it should not return an error');
+    assert.equal(actual, true, 'it should return true');
+});
+```
+
+To dispose multiple modules:
+```JavaScript
+scope.dispose(['module1', 'module2', 'module3'], function (err, actual) {
+    assert.equal(err, null, 'it should not return an error');
+    assert.equal(actual.result, true, 'it should return true');
+    assert.equal(actual.disposed.length, 3, 'it should dispose 3 modules');
+});
+```
+
+To dispose **all** modules:
+```JavaScript
+scope.dispose(function (err, actual) {
+    assert.equal(err, null, 'it should not return an error');
+    assert.equal(actual, true, 'it should return true');
+});
+```
+
+## Scopes
+Scopes are like namespaces. We can use them to isolate code, and to protect module names from being overwritten. This is particularly important in the browser, as it keeps our code from existing in a global space, and from colliding in a private one, as can happen with [require.js](http://requirejs.org/). We can also use scopes to describe different lifetimes, such as the application lifetime (the entire time that our app is running), and the request lifetime (the life time of a single request).
+
+Creating a scope is simple:
+
+```JavaScript
+var hilary = require('hilary');
+
+hilary.scope('myScopeName');
+```
+
+### Isolation
+This example demonstrates how scopes are isolated:
+
+```JavaScript
+var hilary = require('hilary');
+    scope1 = hilary.scope('one'),
+    scope2 = hilary.scope('two');
+
+scope1.register({
+    name: 'scope-isolation',
+    factory: 1
+});
+
+scope2.register({
+    name: 'scope-isolation',
+    factory: 2
+});
+
+//prints 1
+console.log(scope1.resolve('scope-isolation'));
+
+//prints 2
+console.log(scope2.resolve('scope-isolation'));
+```
+
+
+### Nesting Scopes
+Scopes can be nested. In this example, we'll create a shared scope named, "common", that we might use in multiple services. Then we'll create child scopes a couple different ways, to demonstrate how a single service might take advantage of the "common" scope.
+
+```JavaScript
+// common scope
+var hilary = require('hilary'),
+    scope = hilary.scope('common');
+
+scope.register({ name: 'module1', factory: 1 });
+scope.register({ name: 'module2', factory: 2 });
+
+module.exports.scope = scope;
+```
+
+```JavaScript
+// service scope(s)
+var hilary = require('hilary'),
+    common = new require('./common.js'),
+    nestedByName = hilary.scope('nestedByName', {
+        parent: 'common'
+    }),
+    nestedByScope = hilary.scope('nestedByScope', {
+        parent: common.scope
+    });
+
+nestedByName.register({ name: 'module1', factory: 'one' });
+nestedByScope.register({ name: 'module1', factory: 'one' });
+
+console.log(
+    nestedByName.resolve('module1') === 'one' ? 'PASS:' : 'FAIL:',
+    'it should resolve from the immediate scope, when a module is registered'
+
+);
+console.log(
+    nestedByName.resolve('module2') === 2 ? 'PASS:' : 'FAIL:',
+    'it should fall back to the parent scope, when a module isn\'t found'
+);
+
+console.log(
+    nestedByName.resolve('module1') === 'one' ? 'PASS:' : 'FAIL:',
+    'it should resolve from the immediate scope, when a module is registered'
+);
+console.log(
+    nestedByName.resolve('module2') === 2 ? 'PASS:' : 'FAIL:',
+    'it should fall back to the parent scope, when a module isn\'t found'
+);
+```
+
+Any time we attempt to resolve a module on the child scope, it will fall back to the "common" scope, when a module is not found. In this hierarchy, the child scopes are free to define their own implementation of a module, but they don't _have_ to, nor do they need to know how to register modules that exist in the "common" scope.
+
+For more information on the resolution hierarchy, read [Resolving Modules](#resolving-modules).
