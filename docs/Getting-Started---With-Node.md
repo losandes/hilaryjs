@@ -339,6 +339,8 @@ scope.register('qAndA', function (err, result) {
 ### Resolution Hierarchy
 hilary attempts to resolve modules, based on the following flow diagram:
 
+<img src="https://user-images.githubusercontent.com/933621/28041618-23cd3c82-6598-11e7-95bb-09919d5e94ab.png" alt="a flow diagram of the hilary resolution hierarchy (a text representation follows)" height="500" />
+
 ![a flow diagram of the hilary resolution hierarchy (a text representation follows)](https://user-images.githubusercontent.com/933621/28041618-23cd3c82-6598-11e7-95bb-09919d5e94ab.png)
 
 1. If a singleton exists, it is returned
