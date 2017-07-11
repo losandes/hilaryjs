@@ -20,9 +20,9 @@ scope.register({
     factory: function (assert, reduced) {
         'use strict';
 
-        assert(reduced.one, 'one');
-        assert(reduced.two, 'two');
-        assert(typeof reduced.three, 'undefined');
+        assert.equal(reduced.one, 'one');
+        assert.equal(reduced.two, 'two');
+        assert.equal(typeof reduced.three, 'undefined');
 
         return reduced;
     }
@@ -38,9 +38,9 @@ scope.register({
     factory: function (assert, spanish) {
         'use strict';
 
-        assert(spanish.uno, 'one');
-        assert(spanish.dos, 'two');
-        assert(spanish.tres, 'three');
+        assert.equal(spanish.uno, 'one');
+        assert.equal(spanish.dos, 'two');
+        assert.equal(spanish.tres, 'three');
 
         return spanish;
     }
@@ -58,9 +58,9 @@ scope.register({
     factory: function (assert, uno, dos, tres) {
         'use strict';
 
-        assert(uno, 'one');
-        assert(dos, 'two');
-        assert(tres, 'three');
+        assert.equal(uno, 'one');
+        assert.equal(dos, 'two');
+        assert.equal(tres, 'three');
 
         return [uno, dos, tres];
     }

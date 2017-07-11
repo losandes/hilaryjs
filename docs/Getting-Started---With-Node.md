@@ -10,60 +10,24 @@ Getting Started With Node.js
     * [Defining Arrow Functions](#defining-arrow-functions)
     * [Importing Members](#importing-members)
     * [Async Registration](#async-registration)
-    * [Handling Exceptions](#registration-exceptions)
 * [Resolving Modules](#resolving-modules)
     * [Resolution Hierarchy](#resolution-hierarchy)
     * [When To Resolve](#when-to-resolve)
     * [Resolving in the Composition Root](#resolving-in-the-composition-root)
-    * [
-### Reducing Members
-```JavaScript
-// Starting with a module that returns the numbers 1-3 in english
-scope.register({
-    name: 'english',
-    factory: {
-        one: 'one',
-        two: 'two',
-        three: 'three'
-    }
-});
-
-// We can reduce an object to only the members that we want
-var oneAndTwo = scope.resolve('english { one, two }');
-console.log(oneAndTwo);
-assert(oneAndTwo.one, 'one');
-assert(oneAndTwo.two, 'two');
-assert(typeof oneAndTwo.three, 'undefined');
-
-// We can alias the members, naming them as we want
-var spanishToEnglish = scope.resolve('english { one as uno, two as dos, three as tres }');
-console.log(spanishToEnglish);
-assert(spanishToEnglish.uno, 'one');
-assert(spanishToEnglish.dos, 'two');
-assert(spanishToEnglish.tres, 'three');
-
-// We can remove the parent object, by importing a single member
-var uno = scope.resolve('english { one }');
-var dos = scope.resolve('english { two }');
-var tres = scope.resolve('english { three }');
-console.log([ uno, dos, tres ]);
-assert(uno, 'one');
-assert(dos, 'two');
-assert(tres, 'three');
-```
-    Reducing Members](#reducing-members)
+    * [Reducing Members](#reducing-members)
     * [Async Resolution](#async-resolution)
-    * [Handling Exceptions](#resolution-exceptions)
 * [Bootstrapping Your App](#bootstrapping-your-app)
     * [Bootstrapping Your App With `hilary.bootstrap`](#bootstrapping-your-app-with-hilarybootstrap)
     * [Bootstrapping Your App With async.js](#bootstrapping-your-app-with-asyncjs)
-    * [Handling Exceptions](#bootstrap-exceptions)
 * [Logging & Debugging](#logging--debugging)
     * [Log Levels](#log-levels)
     * [Customizing the Log Output](#customizing-the-log-output)
 * [Disposing Modules](#disposing-modules)
     * [Async Disposal](#async-disposal)
 * [Scopes](#scopes)
+* [Exceptions](#exceptions)
+    * [Synchronous Exceptions](synchronous-exceptions)
+    * [Asynchronous Exceptions](asynchronous-exceptions)
 
 ## Hello World
 For the Hello World, checkout the main [README](https://github.com/losandes/hilaryjs), and [examples/hello-world-node](../examples/hello-world-node).
@@ -455,16 +419,6 @@ scope.register('qAndA', function (err, result) {
 });
 ```
 
-### Registration Exceptions
-When registering a module synchronously, hilary returns either the module that was registered, or an exception. We can anticipate, and handle exceptions by checking for the `isException` property on the result of the registration.
-
-In this example, we don't provide the required properties to register a module, and `register` returns an exception.
-```JavaScript
-// given that scope is `hilary` or hilary.scope('myScope')
-var actual = scope.register({});
-```
-
-
 
 ## Resolving Modules
 
@@ -612,10 +566,6 @@ You can check to see if a module exists using `exists`, which returns a boolean:
 scope.exists('myModule');
 ```
 
-### Resolution Exceptions
-
-TODO
-
 
 
 ## Bootstrapping Your App
@@ -750,12 +700,6 @@ function makeRegistrationTask (moduleOrArray) {
 ```
 
 > Note that this example takes advantage of async's `parallel` function. If we make sure not to resolve anything before the callback, then it should be safe for our registration array to execute in any order.
-
-
-### Bootstrap Exceptions
-
-TODO
-
 
 
 
@@ -996,3 +940,42 @@ console.log(
 Any time we attempt to resolve a module on the child scope, it will fall back to the "common" scope, when a module is not found. In this hierarchy, the child scopes are free to define their own implementation of a module, but they don't _have_ to, nor do they need to know how to register modules that exist in the "common" scope.
 
 For more information on the resolution hierarchy, read [Resolving Modules](#resolving-modules).
+
+## Exceptions
+The conventions that hilary uses for communicating errors are consistent, depending on whether you execute a function synchronously, or asynchronously.
+
+Exceptions have the following properties:
+
+* **isException** (boolean): a marker to simplify checking if the result is an exception
+* **type** (string): a type may be associated with several different messages (i.e. InvalidArgument)
+* **error** (Error): a JavaScript Error, with stack trace, if available
+* **messages** (Array): an array of at least one message
+* **data** (object): data associated with the exception, if available
+
+### Synchronous Exceptions
+When _synchronous_ execution of a hilary function fails, it will return an exception. We can anticipate, and handle these exceptions by checking for the `isException` property on the result of the function.
+
+In this example, we don't provide the required properties to register a module, and `register` returns an exception.
+```JavaScript
+// given that scope is `hilary` or hilary.scope('myScope')
+var actual = scope.register({});
+
+if (actual.isException) {
+    console.log(actual);
+}
+```
+
+### Asynchronous Exceptions
+When _asynchronous_ execution of a hilary function fails, it will pass an exception as the first argument to the callback. Otherwise, the first argument is `null`. We can anticipate, and handle these exceptions by checking whether the first argument is present.
+
+In this example, we don't provide the required properties to register a module, and `register` passes an exception as the first argument to the callback.
+```JavaScript
+// given that scope is `hilary` or hilary.scope('myScope')
+scope.register({}, function (err, result) {
+    if (err) {
+        console.log(err);
+    }
+
+    // ...
+});
+```

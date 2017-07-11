@@ -14,22 +14,22 @@ scope.register({
 // We can reduce an object to only the members that we want
 var oneAndTwo = scope.resolve('english { one, two }');
 console.log(oneAndTwo);
-assert(oneAndTwo.one, 'one');
-assert(oneAndTwo.two, 'two');
-assert(typeof oneAndTwo.three, 'undefined');
+assert.equal(oneAndTwo.one, 'one');
+assert.equal(oneAndTwo.two, 'two');
+assert.equal(typeof oneAndTwo.three, 'undefined');
 
 // We can alias the members, naming them as we want
 var spanishToEnglish = scope.resolve('english { one as uno, two as dos, three as tres }');
 console.log(spanishToEnglish);
-assert(spanishToEnglish.uno, 'one');
-assert(spanishToEnglish.dos, 'two');
-assert(spanishToEnglish.tres, 'three');
+assert.equal(spanishToEnglish.uno, 'one');
+assert.equal(spanishToEnglish.dos, 'two');
+assert.equal(spanishToEnglish.tres, 'three');
 
 // We can remove the parent object, by importing a single member
 var uno = scope.resolve('english { one }');
 var dos = scope.resolve('english { two }');
 var tres = scope.resolve('english { three }');
 console.log([ uno, dos, tres ]);
-assert(uno, 'one');
-assert(dos, 'two');
-assert(tres, 'three');
+assert.equal(uno, 'one');
+assert.equal(dos, 'two');
+assert.equal(tres, 'three');
