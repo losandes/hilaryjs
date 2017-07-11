@@ -35,7 +35,8 @@
                 'it should only return the aslases of the desired members': resolveAliases
             },
             'when a module is resolved with a member declaration': {
-                'the reduction should be stored as a singleton': isRegisteredAsSingleton
+                'the reduction should be stored as a singleton': isRegisteredAsSingleton,
+                'different reductions should be stored as different singletons': isRegisteredAsUniqueSingleton
             }
         };
 
@@ -262,6 +263,50 @@
             // then
             expect(actual.isException).to.equal(undefined);
             expect(scope.context.singletonContainer.exists('something { foo }'))
+                .to.equal(true);
+        }
+
+        function isRegisteredAsUniqueSingleton () {
+            // given
+            var scope = hilary.scope(id.createUid(8));
+
+            scope.register({
+                name: 'something',
+                factory: {
+                    one: 'one',
+                    two: 'two',
+                    three: 'three'
+                }
+            });
+
+            // when
+            var actual1 = scope.resolve('something { one, two }');
+            var actual2 = scope.resolve('something { two, three }');
+            var actual3 = scope.resolve('something { one as uno, two }');
+
+            // then
+            expect(actual1.isException).to.equal(undefined);
+            expect(actual2.isException).to.equal(undefined);
+            expect(actual3.isException).to.equal(undefined);
+
+            expect(actual1.one).to.equal('one');
+            expect(actual1.two).to.equal('two');
+            expect(actual1.three).to.equal(undefined);
+
+            expect(actual2.one).to.equal(undefined);
+            expect(actual2.two).to.equal('two');
+            expect(actual2.three).to.equal('three');
+
+            expect(actual3.uno).to.equal('one');
+            expect(actual3.one).to.equal(undefined);
+            expect(actual3.two).to.equal('two');
+            expect(actual3.three).to.equal(undefined);
+
+            expect(scope.context.singletonContainer.exists('something { one, two }'))
+                .to.equal(true);
+            expect(scope.context.singletonContainer.exists('something { two, three }'))
+                .to.equal(true);
+            expect(scope.context.singletonContainer.exists('something { one as uno, two }'))
                 .to.equal(true);
         }
 

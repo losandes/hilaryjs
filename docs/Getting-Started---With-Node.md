@@ -15,6 +15,43 @@ Getting Started With Node.js
     * [Resolution Hierarchy](#resolution-hierarchy)
     * [When To Resolve](#when-to-resolve)
     * [Resolving in the Composition Root](#resolving-in-the-composition-root)
+    * [
+### Reducing Members
+```JavaScript
+// Starting with a module that returns the numbers 1-3 in english
+scope.register({
+    name: 'english',
+    factory: {
+        one: 'one',
+        two: 'two',
+        three: 'three'
+    }
+});
+
+// We can reduce an object to only the members that we want
+var oneAndTwo = scope.resolve('english { one, two }');
+console.log(oneAndTwo);
+assert(oneAndTwo.one, 'one');
+assert(oneAndTwo.two, 'two');
+assert(typeof oneAndTwo.three, 'undefined');
+
+// We can alias the members, naming them as we want
+var spanishToEnglish = scope.resolve('english { one as uno, two as dos, three as tres }');
+console.log(spanishToEnglish);
+assert(spanishToEnglish.uno, 'one');
+assert(spanishToEnglish.dos, 'two');
+assert(spanishToEnglish.tres, 'three');
+
+// We can remove the parent object, by importing a single member
+var uno = scope.resolve('english { one }');
+var dos = scope.resolve('english { two }');
+var tres = scope.resolve('english { three }');
+console.log([ uno, dos, tres ]);
+assert(uno, 'one');
+assert(dos, 'two');
+assert(tres, 'three');
+```
+    Reducing Members](#reducing-members)
     * [Async Resolution](#async-resolution)
     * [Handling Exceptions](#resolution-exceptions)
 * [Bootstrapping Your App](#bootstrapping-your-app)
@@ -177,7 +214,7 @@ module.exports.factory = function () {
 #### Composable Example
 What if we wanted to ask random questions? In the following example, we break the example above into modules, so it is extensible.
 
-> also see [examples/q-and-a-node-functions](../examples/q-and-a-node-functions)
+> also see [examples/registering-functions](../examples/registering-functions)
 
 First, we'll create a printer interface (this could be swapped out with something else later, if desired):
 ```JavaScript
@@ -284,7 +321,7 @@ question.ask(selected.q, selected.a);
 ### Defining Classes
 hilary supports using classes as well. Riffing on the examples above, the Question module would looke like this:
 
-> also see [examples/q-and-a-node-classes](../examples/q-and-a-node-classes)
+> also see [examples/registering-classes](../examples/registering-classes)
 
 ```JavaScript
 module.exports.name = 'Question';
@@ -307,7 +344,7 @@ module.exports.factory = class {
 ### Defining Arrow Functions
 We can also use arrow functions (lambda expressions) to define our modules:
 
-> also see [examples/q-and-a-node-lambdas](../examples/q-and-a-node-lambdas)
+> also see [examples/registering-lambdas](../examples/registering-lambdas)
 
 ```JavaScript
 module.exports.name = 'question';
@@ -325,29 +362,84 @@ module.exports.factory = (printer, listener) => {
 ```
 
 ### Importing Members
-If we want to depend, only on a subset of the members (properties), that a given interface exports, the syntax is similar to that of ES6 imports, and supports aliasing.
+If we want to depend, only on a subset of the members (properties), that a given interface exports, the syntax is similar to that of ES6 imports, supports aliasing, but is not exactly the same.
 
-Let's say we have a module that exports three properties: `one`, `two`, and `three`
+> also see [examples/registering-importing-members](../examples/registering-importing-members)
+
+Let's say we have a module that returns the numbers 1-3 in english
 ```JavaScript
-module.exports.name = 'something';
-module.exports.factory = {
-    one: 'one',
-    two: 'two',
-    three: 'three'
-};
+scope.register({
+    name: 'english',
+    factory: {
+        one: 'one',
+        two: 'two',
+        three: 'three'
+    }
+});
 ```
 
-Another module can depend on only the properties it needs, aliasing them, if desired. In this example, we alias `one` as, `uno`, and also depend on `two`:
+We can depend only on the members of that module, that we need:
 ```JavaScript
-module.exports.name = 'somethingElse';
-module.exports.dependencies = ['something { one as uno, two }'];
-module.exports.factory = function (something) {
-    console.log(something.uno);     // prints 'one'
-    console.log(something.two);     // prints 'two'
-    console.log(something.one);     // prints undefined
-    console.log(something.three);   // prints undefined
-};
+scope.register({
+    name: 'oneAndTwo',
+    dependencies: [
+        'assert',
+        'english { one, two }'
+    ],
+    factory: function (assert, reduced) {
+        'use strict';
+
+        assert(reduced.one, 'one');
+        assert(reduced.two, 'two');
+        assert(typeof reduced.three, 'undefined');
+
+        return reduced;
+    }
+});
 ```
+
+We can alias the members, naming them as we want:
+```JavaScript
+scope.register({
+    name: 'spanishToEnglish',
+    dependencies: [
+        'assert',
+        'english { one as uno, two as dos, three as tres }'
+    ],
+    factory: function (assert, spanish) {
+        'use strict';
+
+        assert(spanish.uno, 'one');
+        assert(spanish.dos, 'two');
+        assert(spanish.tres, 'three');
+
+        return spanish;
+    }
+});
+```
+
+We can remove the parent object, by importing a single member
+```JavaScript
+scope.register({
+    name: 'spanishToEnglish2',
+    dependencies: [
+        'assert',
+        'english { one }',
+        'english { two }',
+        'english { three }'
+    ],
+    factory: function (assert, uno, dos, tres) {
+        'use strict';
+
+        assert(uno, 'one');
+        assert(dos, 'two');
+        assert(tres, 'three');
+
+        return [uno, dos, tres];
+    }
+});
+```
+
 
 ### Async Registration
 `register` can be called synchronously, or asynchronously. Just add a callback for async behavior:
@@ -364,10 +456,12 @@ scope.register('qAndA', function (err, result) {
 ```
 
 ### Registration Exceptions
-When registering a module synchronously, hilary returns either the module that was registered, or an exception. We can anticipate, and handle exceptions by checking for the `isException` property on the result of the registration:
+When registering a module synchronously, hilary returns either the module that was registered, or an exception. We can anticipate, and handle exceptions by checking for the `isException` property on the result of the registration.
 
+In this example, we don't provide the required properties to register a module, and `register` returns an exception.
 ```JavaScript
-
+// given that scope is `hilary` or hilary.scope('myScope')
+var actual = scope.register({});
 ```
 
 
@@ -444,6 +538,53 @@ question
   |__printer
     |__someOtherOutput
   |__listener
+```
+
+### Reducing Members
+Using the same conventions as [importing members](#importing-members) as dependencies, we can reduce and alias the members (properties) of a module, when resolving it.
+
+> also see [examples/resolving-importing-members](../examples/resolving-importing-members)
+
+Let's say we have a module that returns the numbers 1-3 in english
+```JavaScript
+scope.register({
+    name: 'english',
+    factory: {
+        one: 'one',
+        two: 'two',
+        three: 'three'
+    }
+});
+```
+
+We can depend only on the members of that module, that we need:
+```JavaScript
+// We can reduce an object to only the members that we want
+var oneAndTwo = scope.resolve('english { one, two }');
+console.log(oneAndTwo);
+assert(oneAndTwo.one, 'one');
+assert(oneAndTwo.two, 'two');
+assert(typeof oneAndTwo.three, 'undefined');
+```
+
+We can alias the members, naming them as we want:
+```JavaScript
+var spanishToEnglish = scope.resolve('english { one as uno, two as dos, three as tres }');
+console.log(spanishToEnglish);
+assert(spanishToEnglish.uno, 'one');
+assert(spanishToEnglish.dos, 'two');
+assert(spanishToEnglish.tres, 'three');
+```
+
+We can remove the parent object, by importing a single member
+```JavaScript
+var uno = scope.resolve('english { one }');
+var dos = scope.resolve('english { two }');
+var tres = scope.resolve('english { three }');
+console.log([ uno, dos, tres ]);
+assert(uno, 'one');
+assert(dos, 'two');
+assert(tres, 'three');
 ```
 
 ### Async Resolution
