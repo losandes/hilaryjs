@@ -69,12 +69,7 @@ Finally, we'll start the app. In `app.js` (filename is your preference), we'll `
 
 ```JavaScript
 // app.js
-var hilary = require('hilary'),
-    scope = hilary.scope('myApp', {
-        log: {
-            level: 'trace'
-        }
-    });
+var scope = require('hilary').scope('myApp');
 
 scope.bootstrap([
     scope.makeRegistrationTask(require('./http.js')),
