@@ -25,7 +25,7 @@ Getting Started With Node.js
 * [Scopes](#scopes)
 
 ## Hello World
-For the Hello World, checkout the main [README](/losandes/hilaryjs), and [examples/hello-world-node](../examples/hello-world-node).
+For the Hello World, checkout the main [README](https://github.com/losandes/hilaryjs), and [examples/hello-world-node](../examples/hello-world-node).
 
 ## Registering Modules
 
