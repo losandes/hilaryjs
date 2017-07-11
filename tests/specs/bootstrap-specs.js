@@ -88,8 +88,8 @@
                 scope = hilary.scope(id.createUid(8), {
                 logging: {
                     level: 'trace',
-                    printer: function (arg1) {
-                        if (arg1.indexOf('no task functions were found in the bootstrapper') > -1) {
+                    printer: function (entry) {
+                        if (entry.message.indexOf('no task functions were found in the bootstrapper') > -1) {
                             actual = true;
                         }
                     }
@@ -110,8 +110,8 @@
             var scope = hilary.scope(id.createUid(8), {
                 logging: {
                     level: 'trace',
-                    printer: function (arg1) {
-                        if (arg1.indexOf('a callback was not defined for the bootstrapper') > -1) {
+                    printer: function (entry) {
+                        if (entry.message.indexOf('callback was not defined') > -1) {
                             done();
                         }
                     }

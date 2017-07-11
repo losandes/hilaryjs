@@ -84,10 +84,16 @@
                 var err = new Error(locale.api.REGISTER_ERR);
 
                 if (is.object(moduleOrArray)) {
-                    logger.trace('registering a single module:', moduleOrArray);
+                    logger.trace({
+                        message: 'Registering a single module',
+                        module: moduleOrArray
+                    });
                     return registerOne(moduleOrArray, err, callback);
                 } else if (is.array(moduleOrArray)) {
-                    logger.trace('registering an array of modules:', moduleOrArray);
+                    logger.trace({
+                        message: 'Registering an array of modules',
+                        modules: moduleOrArray
+                    });
                     return optionalAsync(function () {
                         moduleOrArray.forEach(registerOne);
                         return self;
@@ -99,7 +105,10 @@
                         data: moduleOrArray
                     });
 
-                    logger.error('registration failed:', exc);
+                    logger.error({
+                        message: 'Registration failed',
+                        exception: exc
+                    });
 
                     if (is.function(callback)) {
                         callback(exc);
@@ -128,7 +137,10 @@
                     var hilaryModule = new HilaryModule(input);
 
                     if (hilaryModule.isException) {
-                        logger.error('Invalid registration model:', hilaryModule);
+                        logger.error({
+                            message: 'Invalid registration model',
+                            module: hilaryModule
+                        });
                         return next(new Exception({
                             type: locale.errorTypes.INVALID_REGISTRATION,
                             error: new Error(hilaryModule.error.message),
@@ -136,14 +148,14 @@
                             data: input
                         }));
                     } else {
-                        logger.trace('Successfully bound to HilaryModule:', hilaryModule.name);
+                        logger.trace('Successfully bound to HilaryModule: ' + hilaryModule.name);
                         return next(null, hilaryModule);
                     }
                 });
 
                 tasks.push(function addToContainer (hilaryModule, next) {
                     context.container.register(hilaryModule);
-                    logger.trace('Module registered on container', hilaryModule.name);
+                    logger.trace('Module registered on container: ' + hilaryModule.name);
                     next(null, hilaryModule);
                 });
 
@@ -152,11 +164,15 @@
                 if (is.function(callback)) {
                     return async.waterfall(tasks, function (err, hilaryModule) {
                         if (err) {
-                            logger.error('Registration failed:', input, err);
+                            logger.error({
+                                message: 'Registration failed',
+                                input: input,
+                                err: err
+                            });
                             return callback(err);
                         }
 
-                        logger.debug('Registration success:', hilaryModule.name);
+                        logger.debug('Registration success: ' + hilaryModule.name);
                         callback(err, hilaryModule);
                     });
                 } else {
@@ -164,12 +180,16 @@
 
                     async.waterfall(tasks, { blocking: true }, function (err, hilaryModule) {
                         if (err) {
-                            logger.error('Registration failed:', input, err);
+                            logger.error({
+                                message: 'Registration failed',
+                                input: input,
+                                err: err
+                            });
                             output = err;
                             return;
                         }
 
-                        logger.debug('Registration success:', hilaryModule.name);
+                        logger.debug('Registration success: ' + hilaryModule.name);
                         output = hilaryModule;
                     });
 
@@ -181,14 +201,21 @@
             // make a registration task that can be added to a bootstrapper startup array
             */
             function makeRegistrationTask (moduleOrArray) {
-                logger.trace('making a registration task for:', moduleOrArray);
+                logger.trace({
+                    message: 'Making a registration task',
+                    module: moduleOrArray
+                });
 
                 return function (scope, done) {
                     var err;
 
                     if (!scope || !scope.__isHilaryScope || is.not.function(done)) {
                         err = new Error(locale.bootstrap.INVALID_TASK_ARGUMENT);
-                        logger.error('bootstrap registration failed:', err);
+
+                        logger.error({
+                            message: locale.bootstrap.INVALID_TASK_ARGUMENT,
+                            err: err
+                        });
                         
                         return arguments[arguments.length-1](new Exception({
                             type: locale.errorTypes.INVALID_REGISTRATION,
@@ -214,7 +241,7 @@
             // @returns the module that is being resolved
             */
             function resolve (moduleName, callback) {
-                logger.trace('resolving:', moduleName);
+                logger.trace('resolving: ' + moduleName);
                 return resolveOne(moduleName, moduleName, callback);
             }
 
@@ -250,19 +277,22 @@
                             context.parent &&
                             scopes[context.parent]
                         ) {
-                            logger.trace('attempting to resolve the module, ' + ctx.name + ', on the parent scope:', context.parent);
+                            logger.trace('Attempting to resolve the module, ' + ctx.name + ', on the parent scope: ' + context.parent);
                             return scopes[context.parent].resolve(moduleName, callback);
                         } else if (err && err.type === locale.errorTypes.MODULE_NOT_FOUND) {
-                            logger.trace('attempting to gracefully degrade, ' + ctx.name);
+                            logger.trace('Attempting to gracefully degrade, ' + ctx.name);
                             return resolveDegraded(ctx, callback);
                         }
 
                         if (err) {
-                            logger.error('resolve failed for:', ctx.name, err);
+                            logger.error({
+                                message: 'Resolve failed for: ' + ctx.name,
+                                err: err
+                            });
                             return callback(err);
                         }
 
-                        logger.debug('module resolved:', ctx.name);
+                        logger.debug('Module resolved: ' + ctx.name);
                         callback(null, results);
                     });
                 } else {
@@ -275,22 +305,25 @@
                             context.parent &&
                             scopes[context.parent]
                         ) {
-                            logger.trace('attempting to resolve the module, ' + ctx.name + ', on the parent scope:', context.parent);
+                            logger.trace('Attempting to resolve the module, ' + ctx.name + ', on the parent scope: ' + context.parent);
                             output = scopes[context.parent].resolve(moduleName);
                             return;
                         } else if (err && err.type === locale.errorTypes.MODULE_NOT_FOUND) {
-                            logger.trace('attempting to gracefully degrade, ' + ctx.name);
+                            logger.trace('Attempting to gracefully degrade, ' + ctx.name);
                             output = resolveDegraded(ctx);
                             return;
                         }
 
                         if (err) {
-                            logger.error('resolve failed for:', ctx.name, err);
+                            logger.error({
+                                message: 'Resolve failed for: ' + ctx.name,
+                                err: err
+                            });
                             output = err;
                             return;
                         }
 
-                        logger.debug('module resolved:', ctx.name);
+                        logger.debug('Module resolved: ' + ctx.name);
                         output = results;
                     });
 
@@ -313,11 +346,14 @@
                 if (is.function(callback)) {
                     async.waterfall(tasks, function (err, results) {
                         if (err) {
-                            logger.error('resolve failed for:', ctx.name, err);
+                            logger.error({
+                                message: 'Resolve failed for: ' + ctx.name,
+                                err: err
+                            });
                             return callback(err);
                         }
 
-                        logger.debug('module resolved:', ctx.name);
+                        logger.debug('Module resolved: ' + ctx.name);
                         callback(null, results);
                     });
                 } else {
@@ -325,12 +361,15 @@
 
                     async.waterfall(tasks, { blocking: true }, function (err, results) {
                         if (err) {
-                            logger.error('resolve failed for:', ctx.name, err);
+                            logger.error({
+                                message: 'Resolve failed for: ' + ctx.name,
+                                err: err
+                            });
                             output = err;
                             return;
                         }
 
-                        logger.debug('module resolved:', ctx.name);
+                        logger.debug('Module resolved: ' + ctx.name);
                         output = results;
                     });
 
@@ -344,7 +383,7 @@
             // @returns true if the module exists, otherwise false
             */
             function exists (moduleName) {
-                logger.debug('checking if module exists:', moduleName);
+                logger.debug('Checking if module exists: ' + moduleName);
                 return context.container.exists(moduleName);
             }
 
@@ -358,11 +397,14 @@
                 var nameOrArr, cb;
 
                 if (typeof moduleNames === 'function') {
-                    logger.debug('disposing all modules on scope, ' + self.name);
+                    logger.debug('Disposing all modules on scope, ' + self.name);
                     nameOrArr = null;
                     cb = moduleNames;
                 } else {
-                    logger.debug('disposing module(s) on scope, ' + self.name + ':', moduleNames);
+                    logger.debug({
+                        message: 'Disposing module(s) on scope, ' + self.name,
+                        moduleNames: moduleNames
+                    });
                     nameOrArr = moduleNames;
                     cb = callback;
                 }
@@ -402,9 +444,12 @@
                     getScopeName(options.parent || self);
 
                 if (scopes[name]) {
-                    logger.debug('returning existing scope:', name);
+                    logger.debug('Returning existing scope: ' + name);
                 } else {
-                    logger.debug('creating new scope:', name, options);
+                    logger.debug({
+                        message: 'Creating new scope: ' + name,
+                        options: options
+                    });
                 }
 
                 return optionalAsync(function () {
@@ -423,14 +468,14 @@
                 var name = getScopeName(scope);
 
                 if (!name) {
-                    logger.error('unable to set the parent scope of, ' + self.context.scope + ', to:', name);
+                    logger.error('Unable to set the parent scope of, ' + self.context.scope + ', to: ' + name);
                     return new Exception({
                         type: locale.errorTypes.INVALID_ARG,
                         error: new Error(locale.api.PARENT_CONTAINER_ARG)
                     });
                 }
 
-                logger.debug('setting the parent scope of, ' + self.context.scope + ', to:', name);
+                logger.debug('Setting the parent scope of, ' + self.context.scope + ', to: ' + name);
                 context.parent = name;
                 return  context;
             }
@@ -462,10 +507,10 @@
                 }
 
                 if (callbackExists) {
-                    logger.trace('using the callback argument for the bootstrapper for:', self.context.scope);
+                    logger.trace('Using the callback argument for the bootstrapper for: ' + self.context.scope);
                     done = callback;
                 } else {
-                    logger.trace('a callback was not defined for the bootstrapper for:', self.context.scope);
+                    logger.trace('A callback was not defined for the bootstrapper for: ' + self.context.scope);
                     done = function (err) {
                         if (err) {
                             logger.fatal(new Exception({
@@ -473,13 +518,13 @@
                                 error: err
                             }));
                         } else {
-                            logger.trace('finished bootstrapping:', self.context.scope);
+                            logger.trace('finished bootstrapping: ' + self.context.scope);
                         }
                     };
                 }
 
                 tasks.push(function start (next) {
-                    logger.trace('bootstrapping hilary for:', self.context.scope);
+                    logger.trace('bootstrapping hilary for: ' + self.context.scope);
                     next(null, self);
                 });
 
@@ -501,7 +546,7 @@
                 }
 
                 if (tasks.length === 1) {
-                    logger.trace('no task functions were found in the bootstrapper for:', self.context.scope);
+                    logger.trace('no task functions were found in the bootstrapper for: ' + self.context.scope);
                 }
 
                 return async.waterfall(tasks, done);
@@ -529,7 +574,10 @@
                 } catch (e) {
                     err.message += '(' + e.message + ')';
                     err.cause = e;
-                    logger.error(e.message, err);
+                    logger.error({
+                        message: e.message,
+                        err: err
+                    });
                     return {
                         err: err,
                         isException: true

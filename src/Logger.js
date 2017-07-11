@@ -64,19 +64,19 @@
 
         function makeLogHandler (options) {
             if (options.log) {
-                return function (level, args) {
-                    return options.log(level, args);
+                return function (level, entry) {
+                    return options.log(level, new Entry(entry[0]));
                 };
             } else if (options.printer) {
-                return function (level, args) {
+                return function (level, entry) {
                     if (level < options.level) {
                         return;
                     }
 
-                    return options.printer.apply(null, args);
+                    return options.printer(new Entry(entry[0]));
                 };
             } else {
-                return function (level, args) {
+                return function (level, entry) {
                     var printer;
 
                     if (level < options.level) {
@@ -98,10 +98,18 @@
                             break;
                     }
 
-                    printer.apply(null, args);
+                    printer.apply(null, new Entry(entry));
                 };
             }
         } // /makeLogHandler
+
+        function Entry (entry) {
+            if (is.string(entry)) {
+                return { message: entry };
+            }
+
+            return entry;
+        }
     } // /Logger
 
 }(function (registration) {

@@ -22,10 +22,10 @@
 
             function validateModuleName (ctx, next) {
                 if (is.string(ctx.name)) {
-                    logger.trace('module name is valid:', ctx.name);
+                    logger.trace('module name is valid: ' + ctx.name);
                     next(null, ctx);
                 } else {
-                    logger.error('module name is INVALID:', ctx.name);
+                    logger.error('module name is INVALID: ' + ctx.name);
                     next(new Exception({
                         type: locale.errorTypes.INVALID_ARG,
                         error: new Error(locale.api.RESOLVE_ARG + JSON.stringify(ctx.name))
@@ -38,7 +38,7 @@
 
                 if (context.singletonContainer.exists(ctx.name)) {
                     // singleton exists
-                    logger.trace('found singleton for:', ctx.name);
+                    logger.trace('found singleton for: ' + ctx.name);
                     ctx.resolved = context.singletonContainer
                         .resolve(ctx.name)
                         .factory;
@@ -47,18 +47,18 @@
                     return next(null, ctx);
                 } else if (parsed.members.length && context.container.exists(parsed.name)) {
                     // registration exists, and we're being asked for a subset of its members
-                    logger.trace('found factory for:', ctx.name);
+                    logger.trace('found factory for: ' + ctx.name);
                     ctx.theModule = context.container.resolve(parsed.name);
                     ctx.members = parsed.members;
                     return next(null, ctx);
                 } else if (context.container.exists(ctx.name)) {
                     // registration exists
-                    logger.trace('found factory for:', ctx.name);
+                    logger.trace('found factory for: ' + ctx.name);
                     ctx.theModule = context.container.resolve(ctx.name);
                     return next(null, ctx);
                 } else {
                     // module not found
-                    logger.trace('module not found:', ctx.name);
+                    logger.trace('module not found: ' + ctx.name);
                     ctx.parsedName = parsed.name;
                     ctx.members = parsed.members;
                     return next(makeNotFoundException(ctx));
@@ -70,7 +70,7 @@
 
                 if (result) {
                     // singleton exists
-                    logger.trace('found module (via degrade) for:', ctx.name);
+                    logger.trace('found module (via degrade) for: ' + ctx.name);
                     ctx.resolved = result;
                     ctx.isResolved = true;
                     ctx.registerSingleton = ctx.members.length > 0;
@@ -82,28 +82,28 @@
 
             function resolveDependencies (ctx, next) {
                 var subTasks;
-                logger.trace('resolving dependencies for:', ctx.name);
+                logger.trace('resolving dependencies for: ' + ctx.name);
 
                 if (ctx.isResolved) {
                     // this was a singleton that has been resolved before
                     return next(null, ctx);
                 } else if (is.array(ctx.theModule.dependencies) && ctx.theModule.dependencies.length > 0) {
-                    logger.trace('resolving with dependencies array:', ctx.theModule.dependencies.join(', '));
+                    logger.trace('resolving with dependencies array: ' + ctx.theModule.dependencies.join(', '));
                     subTasks = ctx.theModule.dependencies.map(function (item) {
                         return function (dependencies, relyingModuleName, cb) {
                             var dependency = resolve(item, relyingModuleName);
 
                             if (!dependency) {
                                 // short circuit
-                                logger.trace('the following dependency was not resolved:', item);
+                                logger.trace('the following dependency was not resolved: ' + item);
                                 return cb(null, dependencies, relyingModuleName);
                             } else if (dependency.isException) {
                                 // short circuit
-                                logger.error('the following dependency returned an exception:', item);
+                                logger.error('the following dependency returned an exception: ' + item);
                                 return cb(dependency);
                             }
 
-                            logger.trace('the following dependency was resolved:', item);
+                            logger.trace('the following dependency was resolved: ' + item);
                             dependencies.push(dependency);
                             cb(null, dependencies, relyingModuleName);
                         };
@@ -115,7 +115,10 @@
 
                     return async.waterfall(subTasks, { blocking: true }, function (err, dependencies) {
                         if (err) {
-                            logger.trace('at least one dependency was not found for:', ctx.name, err);
+                            logger.trace({
+                                message: 'at least one dependency was not found for: ' + ctx.name,
+                                err: err
+                            });
                             return next(err);
                         }
 
@@ -123,15 +126,15 @@
                         ctx.registerSingleton = ctx.theModule.singleton;
                         ctx.isResolved = true;
 
-                        logger.trace('dependencies resolved for:', ctx.name);
+                        logger.trace('dependencies resolved for: ' + ctx.name);
                         next(null, ctx);
                     });
                 } else if (is.function(ctx.theModule.factory) && ctx.theModule.factory.length === 0) {
-                    logger.trace('the factory is a function and takes no arguments, returning the result of executing it:', ctx.name);
+                    logger.trace('the factory is a function and takes no arguments, returning the result of executing it: ' + ctx.name);
                     ctx.resolved = invoke(ctx.theModule.factory);
                 } else {
                     // the module takes arguments and has no dependencies, this must be a factory
-                    logger.trace('the factory takes arguments and has no dependencies, returning the function as-is:', ctx.name);
+                    logger.trace('the factory takes arguments and has no dependencies, returning the function as-is: ' + ctx.name);
                     ctx.resolved = ctx.theModule.factory;
                 }
 
@@ -155,10 +158,10 @@
 
                 if (ctx.members.length === 1) {
                     if (!ctx.resolved.hasOwnProperty(ctx.members[0].member)) {
-                        logger.trace('the following dependency was NOT reduced to chosen members:', ctx.name);
+                        logger.trace('the following dependency was NOT reduced to chosen members: ' + ctx.name);
                     }
 
-                    logger.trace('the following dependency was reduced to chosen members:', ctx.name);
+                    logger.trace('the following dependency was reduced to chosen members: ' + ctx.name);
                     ctx.resolved = ctx.resolved[ctx.members[0].member];
                     return next(null, ctx);
                 }
@@ -168,20 +171,20 @@
                     reduced[item.alias] = ctx.resolved[item.member];
                 });
 
-                logger.trace('the following dependency was reduced to chosen members:', ctx.name);
+                logger.trace('the following dependency was reduced to chosen members: ' + ctx.name);
                 ctx.resolved = reduced;
                 return next(null, ctx);
             } // /reduceMembers
 
             function optionallyRegisterSingleton (ctx, next) {
                 if (ctx.registerSingleton) {
-                    logger.trace('registering the resolved module as a singleton: ', ctx.name);
+                    logger.trace('registering the resolved module as a singleton: ' + ctx.name);
                     context.singletonContainer.register({
                         name: ctx.name,
                         factory: ctx.resolved
                     });
 
-                    logger.trace('removing the resolved module registration: ', ctx.name);
+                    logger.trace('removing the resolved module registration: ' + ctx.name);
                     context.container.dispose(ctx.name);
                 }
 
@@ -189,7 +192,7 @@
             } // /optionallyRegisterSingleton
 
             function bindToOutput (ctx, next) {
-                logger.trace('binding the module to the output:', ctx.name);
+                logger.trace('binding the module to the output: ' + ctx.name);
                 next(null, ctx.resolved);
             } // /bindToOutput
 
