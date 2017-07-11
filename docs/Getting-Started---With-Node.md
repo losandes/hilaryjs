@@ -2,8 +2,22 @@ Getting Started With Node.js
 ============================
 
 * [Registering Modules](#registering-modules)
+    * [Degrading to Node.js `require`](#degrading-to-nodejs-require)
+    * [The Composition Root Pattern](#the-composition-root-pattern)
+    * [Defining Objects & Primitives](#defining-objects--primitives)
+    * [Defining Functions](#defining-functions)
+    * [Defining Classes](#defining-classes)
+    * [Defining Arrow Functions](#defining-arrow-functions)
+    * [Importing Members](#importing-members)
+    * [Async Registration](#async-registration)
 * [Resolving Modules](#resolving-modules)
+    * [Resolution Hierarchy](#resolution-hierarchy)
+    * [When To Resolve](#when-to-resolve)
+    * [Resolving in the Composition Root](#resolving-in-the-composition-root)
+    * [Async Resolution](#async-resolution)
 * [Bootstrapping Your App](#bootstrapping-your-app)
+    * [Bootstrapping Your App With `hilary.bootstrap`](bootstrapping-your-app-with-hilarybootstrap)
+    * [Bootstrapping Your App With async.js](bootstrapping-your-app-with-asyncjs)
 
 ## Registering Modules
 
@@ -12,7 +26,7 @@ hilary gracefully degrades to `require` (specifically, `require.main.require`), 
 
 To add the other modules in our application, and to avoid coupling our modules to the file structure, we can `register` them in hilary.
 
-> For the complete resolution hierarchy, see [Resolving Modules](Resolving-Modules---in-Node#resolution-hierarchy).
+> For the complete resolution hierarchy, see [Resolving Modules](#resolving-modules).
 >
 > Note that if you import members, a singleton _is_ created.
 
@@ -319,7 +333,7 @@ module.exports.factory = function (something) {
 };
 ```
 
-### Async Register
+### Async Registration
 `register` can be called synchronously, or asynchronously. Just add a callback for async behavior:
 
 ```JavaScript
@@ -340,8 +354,6 @@ scope.register('qAndA', function (err, result) {
 hilary attempts to resolve modules, based on the following flow diagram:
 
 <img src="https://user-images.githubusercontent.com/933621/28041618-23cd3c82-6598-11e7-95bb-09919d5e94ab.png" alt="a flow diagram of the hilary resolution hierarchy (a text representation follows)" height="500" />
-
-![a flow diagram of the hilary resolution hierarchy (a text representation follows)](https://user-images.githubusercontent.com/933621/28041618-23cd3c82-6598-11e7-95bb-09919d5e94ab.png)
 
 1. If a singleton exists, it is returned
 2. Otherwise, if a module is registered, it is resolved, and returned
@@ -371,10 +383,10 @@ module.exports.factory = function (http) {
 ### When To Resolve
 When we resolve a module, hilary attempts to satisfy it's dependencies. If those dependencies are not yet registered, resolution will fail. So the best time to resolve a module is _at the last possible moment_, or simply, _after all of the modules are registered_.
 
-hilary has a [Bootstrapper](The-Bootstrapper---in-Node) to help make this clear, and the bootstrapper, or [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot) is the only place where we should resolve modules.
+hilary has a [Bootstrapper](#bootstrapping-your-app) to help make this clear, and the bootstrapper, or [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot) is the only place where we should resolve modules.
 
 ### Resolving in the Composition Root
-If we look at the example in [Registering Modules - composable example](Registering-Modules---in-Node#composable-example), we can see that we resolve the `question` module in the final callback of our `bootstrap` method:
+If we look at the example in [Registering Modules - composable example](#composable-example), we can see that we resolve the `question` module in the final callback of our `bootstrap` method:
 ```JavaScript
 // given that scope is `hilary` or hilary.scope('myScope')
 scope.resolve('question');
@@ -410,7 +422,7 @@ question
   |__listener
 ```
 
-### Async Resolve
+### Async Resolution
 `resolve` can be called synchronously, or asynchronously. Just add a callback for async behavior:
 
 ```JavaScript
