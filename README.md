@@ -25,7 +25,7 @@ In this example, we'll produce the following files:
 
 Let's start with the web server, `api.js`, which will simply return "Hello World" when we navigate to `localhost:3000`.
 
-> > Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](docs/Getting-Started---With-Node.md#registering-modules) for more detailed instructions.
+> Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](docs/Getting-Started---With-Node.md#registering-modules) for more detailed instructions.
 
 > Note that we're not referencing Hilary, yet. There is no need to couple Hilary to your modules. Hilary just expects your modules to export specific properties, such as name, dependencies, and factory.
 
