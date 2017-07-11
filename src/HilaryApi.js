@@ -184,10 +184,15 @@
                 logger.trace('making a registration task for:', moduleOrArray);
 
                 return function (scope, done) {
+                    var err;
+
                     if (!scope || !scope.__isHilaryScope || is.not.function(done)) {
+                        err = new Error(locale.bootstrap.INVALID_TASK_ARGUMENT);
+                        logger.error('bootstrap registration failed:', err);
+                        
                         return arguments[arguments.length-1](new Exception({
                             type: locale.errorTypes.INVALID_REGISTRATION,
-                            error: new Error(locale.bootstrap.INVALID_TASK_ARGUMENT),
+                            error: err,
                             messages: [locale.bootstrap.INVALID_TASK_ARGUMENT],
                             data: moduleOrArray
                         }));
