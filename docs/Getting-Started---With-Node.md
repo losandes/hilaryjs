@@ -24,6 +24,8 @@ Getting Started With Node.js
 * [Disposing Modules](#disposing-modules)
 * [Scopes](#scopes)
 
+## Hello World
+For the Hello World, checkout the main [README](../), and [examples/hello-world-node](../examples/hello-world-node).
 
 ## Registering Modules
 
@@ -171,7 +173,7 @@ module.exports.factory = function () {
 #### Composable Example
 What if we wanted to ask random questions? In the following example, we break the example above into modules, so it is extensible.
 
-> You can see this example in action, in the [examples](https://github.com/losandes/hilaryjs/tree/master/examples/q-and-a-node-functions)
+> also see [examples/q-and-a-node-functions](../examples/q-and-a-node-functions)
 
 First, we'll create a printer interface (this could be swapped out with something else later, if desired):
 ```JavaScript
@@ -278,6 +280,8 @@ question.ask(selected.q, selected.a);
 ### Defining Classes
 hilary supports using classes as well. Riffing on the examples above, the Question module would looke like this:
 
+> also see [examples/q-and-a-node-classes](../examples/q-and-a-node-classes)
+
 ```JavaScript
 module.exports.name = 'Question';
 module.exports.dependencies = ['printer', 'Listener'];
@@ -297,7 +301,9 @@ module.exports.factory = class {
 ```
 
 ### Defining Arrow Functions
-We can also use arrow functions (lambda expressions) to define our modules"
+We can also use arrow functions (lambda expressions) to define our modules:
+
+> also see [examples/q-and-a-node-lambdas](../examples/q-and-a-node-lambdas)
 
 ```JavaScript
 module.exports.name = 'question';
@@ -619,7 +625,7 @@ By default, hilary prints it's logs to the console. That might not be ideal for 
 
 > All `entry` objects have a `message` property. They are otherwise dynamic, and may or may not include other properties. If you require a string format, we recommend using `JSON.stringify` in your _printer_ or _logger_.
 
-Here's an example of injecting a _printer_ ([also in the examples](../examples/logger-inject-printer)):
+Here's an example of injecting a _printer_ (also see [examples/logger-inject-printer](../examples/logger-inject-printer)):
 
 ```JavaScript
 var hilary = require('hilary'),
@@ -638,7 +644,7 @@ scope.register({
 });
 ```
 
-And an example of injecting a _logger_:
+And an example of injecting a _logger_ (also see [examples/logger-inject-log-handler](../examples/logger-inject-log-handler)):
 
 ```JavaScript
 var hilary = require('hilary'),
