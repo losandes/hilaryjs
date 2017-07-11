@@ -1,26 +1,19 @@
 'use strict';
 
-var hilary = require('../../index.js'), //require('hilary');
-    http = require('./http.js'),
-    api = require('./api.js');
+var hilary = require('../../index.js'), //require('hilary'),
+    scope = hilary.scope('myApp', {
+        log: {
+            level: 'trace'
+        }
+    });
 
-hilary.scope('myApp', {
-    log: {
-        level: 'trace'
-    }
-}).bootstrap([
-    function (scope, next) {
-        console.log('registering modules');
-
-        // note: you can also register indexes (arrays of modules)
-        scope.register(http);
-        scope.register(api);
-
-        next(null, scope);
-    }
+scope.bootstrap([
+    scope.makeRegistrationTask(require('./http.js')),
+    scope.makeRegistrationTask(require('./api.js'))
 ], function (err, scope) {
     if (err) {
-        throw err;
+        console.log(err);
+        return;
     }
 
     console.log('starting api');

@@ -5,7 +5,7 @@ Hilary is an easy to use JavaScript Inversion of Control (IoC) container written
 
 Also check out [generator-hilary](https://github.com/losandes/generator-hilary), our Yeoman generator, and [Gidget](https://github.com/Acatar/gidget) our route/app engine.
 
-> You can find documentation and examples on our [wiki](https://github.com/Acatar/hilaryjs/wiki). Below is just a quick-start.
+> You can find documentation and examples on the [documentation](https://github.com/Acatar/hilaryjs/docs). Below is just a quick-start. There are also lots of [examples](https://github.com/Acatar/hilaryjs/examples)
 
 > If the bootstrapper in the examples that follow looks foreign to you, consider reading about the [composition root pattern](http://blog.ploeh.dk/2011/07/28/CompositionRoot/).
 
@@ -69,25 +69,20 @@ Finally, we'll start the app. In `app.js` (filename is your preference), we'll `
 
 ```JavaScript
 // app.js
-'use strict';
+var hilary = require('hilary'),
+    scope = hilary.scope('myApp', {
+        log: {
+            level: 'trace'
+        }
+    });
 
-var hilary = require('hilary');
-    http = require('./http.js'),
-    api = require('./api.js');
-
-hilary.scope('myApp').bootstrap([
-    function (scope, next) {
-        console.log('registering modules');
-
-        // note: you can also register indexes (arrays of modules)
-        scope.register(http);
-        scope.register(api);
-
-        next(null, scope);
-    }
+scope.bootstrap([
+    scope.makeRegistrationTask(require('./http.js')),
+    scope.makeRegistrationTask(require('./api.js'))
 ], function (err, scope) {
     if (err) {
-        throw err;
+        console.log(err);
+        return;
     }
 
     console.log('starting api');
@@ -113,7 +108,7 @@ In this example, we'll produce the following files:
 
 We'll start with the alert notifier:
 
-> Modules need to export a `name` and a `factory` at a minimum. Checkout [Registering Modules](https://github.com/losandes/hilaryjs/wiki/Registering-Modules) for more detailed instructions. When using a shim, like `module.exports`, the `scope` is also required.
+> Modules need to export a `name` and a `factory` at a minimum. Checkout Checkout [Registering Modules](docs/Getting-Started---With-the-Browser.md#registering-modules) for more detailed instructions. When using a shim, like `module.exports`, the `scope` is also required.
 
 ```JavaScript
 // alertNotifier.js
