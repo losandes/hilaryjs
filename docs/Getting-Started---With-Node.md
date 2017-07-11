@@ -16,8 +16,12 @@ Getting Started With Node.js
     * [Resolving in the Composition Root](#resolving-in-the-composition-root)
     * [Async Resolution](#async-resolution)
 * [Bootstrapping Your App](#bootstrapping-your-app)
-    * [Bootstrapping Your App With `hilary.bootstrap`](bootstrapping-your-app-with-hilarybootstrap)
-    * [Bootstrapping Your App With async.js](bootstrapping-your-app-with-asyncjs)
+    * [Bootstrapping Your App With `hilary.bootstrap`](#bootstrapping-your-app-with-hilarybootstrap)
+    * [Bootstrapping Your App With async.js](#bootstrapping-your-app-with-asyncjs)
+* [Logging & Debugging](#logging--debugging)
+    * [Log Levels](#log-levels)
+    * [Customizing the Log Output](#customizing-the-log-output)
+
 
 ## Registering Modules
 
@@ -580,3 +584,99 @@ function makeRegistrationTask (moduleOrArray) {
 ```
 
 > Note that this example takes advantage of async's `parallel` function. If we make sure not to resolve anything before the callback, then it should be safe for our registration array to execute in any order.
+
+
+## Logging & Debugging
+
+### Log Levels
+hilary produces logs to help you understand it's behavior, and what might be failing. You can choose the verbosity of these logs. The default level is `info`. The following levels are supported:
+
+* **trace** (10): _very verbose_; prints detailed information about what hilary is doing
+* **debug** (20): _verbose_; prints high-level information about what hilary is doing
+* **info** (30): not used currently
+* **warn** (40): prints warnings, such as things you might be doing that won't break hilary, but are not a best practice
+* **error** (50): prints errors that occur
+* **fatal** (60): prints errors that would keep hilary from completing more than one task (i.e. if the bootstrapper can't continue)
+* **off** (70): turns all logging off
+
+To set the log level for your application, pass an object in as the second argument for your scope. hilary will print anything that occurrs that the log level you choose, or above. For instance, by setting the log level to _trace_, hilary will print everything. By setting it to _error_, it will not print _trace_, _debug_, _info_, or _warn_ logs.
+
+```JavaScript
+hilary.scope('myScope', {
+    logging: {
+        level: 'trace'
+    }
+});
+```
+
+### Customizing the Log Output
+By default, hilary prints it's logs to the console. That might not be ideal for you, so you can inject a _printer_, or a _logger_ of your choosing. What's the difference?
+
+* **printer**: accepts an `entry` object. You might choose to do this if you if you want to leverage a log utility, instead of printing the logs to the console.
+* **log**: accepts a first argument of `level`, followed by an `entry` object. You might choose to use this if you if you want to choose how to handle logs, based on their level. For instance, this is appropriate if you want to leverage a log utility, instead of printing the logs to the console, AND to send notifications when logs exceed a given threshold.
+
+> All `entry` objects have a `message` property. They are otherwise dynamic, and may or may not include other properties. If you require a string format, we recommend using `JSON.stringify` in your _printer_ or _logger_.
+
+Here's an example of injecting a _printer_:
+
+```JavaScript
+var hilary = require('hilary'),
+    scope = hilary.scope('myApp', {
+        logging: {
+            level: 'trace',
+            printer: function (entry) {
+                console.log('MY PRINTER', entry);
+            }
+        }
+    });
+
+scope.register({
+    name: 'foo',
+    factory: 42
+});
+```
+
+And an example of injecting a _logger_:
+
+```JavaScript
+var hilary = require('hilary'),
+    scope = hilary.scope('myApp', {
+        logging: {
+            level: 'trace',
+            log: function (level, entry) {
+                if (level < 10 || level === 70) {
+                    return;
+                }
+
+                switch(level) {
+                    case 60:
+                        console.log('[FATAL]', entry);
+                        break;
+                    case 50:
+                        console.log('[ERROR]', entry);
+                        break;
+                    case 40:
+                        console.log('[WARN]', entry);
+                        break;
+                    case 30:
+                        console.log('[INFO]', entry);
+                        break;
+                    case 20:
+                        console.log('[DEBUG]', entry);
+                        break;
+                    case 10:
+                        console.log('[TRACE]', entry);
+                        break;
+                    default:
+                        console.log(entry);
+                        break;
+                }
+            }
+        }
+    });
+
+scope.register({
+    name: 'foo',
+    factory: 42
+});
+```
