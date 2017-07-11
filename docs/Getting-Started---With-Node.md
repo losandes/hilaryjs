@@ -21,6 +21,8 @@ Getting Started With Node.js
 * [Logging & Debugging](#logging--debugging)
     * [Log Levels](#log-levels)
     * [Customizing the Log Output](#customizing-the-log-output)
+* [Disposing Modules](#disposing-modules)
+* [Scopes](#scopes)
 
 
 ## Registering Modules
@@ -32,7 +34,7 @@ To add the other modules in our application, and to avoid coupling our modules t
 
 > For the complete resolution hierarchy, see [Resolving Modules](#resolving-modules).
 >
-> Note that if you import members, a singleton _is_ created.
+> Note that if you import members, a singleton _is_ created. You'll find more information about how hilary uses singletons as you read on.
 
 ### The Composition Root Pattern
 >A Composition Root is a (preferably) unique location in an application where modules are composed together.
@@ -617,7 +619,7 @@ By default, hilary prints it's logs to the console. That might not be ideal for 
 
 > All `entry` objects have a `message` property. They are otherwise dynamic, and may or may not include other properties. If you require a string format, we recommend using `JSON.stringify` in your _printer_ or _logger_.
 
-Here's an example of injecting a _printer_:
+Here's an example of injecting a _printer_ ([also in the examples](../examples/logger-inject-printer)):
 
 ```JavaScript
 var hilary = require('hilary'),

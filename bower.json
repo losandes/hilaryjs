@@ -30,8 +30,10 @@
   "license": "MIT",
   "ignore": [
     "build-tasks",
+    "docs/archive",
+    "docs/assets",
+    "examples",
     "node_modules",
-    "bower_components",
     "src",
     "tests",
     "index.js",

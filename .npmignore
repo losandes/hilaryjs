@@ -1,0 +1,9 @@
+# Ignore these directories
+build_tasks
+examples
+node_modules
+tests
+
+#Ignore these files
+bower.json
+Gruntfile.js
