@@ -176,9 +176,9 @@ module.exports.factory = function () {
 ```
 
 #### Composable Example
-What if we wanted to ask random questions? In the following example, we break the example above into modules, so it is extensible.
-
 > also see [examples/registering-functions](../examples/registering-functions)
+
+What if we wanted to ask random questions? In the following example, we break the example above into modules, so it is extensible.
 
 First, we'll create a printer interface (this could be swapped out with something else later, if desired):
 ```JavaScript
@@ -283,9 +283,9 @@ question.ask(selected.q, selected.a);
 > Notice that in this example, the _poor man's DI_ is simpler than using hilary. A general rule of thumb that I use is not to use an IoC container if my app is less than ~20 modules. We can always start with _poor mans DI_, using the convention in this documentation, and choose to add an IoC container later, if the app gets big enough.
 
 ### Defining Classes
-hilary supports using classes as well. Riffing on the examples above, the Question module would looke like this:
-
 > also see [examples/registering-classes](../examples/registering-classes)
+
+hilary supports using classes as well. Riffing on the examples above, the Question module would looke like this:
 
 ```JavaScript
 module.exports.name = 'Question';
@@ -306,9 +306,9 @@ module.exports.factory = class {
 ```
 
 ### Defining Arrow Functions
-We can also use arrow functions (lambda expressions) to define our modules:
-
 > also see [examples/registering-lambdas](../examples/registering-lambdas)
+
+We can also use arrow functions (lambda expressions) to define our modules:
 
 ```JavaScript
 module.exports.name = 'question';
@@ -326,9 +326,9 @@ module.exports.factory = (printer, listener) => {
 ```
 
 ### Importing Members
-If we want to depend, only on a subset of the members (properties), that a given interface exports, the syntax is similar to that of ES6 imports, supports aliasing, but is not exactly the same.
-
 > also see [examples/importing-members-registration](../examples/importing-members-registration)
+
+If we want to depend, only on a subset of the members (properties), that a given interface exports, the syntax is similar to that of ES6 imports, supports aliasing, but is not exactly the same.
 
 Let's say we have a module that returns the numbers 1-3 in english
 ```JavaScript
@@ -495,9 +495,9 @@ question
 ```
 
 ### Reducing Members
-Using the same conventions as [importing members](#importing-members) as dependencies, we can reduce and alias the members (properties) of a module, when resolving it.
-
 > also see [examples/importing-members-resolution](../examples/importing-members-resolution)
+
+Using the same conventions as [importing members](#importing-members) as dependencies, we can reduce and alias the members (properties) of a module, when resolving it.
 
 Let's say we have a module that returns the numbers 1-3 in english
 ```JavaScript
