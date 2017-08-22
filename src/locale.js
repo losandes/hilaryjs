@@ -8,6 +8,7 @@
                 INVALID_ARG: 'InvalidArgument',
                 INVALID_REGISTRATION: 'InvalidRegistration',
                 MODULE_NOT_FOUND: 'ModuleNotFound',
+                MODULE_NOT_RESOLVED: 'ModuleNotResolved',
                 BOOTSTRAP_FAILED: 'BootstrapFailed'
             },
             container: {
@@ -24,6 +25,7 @@
                 RESOLVE_ARG: 'resolve expects a moduleName (string) as the first argument, but instead saw this: ',
                 MODULE_NOT_FOUND: 'The module, "{{module}}", cannot be found',
                 MODULE_NOT_FOUND_RELYING: ', and is a dependency of, "{{startingModule}}"',
+                MODULE_THREW: 'The module, "{{module}}", cannot be resolved because it returned or threw an Error',
                 // MODULE_NOT_RESOLVABLE: 'The module, "{{module}}", cannot be resolved because of a dependency exception',
                 // MODULE_NOT_RESOLVABLE_RELYING: ', causing a ripple effect for, "{{startingModule}}"',
                 REGISTRATION_BLACK_LIST: 'A module was registered with a reserved name: ',

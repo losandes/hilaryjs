@@ -26,6 +26,13 @@
                 'and the module\'s dependencies were not found': {
                     'it should return an exception': resolveMissingDependencies
                 }
+            },
+            'when resolving a module that depends on a broken module': {
+                'it should log an exception': resolveDependsOnBrokenModule
+            },
+            'when resolving a module that depends on a module that depends on a broken module': {
+                'it should log an exception (1)': resolveDependsOnModuleThatDependsOnABrokenModule,
+                'it should log an exception (2)': resolveDependsOnModuleThatDependsOnABrokenModule2
             }
         };
 
@@ -105,6 +112,103 @@
             // then
             expect(actual.isException).to.equal(true);
             expect(actual.type).to.equal('ModuleNotFound');
+        }
+
+        function resolveDependsOnBrokenModule () {
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}}),
+                actual;
+
+            scope.register({ name: 't1', factory: () => { return { foo: 'bar1' }; }});
+            scope.register({ name: 't2', factory: () => { return { foo: 'bar2' }; }});
+            scope.register({ name: 't3', factory: () => { throw new Error('BOOM!'); }});
+            scope.register({ name: 't4', factory: () => { return { foo: 'bar4' }; }});
+            scope.register({ name: 't5', factory: () => { return { foo: 'bar5' }; }});
+            scope.register({ name: 'sut', factory: (t1, t2, t3, t4, t5) => {
+                return {
+                    t1: t1,
+                    t2: t2,
+                    t3: t3,
+                    t4: t4,
+                    t5: t5
+                };
+            }});
+
+            // when
+            actual = scope.resolve('sut');
+
+            // then
+            expect(actual.isException).to.equal(true);
+            expect(actual.type).to.equal('ModuleNotResolved');
+        }
+
+        function resolveDependsOnModuleThatDependsOnABrokenModule () {
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}}),
+                actual;
+
+            scope.register({ name: 't1', factory: () => { return { foo: 'bar1' }; }});
+            scope.register({ name: 't2', factory: () => { return { foo: 'bar2' }; }});
+            scope.register({ name: 't3', factory: () => { throw new Error('BOOM!'); }});
+            scope.register({ name: 't4', factory: () => { return { foo: 'bar4' }; }});
+            scope.register({ name: 't5', factory: () => { return { foo: 'bar5' }; }});
+            scope.register({ name: 't6', factory: (t1, t2, t3, t4, t5) => {
+                return {
+                    t1: t1,
+                    t2: t2,
+                    t3: t3,
+                    t4: t4,
+                    t5: t5
+                };
+            }});
+            scope.register({ name: 'sut', factory: (t1, t6, t2, t3) => {
+                return {
+                    t1: t1,
+                    t2: t2,
+                    t3: t3,
+                    t6: t6
+                };
+            }});
+
+            // when
+            actual = scope.resolve('sut');
+
+            // then
+            expect(actual.isException).to.equal(true);
+            expect(actual.type).to.equal('ModuleNotResolved');
+        }
+
+        function resolveDependsOnModuleThatDependsOnABrokenModule2 () {
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}}),
+                actual;
+
+            scope.register({ name: 't1', factory: () => { return { foo: 'bar1' }; }});
+            scope.register({ name: 't2', factory: () => { return { foo: 'bar2' }; }});
+            scope.register({ name: 't3', factory: (t2) => { t2.bar(); /*should throw*/ }});
+            scope.register({ name: 't4', factory: () => { return { foo: 'bar4' }; }});
+            scope.register({ name: 't5', factory: () => { return { foo: 'bar5' }; }});
+            scope.register({ name: 't6', factory: (t1, t2, t3, t4, t5) => {
+                return {
+                    t1: t1,
+                    t2: t2,
+                    t3: t3,
+                    t4: t4,
+                    t5: t5
+                };
+            }});
+            scope.register({ name: 'sut', factory: (t1, t6, t2, t3) => {
+                return {
+                    t1: t1,
+                    t2: t2,
+                    t3: t3,
+                    t6: t6
+                };
+            }});
+
+            // when
+            actual = scope.resolve('sut');
+
+            // then
+            expect(actual.isException).to.equal(true);
+            expect(actual.type).to.equal('ModuleNotResolved');
         }
 
     } // /Spec
