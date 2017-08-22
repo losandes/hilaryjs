@@ -1,4 +1,4 @@
-/*! hilary 2017-07-11 */
+/*! hilary 2017-08-22 */
 
 (function(register) {
     "use strict";
@@ -9,6 +9,7 @@
                 INVALID_ARG: "InvalidArgument",
                 INVALID_REGISTRATION: "InvalidRegistration",
                 MODULE_NOT_FOUND: "ModuleNotFound",
+                MODULE_NOT_RESOLVED: "ModuleNotResolved",
                 BOOTSTRAP_FAILED: "BootstrapFailed"
             },
             container: {
@@ -25,6 +26,7 @@
                 RESOLVE_ARG: "resolve expects a moduleName (string) as the first argument, but instead saw this: ",
                 MODULE_NOT_FOUND: 'The module, "{{module}}", cannot be found',
                 MODULE_NOT_FOUND_RELYING: ', and is a dependency of, "{{startingModule}}"',
+                MODULE_THREW: 'The module, "{{module}}", cannot be resolved because it returned or threw an Error',
                 REGISTRATION_BLACK_LIST: "A module was registered with a reserved name: ",
                 PARENT_CONTAINER_ARG: "setParentScope expects the name of the parent scope, or an instance of Hilary"
             },
@@ -573,7 +575,7 @@
                             if (!dependency) {
                                 logger.trace("the following dependency was not resolved: " + item);
                                 return cb(null, dependencies, relyingModuleName);
-                            } else if (dependency.isException) {
+                            } else if (dependency.isException || dependency instanceof Error) {
                                 logger.error("the following dependency returned an exception: " + item);
                                 return cb(dependency);
                             }
@@ -595,7 +597,7 @@
                             });
                             return next(err);
                         }
-                        ctx.resolved = invoke(ctx.theModule.factory, dependencies);
+                        ctx.resolved = invoke(ctx.theModule.name, ctx.theModule.factory, dependencies);
                         ctx.registerSingleton = ctx.theModule.singleton;
                         ctx.isResolved = true;
                         logger.trace("dependencies resolved for: " + ctx.name);
@@ -603,7 +605,7 @@
                     });
                 } else if (is.function(ctx.theModule.factory) && ctx.theModule.factory.length === 0) {
                     logger.trace("the factory is a function and takes no arguments, returning the result of executing it: " + ctx.name);
-                    ctx.resolved = invoke(ctx.theModule.factory);
+                    ctx.resolved = invoke(ctx.theModule.name, ctx.theModule.factory);
                 } else {
                     logger.trace("the factory takes arguments and has no dependencies, returning the function as-is: " + ctx.name);
                     ctx.resolved = ctx.theModule.factory;
@@ -664,6 +666,26 @@
                 });
             }
         };
+        function invoke(name, factory, args) {
+            try {
+                if (isConstructor(factory)) {
+                    if (args) {
+                        args = [ null ].concat(args);
+                    } else {
+                        args = [ null ];
+                    }
+                    return new (Function.prototype.bind.apply(factory, args))();
+                } else {
+                    return factory.apply(null, args);
+                }
+            } catch (e) {
+                return new Exception({
+                    type: locale.errorTypes.MODULE_NOT_RESOLVED,
+                    messages: [ locale.api.MODULE_THREW.replace(/{{module}}/, name), e.message ],
+                    error: e
+                });
+            }
+        }
     }
     function parseDependencyName(dependencyName) {
         var memberMatches = /\{([^}]+)\}/.exec(dependencyName), members = [];
@@ -702,18 +724,6 @@
             }
         } else if (typeof window !== "undefined") {
             return window[moduleName];
-        }
-    }
-    function invoke(factory, args) {
-        if (isConstructor(factory)) {
-            if (args) {
-                args = [ null ].concat(args);
-            } else {
-                args = [ null ];
-            }
-            return new (Function.prototype.bind.apply(factory, args))();
-        } else {
-            return factory.apply(null, args);
         }
     }
     function isConstructor(func) {

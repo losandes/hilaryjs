@@ -576,7 +576,6 @@
                                 logger.trace("the following dependency was not resolved: " + item);
                                 return cb(null, dependencies, relyingModuleName);
                             } else if (dependency.isException || dependency instanceof Error) {
-                                debugger;
                                 logger.error("the following dependency returned an exception: " + item);
                                 return cb(dependency);
                             }

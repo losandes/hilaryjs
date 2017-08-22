@@ -1,7 +1,7 @@
 {
   "name": "hilary",
   "main": "release/hilary.js",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "homepage": "https://github.com/losandes/hilaryjs",
   "authors": [
     "&y <andes.collab@gmail.com> (https://github.com/losandes)"
