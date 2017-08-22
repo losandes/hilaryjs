@@ -97,7 +97,7 @@
                                 // short circuit
                                 logger.trace('the following dependency was not resolved: ' + item);
                                 return cb(null, dependencies, relyingModuleName);
-                            } else if (dependency.isException) {
+                            } else if (dependency.isException || dependency instanceof Error) {
                                 // short circuit
                                 logger.error('the following dependency returned an exception: ' + item);
                                 return cb(dependency);
@@ -122,7 +122,7 @@
                             return next(err);
                         }
 
-                        ctx.resolved = invoke(ctx.theModule.factory, dependencies);
+                        ctx.resolved = invoke(ctx.theModule.name, ctx.theModule.factory, dependencies);
                         ctx.registerSingleton = ctx.theModule.singleton;
                         ctx.isResolved = true;
 
@@ -131,7 +131,7 @@
                     });
                 } else if (is.function(ctx.theModule.factory) && ctx.theModule.factory.length === 0) {
                     logger.trace('the factory is a function and takes no arguments, returning the result of executing it: ' + ctx.name);
-                    ctx.resolved = invoke(ctx.theModule.factory);
+                    ctx.resolved = invoke(ctx.theModule.name, ctx.theModule.factory);
                 } else {
                     // the module takes arguments and has no dependencies, this must be a factory
                     logger.trace('the factory takes arguments and has no dependencies, returning the function as-is: ' + ctx.name);
@@ -216,6 +216,29 @@
             }
 
         }; // /Ctor
+
+        function invoke (name, factory, args) {
+            try {
+                if (isConstructor(factory)) {
+                    if (args) {
+                        args = [null].concat(args);
+                    } else {
+                        args = [null];
+                    }
+
+                    return new (Function.prototype.bind.apply(factory, args))();
+                } else {
+                    return factory.apply(null, args);
+                }
+            } catch (e) {
+                return new Exception({
+                    type: locale.errorTypes.MODULE_NOT_RESOLVED,
+                    messages: [locale.api.MODULE_THREW.replace(/{{module}}/, name), e.message],
+                    error: e
+                });
+            }
+        }
+
     } // /ResolveTasks
 
     // Check to see if the dependency reduces members
@@ -268,20 +291,6 @@
         } else if (typeof window !== 'undefined') {
             // attempt to resolve from Window
             return window[moduleName];
-        }
-    }
-
-    function invoke (factory, args) {
-        if (isConstructor(factory)) {
-            if (args) {
-                args = [null].concat(args);
-            } else {
-                args = [null];
-            }
-
-            return new (Function.prototype.bind.apply(factory, args))();
-        } else {
-            return factory.apply(null, args);
         }
     }
 
