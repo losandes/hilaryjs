@@ -798,6 +798,13 @@ scope.register({
 });
 ```
 
+### Finding Trace Output
+When the log level is set to "trace", hilary may produce a significant amount of output. To find what you're looking for, `grep` can help. The following example finds instances of ModuleNotFound in the trace logs and prints the 10 lines before and after each instance of it.
+
+```
+$ node myapp | grep -C 10 ModuleNotFound
+```
+
 
 ## Disposing Modules
 Modules can be disposed in hilary, as well as the entire container. Modules are disposed by name.
