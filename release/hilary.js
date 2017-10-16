@@ -1,4 +1,4 @@
-/*! hilary 2017-08-22 */
+/*! hilary 2017-10-16 */
 
 (function(register) {
     "use strict";

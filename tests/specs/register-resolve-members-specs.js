@@ -15,8 +15,14 @@
                 'and uses a single member declaration (i.e. `polyn { is }`)': {
                     'it should just pass the declared member to the factory': dependOnSingleMember
                 },
+                'and uses a single member arg import (i.e. `factory: ({ is })`)': {
+                    'it should just pass the declared member to the factory': dependOnSingleArgImport
+                },
                 'and uses a multiple member declaration (i.e. `polyn { is, Immutable }`)': {
                     'it should just pass the declared members to the factory': dependOnMultipleMembers
+                },
+                'and uses a multiple member arg import (i.e. `factory: ({ is, Immutable })`)': {
+                    'it should just pass the declared member to the factory': resolveMultipleArgImports
                 },
                 'and uses aliases in the member declaration (i.e. `polyn { is as test, Immutable }`)': {
                     'it should use the aliases as the member names that are passed to the factory': dependOnAliases
@@ -88,6 +94,35 @@
             expect(actual.value).to.equal('bar');
         }
 
+        function dependOnSingleArgImport() {
+            // given
+            var scope = hilary.scope(id.createUid(8));
+
+            scope.register({
+                name: 'something',
+                factory: {
+                    foo: 'bar'
+                }
+            });
+
+            scope.register({
+                name: 'dependOnMember',
+                dependencies: ['something'],
+                factory: function ({ foo }) {
+                    return {
+                        value: foo
+                    };
+                }
+            });
+
+            // when
+            var actual = scope.resolve('dependOnMember');
+
+            // then
+            expect(actual.isException).to.equal(undefined);
+            expect(actual.value).to.equal('bar');
+        }
+
         function resolveMultipleMembers () {
             // given
             var scope = hilary.scope(id.createUid(8));
@@ -103,6 +138,37 @@
 
             // when
             var actual = scope.resolve('something { foo, baz }');
+
+            // then
+            expect(actual.isException).to.equal(undefined);
+            expect(actual.foo).to.equal('bar');
+            expect(actual.baz).to.equal('fizz');
+            expect(actual.raz).to.equal(undefined);
+        }
+
+        function resolveMultipleArgImports() {
+            // given
+            var scope = hilary.scope(id.createUid(8));
+
+            scope.register({
+                name: 'something',
+                factory: {
+                    foo: 'bar',
+                    baz: 'fizz',
+                    raz: 'amataz'
+                }
+            });
+
+            scope.register({
+                name: 'dependOnMember',
+                dependencies: ['something'],
+                factory: function ({ foo, baz }) {
+                    return { foo, baz };
+                }
+            });
+
+            // when
+            var actual = scope.resolve('dependOnMember');
 
             // then
             expect(actual.isException).to.equal(undefined);
