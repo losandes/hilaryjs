@@ -448,7 +448,7 @@ module.exports.factory = function (http) {
 
     console.log('Server running at http://127.0.0.1:3000/');
 
-    return http;    
+    return http;
 };
 ```
 
@@ -539,6 +539,18 @@ console.log([ uno, dos, tres ]);
 assert(uno, 'one');
 assert(dos, 'two');
 assert(tres, 'three');
+```
+
+When authoring modules, we can also depend on only the members that we need by using an object as our factory argument, as in this next example:
+```JavaScript
+module.exports.name = 'oneAndTwo';
+module.exports.dependences = ['numbers'];
+// We can reduce an object to only the members that we want
+module.exports.factory = ({ one, two }) {
+    console.log(one, two);
+    assert(one, 'one');
+    assert(two, 'two');
+};
 ```
 
 ### Async Resolution
