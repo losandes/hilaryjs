@@ -25,7 +25,7 @@
                 name: 'three-component',
                 dependencies: ['one-component', 'two-component'],
                 factory: function (one, two) {
-                    return one + two;
+                    return function () { return one + two; };
                 }
             });
             scope.register({ name: 'four', factory: 4 });
@@ -35,7 +35,7 @@
                 factory: function (components, three) {
                     return {
                         components,
-                        three: three
+                        three: three()
                     };
                 }
             });
@@ -44,7 +44,7 @@
             // then
             expect(actual.components.indexOf(1) > -1).to.equal(true);
             expect(actual.components.indexOf(2) > -1).to.equal(true);
-            expect(actual.components.indexOf(3) > -1).to.equal(true);
+            expect(actual.components[2]()).to.equal(3);
             expect(actual.three).to.equal(3);
             expect(actual.components.indexOf(4) > -1).to.equal(false);
         }
