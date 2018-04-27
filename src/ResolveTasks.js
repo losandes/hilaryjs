@@ -21,7 +21,7 @@
 
 
             function validateModuleName (ctx, next) {
-                if (is.string(ctx.name)) {
+                if (is.string(ctx.name) || is.regexp(ctx.name)) {
                     logger.trace('module name is valid: ' + ctx.name);
                     next(null, ctx);
                 } else {
@@ -81,7 +81,6 @@
             }
 
             function resolveDependencies (ctx, next) {
-                var subTasks;
                 logger.trace('resolving dependencies for: ' + ctx.name);
 
                 if (ctx.isResolved) {
@@ -89,46 +88,7 @@
                     return next(null, ctx);
                 } else if (is.array(ctx.theModule.dependencies) && ctx.theModule.dependencies.length > 0) {
                     logger.trace('resolving with dependencies array: ' + ctx.theModule.dependencies.join(', '));
-                    subTasks = ctx.theModule.dependencies.map(function (item) {
-                        return function (dependencies, relyingModuleName, cb) {
-                            var dependency = resolve(item, relyingModuleName);
-
-                            if (!dependency) {
-                                // short circuit
-                                logger.trace('the following dependency was not resolved: ' + item);
-                                return cb(null, dependencies, relyingModuleName);
-                            } else if (dependency.isException) {
-                                // short circuit
-                                logger.error('the following dependency returned an exception: ' + item);
-                                return cb(dependency);
-                            }
-
-                            logger.trace('the following dependency was resolved: ' + item);
-                            dependencies.push(dependency);
-                            cb(null, dependencies, relyingModuleName);
-                        };
-                    });
-
-                    subTasks.unshift(function (cb) {
-                        cb(null, [], ctx.relyingName);
-                    });
-
-                    return async.waterfall(subTasks, { blocking: true }, function (err, dependencies) {
-                        if (err) {
-                            logger.trace({
-                                message: 'at least one dependency was not found for: ' + ctx.name,
-                                err: err
-                            });
-                            return next(err);
-                        }
-
-                        ctx.resolved = invoke(ctx.theModule.factory, dependencies);
-                        ctx.registerSingleton = ctx.theModule.singleton;
-                        ctx.isResolved = true;
-
-                        logger.trace('dependencies resolved for: ' + ctx.name);
-                        next(null, ctx);
-                    });
+                    return recursivelyResolveDependencies(ctx, next);
                 } else if (is.function(ctx.theModule.factory) && ctx.theModule.factory.length === 0) {
                     logger.trace('the factory is a function and takes no arguments, returning the result of executing it: ' + ctx.name);
                     ctx.resolved = invoke(ctx.theModule.factory);
@@ -142,6 +102,94 @@
                 ctx.isResolved = true;
                 next(null, ctx);
             } // /resolveDependencies
+
+            function makeDependencyResolveTask (item) {
+                return function (dependencies, relyingModuleName, cb) {
+                    var dependency = resolve(item, relyingModuleName);
+
+                    if (!dependency) {
+                        // short circuit
+                        logger.trace('the following dependency was not resolved: ' + item);
+                        return cb(null, dependencies, relyingModuleName);
+                    } else if (dependency.isException) {
+                        // short circuit
+                        logger.error('the following dependency returned an exception: ' + item);
+                        return cb(dependency);
+                    }
+
+                    logger.trace('the following dependency was resolved: ' + item);
+                    dependencies.push(dependency);
+                    cb(null, dependencies, relyingModuleName);
+                };
+            }
+
+            function filterMatchingRegistrations (item, scopeContext, moduleNameBeingResolved) {
+                return Object.keys(scopeContext.singletonContainer.get())
+                    .concat(Object.keys(scopeContext.container.get()))
+                    .reduce(function (distinct, name) {
+                        if (distinct.indexOf(name) === -1) {
+                            distinct.push(name);
+                        }
+
+                        return distinct;
+                    }, [])
+                    .filter(function (key) {
+                        return key !== moduleNameBeingResolved &&   // isn't the module that is being resolve (stack overflow)
+                            item.test(key);                         // dependency matches expression
+                    });
+            }
+
+            function makeDependencyArrayResolveTask (items, ctx) {
+                const subTasks = items.map(makeDependencyResolveTask);
+                subTasks.unshift(function (cb) {
+                    cb(null, [], ctx.relyingName);
+                });
+
+                return function (dependencies, relyingModuleName, cb) {
+                    async.waterfall(subTasks, { blocking: true }, function (err, resolved) {
+                        if (err) {
+                            return cb(err);
+                        }
+
+                        dependencies.push(resolved);
+                        return cb(null, dependencies, relyingModuleName);
+                    });
+                }
+            }
+
+            function recursivelyResolveDependencies (ctx, next) {
+                var subTasks = ctx.theModule.dependencies.reduce(function (tasks, item) {
+                    if (is.regexp(item)) {
+                        var dependencies = filterMatchingRegistrations(item, context, ctx.name);
+                        tasks = tasks.concat(makeDependencyArrayResolveTask(dependencies, ctx));
+                        return tasks;
+                    }
+
+                    tasks.push(makeDependencyResolveTask(item));
+                    return tasks;
+                }, []);
+
+                subTasks.unshift(function (cb) {
+                    cb(null, [], ctx.relyingName);
+                });
+
+                return async.waterfall(subTasks, { blocking: true }, function (err, dependencies) {
+                    if (err) {
+                        logger.trace({
+                            message: 'at least one dependency was not found for: ' + ctx.name,
+                            err: err
+                        });
+                        return next(err);
+                    }
+
+                    ctx.resolved = invoke(ctx.theModule.factory, dependencies);
+                    ctx.registerSingleton = ctx.theModule.singleton;
+                    ctx.isResolved = true;
+
+                    logger.trace('dependencies resolved for: ' + ctx.name);
+                    next(null, ctx);
+                });
+            }
 
             /*
             // reduces the members of the object that was registered

@@ -216,7 +216,7 @@
                             message: locale.bootstrap.INVALID_TASK_ARGUMENT,
                             err: err
                         });
-                        
+
                         return arguments[arguments.length-1](new Exception({
                             type: locale.errorTypes.INVALID_REGISTRATION,
                             error: err,
