@@ -15,6 +15,7 @@ Getting Started With Node.js
     * [When To Resolve](#when-to-resolve)
     * [Resolving in the Composition Root](#resolving-in-the-composition-root)
     * [Reducing Members](#reducing-members)
+    * [Dependency Expressions](#dependency-expressions)
     * [Async Resolution](#async-resolution)
 * [Bootstrapping Your App](#bootstrapping-your-app)
     * [Bootstrapping Your App With `hilary.bootstrap`](#bootstrapping-your-app-with-hilarybootstrap)
@@ -551,6 +552,23 @@ module.exports.factory = ({ one, two }) {
     assert(one, 'one');
     assert(two, 'two');
 };
+```
+
+### Dependency Expressions
+Sometimes we need to resolve all modules that match an expression. For instance, we might want to resolve all modules with "controller", or "component" in the name. Hilary supports this need, using expressions in dependencies.
+
+```JavaScript
+scope.register({ name: 'one-component', factory: 1 });
+scope.register({ name: 'two-component', factory: 2 });
+scope.register({ name: 'three', factory: 3 });
+scope.register({
+    name: 'all-components',
+    dependencies: [/component/i],
+    factory: function (components) {
+        assert(components[0], 1);
+        assert(components[1], 2);
+    }
+});
 ```
 
 ### Async Resolution
