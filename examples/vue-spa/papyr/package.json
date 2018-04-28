@@ -1,0 +1,23 @@
+{
+  "name": "papyr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js -e js,json,html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
+  "license": "MIT",
+  "dependencies": {
+    "hilary": "^5.1.0",
+    "page": "^1.8.6",
+    "polyn": "^1.10.0",
+    "vue": "^2.5.16"
+  },
+  "devDependencies": {
+    "express": "^4.16.3",
+    "serve-static": "^1.13.2",
+    "supposed": "^0.1.0"
+  }
+}

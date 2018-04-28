@@ -1,0 +1,7 @@
+{
+    "extends": ["standard"],
+    "rules": {
+        "no-multi-spaces": ["error", { "ignoreEOLComments": true }],
+        "no-multiple-empty-lines": ["error", { "max": 4 }]
+    }
+}
