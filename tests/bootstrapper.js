@@ -22,6 +22,7 @@
         testRunner.run(require('./specs/parent-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-async-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-specs')(hilary, chai.expect, polyn.id, skip));
+        testRunner.run(require('./specs/register-resolve-patterns-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-class-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-function-specs')(hilary, chai.expect, polyn.id, skip));
         testRunner.run(require('./specs/register-resolve-lambda-specs')(hilary, chai.expect, polyn.id, skip));

@@ -1,10 +1,10 @@
 {
   "name": "hilary",
-  "version": "5.0.1",
+  "version": "5.1.0",
   "description": "a simple Dependency Injection (DI) library that provides Inversion of Control (IoC) capabilities in Node.js and the browser",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "grunt test"
   },
   "repository": {
     "type": "git",
