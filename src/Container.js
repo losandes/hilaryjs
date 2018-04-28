@@ -45,6 +45,10 @@
             // Checks to see if a module is registered by this name
             */
             function exists (name) {
+                if (is.regexp(name)) {
+                    return true;        // this may not actually be true, but we want the expression to be evaluated later
+                }
+
                 return container.hasOwnProperty(name);
             }
 
