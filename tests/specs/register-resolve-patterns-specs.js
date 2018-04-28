@@ -10,10 +10,12 @@
         return {
             'when a regular expression is used for a dependency,': {
                 'hilary should be resolve all modules whose names match that expression as an array': resolvePattern,
+                'and no modules match the expression': {
+                    'it should resolve an empty array': resolvePatternNoneFound
+                }
             }
         };
 
-        // factory: {}
         function resolvePattern () {
             // when
             var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}});
@@ -47,6 +49,39 @@
             expect(actual.components[2]()).to.equal(3);
             expect(actual.three).to.equal(3);
             expect(actual.components.indexOf(4) > -1).to.equal(false);
+        }
+
+        function resolvePatternNoneFound () {
+            // when
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}});
+            // var scope = hilary.scope(id.createUid(8), { logging: { level: 'trace' }});
+
+            scope.register({ name: 'one', factory: 1 });
+            scope.register({ name: 'two', factory: 2 });
+            scope.register({
+                name: 'three',
+                dependencies: ['one', 'two'],
+                factory: function (one, two) {
+                    return function () { return one + two; };
+                }
+            });
+            scope.register({ name: 'four', factory: 4 });
+            scope.register({
+                name: 'all-components',
+                dependencies: [/component/i, 'three'],
+                factory: function (components, three) {
+                    return {
+                        components,
+                        three: three()
+                    };
+                }
+            });
+
+            var actual = scope.resolve('all-components');
+
+            // then
+            expect(actual.components.length).to.equal(0);
+            expect(actual.three).to.equal(3);
         }
     } // /Spec
 
