@@ -1,11 +1,11 @@
 module.exports = {
   scope: 'papyr',
   name: 'home-controller',
-  dependencies: ['router', 'content-vue'],
-  factory: (router, content) => {
+  dependencies: ['page', 'content-vue'],
+  factory: (page, content) => {
     'use strict'
 
-    router.get('/', () => {
+    page('/', () => {
       content.component = 'home'
     })
   }

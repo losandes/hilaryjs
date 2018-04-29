@@ -1,5 +1,5 @@
-Building a SOLID Vue.js App: Layout
-===================================
+Building a SPA with Vue.js & Hilary: Layout
+===========================================
 Now that we have a shell for our app, we can start building. We're going to start with the layout. I like to break the layout into sections, and make each section an instance of Vue. This app will have 2 sections: header, and content.
 
 > The HTML throughout this page should be added to `index.html`

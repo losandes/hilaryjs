@@ -1,5 +1,5 @@
-Building a SOLID Vue.js App: Setup
-==================================
+Building a SPA with Vue.js & Hilary: Setup
+==========================================
 
 ## NPM package manager
 We're going to use npm for dependency, so install node.js if you don't already have it.

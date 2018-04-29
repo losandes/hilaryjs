@@ -1,5 +1,5 @@
-Building a SOLID Vue.js App: Composition Root
-=============================================
+Building a SPA with Vue.js & Hilary: Composition Root
+=====================================================
 The [composition root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) is the entry point for our JavaScript application. It is where we will define our dependency graph, and start our app. We're going to use [hilary](https://github.com/losandes/hilaryjs) to manage our dependencies.
 
 ## Create an app directory, and an app.js file

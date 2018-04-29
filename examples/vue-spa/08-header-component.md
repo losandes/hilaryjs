@@ -1,20 +1,16 @@
-Building a SOLID Vue.js App: Header Component
-=============================================
+Building a SPA with Vue.js & Hilary: Header Component
+=====================================================
 Let's put something on that screen, starting with the header.
 
-### Create a header directory
+## Create a header directory, and vue file
 
 ```Shell
 /papyr/app $ mkdir header
 /papyr/app $ cd header
-```
-
-### Create a file for our Vue instance
-
-```Shell
 /papyr/app/header $ touch header-vue.js
 ```
 
+## Create a file for our Vue instance
 
 ```HTML
 <header id="header">

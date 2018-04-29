@@ -1,5 +1,5 @@
-Building a SOLID Vue.js App: Content Component
-==============================================
+Building a SPA with Vue.js & Hilary: Content Component
+======================================================
 The content section in our HTML is where the main content will be displayed. It's where the majority of our components will be bound. In this step, we're going to setup a naming convention, so our components are registered automatically, when we add the scripts to the DOM.
 
 > Alternatively, we can register components by hand, in our main Vue instance

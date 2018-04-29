@@ -10,7 +10,8 @@
   }).bootstrap([
     (scope, next) => {
       console.log('startup::papyr::composing application')
-      scope.resolve('startup')
+      scope.resolve('header-vue')
+      scope.resolve('router').listen()
       next(null, scope)
     }
   ], (err) => {

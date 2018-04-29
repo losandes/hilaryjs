@@ -1,5 +1,5 @@
-Building a SOLID Vue.js App: Home Component
-===========================================
+Building a SPA with Vue.js & Hilary: Home Component
+===================================================
 Now that we have a router, we need to register a route for the home page, so we can see some content.
 
 ## Add a home directory, and component
