@@ -1,4 +1,4 @@
-/*! hilary 2018-04-28 */
+/*! hilary 2018-04-29 */
 
 (function(register) {
     "use strict";
@@ -515,7 +515,8 @@
                 resolveDependencies: resolveDependencies,
                 reduceMembers: reduceMembers,
                 optionallyRegisterSingleton: optionallyRegisterSingleton,
-                bindToOutput: bindToOutput
+                bindToOutput: bindToOutput,
+                filterMatchingRegistrations: filterMatchingRegistrations
             };
             function validateModuleName(ctx, next) {
                 if (is.string(ctx.name)) {
@@ -960,6 +961,16 @@
             }
             function resolve(moduleName, callback) {
                 logger.trace("resolving: " + moduleName);
+                if (is.regexp(moduleName)) {
+                    var modules = resolveTasks.filterMatchingRegistrations(moduleName, context).map(function(moduleNameText) {
+                        return resolveOne(moduleNameText, moduleNameText);
+                    });
+                    if (is.function(callback)) {
+                        callback(null, modules);
+                    } else {
+                        return modules;
+                    }
+                }
                 return resolveOne(moduleName, moduleName, callback);
             }
             function resolveOne(moduleName, relyingModuleName, callback) {

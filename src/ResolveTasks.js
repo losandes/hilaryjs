@@ -16,7 +16,8 @@
                 resolveDependencies: resolveDependencies,
                 reduceMembers: reduceMembers,
                 optionallyRegisterSingleton: optionallyRegisterSingleton,
-                bindToOutput: bindToOutput
+                bindToOutput: bindToOutput,
+                filterMatchingRegistrations: filterMatchingRegistrations
             };
 
 
