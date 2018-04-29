@@ -11,7 +11,13 @@
             'when a regular expression is used with resolve,': {
                 'hilary should be resolve all modules whose names match that expression as an array': resolvePattern,
                 'and no modules match the expression': {
-                    'it should resolve an empty array': resolvePatternNoneFound
+                    'it should resolve an empty array': resolvePatternNoneFound,
+                    'and the caller uses callbacks': {
+                        'hilary should be resolve all modules whose names match that expression as an array': resolvePatternNoneFoundAsync,
+                    }
+                },
+                'and the caller uses callbacks': {
+                    'hilary should be resolve all modules whose names match that expression as an array': resolvePatternAsync,
                 }
             },
             'when a regular expression is used for a dependency,': {
@@ -47,6 +53,32 @@
             expect(actual.indexOf(4) > -1).to.equal(false);
         }
 
+        function resolvePatternAsync (done) {
+            // given
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}});
+
+            scope.register({ name: 'one-component', factory: 1 });
+            scope.register({ name: 'two-component', factory: 2 });
+            scope.register({
+                name: 'three-component',
+                dependencies: ['one-component', 'two-component'],
+                factory: function (one, two) {
+                    return function () { return one + two; };
+                }
+            });
+            scope.register({ name: 'four', factory: 4 });
+
+            // when
+            scope.resolve(/component/i, function (err, actual) {
+                // then
+                expect(actual.indexOf(1) > -1).to.equal(true);
+                expect(actual.indexOf(2) > -1).to.equal(true);
+                expect(actual[2]()).to.equal(3);
+                expect(actual.indexOf(4) > -1).to.equal(false);
+                done();
+            });
+        }
+
         function resolvePatternNoneFound () {
             // given
             var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}});
@@ -60,6 +92,22 @@
             // then
             expect(Array.isArray(actual)).to.equal(true);
             expect(actual.length).to.equal(0);
+        }
+
+        function resolvePatternNoneFoundAsync (done) {
+            // given
+            var scope = hilary.scope(id.createUid(8), { logging: { log: function () {}}});
+
+            scope.register({ name: 'one', factory: 1 });
+            scope.register({ name: 'two', factory: 2 });
+
+            // when
+            var actual = scope.resolve(/component/i, function (err, actual) {
+                // then
+                expect(Array.isArray(actual)).to.equal(true);
+                expect(actual.length).to.equal(0);
+                done();
+            });
         }
 
         function dependencyPattern () {
