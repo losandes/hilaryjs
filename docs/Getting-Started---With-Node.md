@@ -580,6 +580,12 @@ scope.resolve(/component/i, function (err, components) {
     assert(components[0], 1);
     assert(components[1], 2);
 });
+
+// OR
+
+const components = scope.resolve(/component/i);
+assert(components[0], 1);
+assert(components[1], 2);
 ```
 
 ### Async Resolution
