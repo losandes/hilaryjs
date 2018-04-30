@@ -1,8 +1,8 @@
 module.exports = {
   scope: 'papyr',
   name: 'query-string',
-  dependencies: ['page', 'content-vue'],
-  factory: function (page, content) {
+  dependencies: [],
+  factory: function () {
     'use strict'
 
     /**
@@ -19,12 +19,17 @@ module.exports = {
       return queryString.split('&')
         .reduce((output, pair) => {
           const keyvalue = pair.split('=')
-          output[keyvalue[0]] = keyvalue[1]
+          output[keyvalue[0]] = decodeURIComponent(keyvalue[1])
 
           return output
         }, {})
     }
 
-    return Object.freeze({ parse })
+    const getCurrent = () => {
+      const current = location.href.split('?');
+      return parse(current.length > 1 ? current[1] : '')
+    }
+
+    return Object.freeze({ parse, getCurrent })
   }
 }

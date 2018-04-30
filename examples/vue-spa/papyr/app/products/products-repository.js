@@ -10,11 +10,9 @@ module.exports = {
         .then((products) => {
           return products.filter((product) => {
             const q = query.toLowerCase()
+            const productText = JSON.stringify(product).toLowerCase()
 
-            return product.uid.indexOf(q) > -1 ||
-              product.description.indexOf(q) > -1 ||
-              (product.metadata.keywords &&
-                product.metadata.keywords.indexOf(q) > -1)
+            return productText.indexOf(q) > -1
           })
           .map((product) => new Product(product))
         })

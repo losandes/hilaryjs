@@ -1,13 +1,13 @@
 module.exports = {
   scope: 'papyr',
   name: 'header-component',
-  dependencies: ['Vue', 'page'],
-  factory: (Vue, page) => {
+  dependencies: ['Vue', 'page', 'query-string'],
+  factory: (Vue, page, qs) => {
     'use strict'
 
     const state = {
       brand: 'Papyr',
-      query: ''
+      query: qs.getCurrent().q || ''
     }
 
     const search = () => {

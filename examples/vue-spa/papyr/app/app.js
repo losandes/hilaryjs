@@ -4,7 +4,7 @@
   // configure the scope for our application
   hilary.scope('papyr', {
     logging: {
-      level: 'info' // trace|debug|info|warn|error|fatal|off
+      level: 'trace' // trace|debug|info|warn|error|fatal|off
     }
   // bootstrap the application
   }).bootstrap([
