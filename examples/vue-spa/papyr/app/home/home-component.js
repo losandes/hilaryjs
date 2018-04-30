@@ -12,13 +12,14 @@ module.exports = {
 
     const component = Vue.component('home', {
       template: `
-      <div class="component home-component">
-        <h1>{{heading}}</h1>
-        <div>{{body}}</div>
-      </div>`,
+        <div class="component home-component">
+          <h1>{{heading}}</h1>
+          <div>{{body}}</div>
+        </div>
+      `,
       data: () => state
     })
 
-    return { component }
+    return Object.freeze({ name: 'home', component })
   }
 }

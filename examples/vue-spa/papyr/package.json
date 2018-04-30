@@ -10,7 +10,7 @@
   "author": "Andy Wright <andes.collab@gmail.com> (https://github.com/losandes)",
   "license": "MIT",
   "dependencies": {
-    "hilary": "^5.1.0",
+    "hilary": "^5.2.0",
     "page": "^1.8.6",
     "polyn": "^1.10.0",
     "vue": "^2.5.16"

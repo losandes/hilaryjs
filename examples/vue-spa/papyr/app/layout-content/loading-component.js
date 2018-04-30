@@ -15,6 +15,6 @@ module.exports = {
       data: () => state
     })
 
-    return { component }
+    return Object.freeze({ name: 'loading', component })
   }
 }

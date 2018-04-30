@@ -10,7 +10,9 @@ module.exports = {
         data: {
           component: 'main-header'
         },
-        components: [headerComponent.component]
+        components: {
+          'main-header': headerComponent.component
+        }
       })
     }
   }

@@ -25,6 +25,6 @@ module.exports = {
         }, {})
     }
 
-    return { parse }
+    return Object.freeze({ parse })
   }
 }

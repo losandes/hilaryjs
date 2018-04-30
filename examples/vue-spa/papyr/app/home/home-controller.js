@@ -5,8 +5,12 @@ module.exports = {
   factory: (page, content) => {
     'use strict'
 
-    page('/', () => {
-      content.component = 'home'
-    })
+    const registerRoutes = () => {
+      page('/', () => {
+        content.component = 'home'
+      })
+    }
+
+    return Object.freeze({ registerRoutes })
   }
 }

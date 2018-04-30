@@ -10,8 +10,14 @@
   }).bootstrap([
     (scope, next) => {
       console.log('startup::papyr::composing application')
-      scope.resolve('header-vue')
-      scope.resolve('router').listen()
+      scope.resolve('header-vue')       // bind the header
+      scope.resolve('content-vue')      // bind the main content
+      scope.resolve(/controller/i).forEach((controller) => {
+        if (controller && typeof controller.registerRoutes === 'function') {
+          controller.registerRoutes()   // resolve controllers to register routes
+        }
+      })
+      scope.resolve('router').listen()  // start listening to document events
       next(null, scope)
     }
   ], (err) => {

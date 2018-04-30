@@ -29,6 +29,6 @@ module.exports = {
       methods: { search }
     })
 
-    return { component }
+    return Object.freeze({ name: 'main-header', component })
   }
 }

@@ -10,7 +10,12 @@ module.exports = {
       data: {
         component: 'loading'
       },
-      components: components.map((item) => item.component)
+      components: components.filter((item) => {
+        return item && typeof item.component === 'object'
+      }).reduce((output, item) => {
+        output[item.name] = item.component
+        return output
+      }, {})
     })
 
     const self = {}
