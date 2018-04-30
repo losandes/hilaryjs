@@ -13,18 +13,19 @@ module.exports = {
 
     const component = Vue.component('product', {
     template: `
-      <div class="col-sm-6 col-md-4 product-col">
+      <div class="product-card">
         <div class="thumbnail">
           <a class="thumbnail-img" href="javascript:void(0);" v-on:click="viewDetails(product)">
             <img v-bind:src="product.thumbnailLink" v-bind:alt="product.thumbnailAlt">
           </a>
-
-          <div class="caption">
-            <h3><a href="javascript:void(0);" v-on:click="viewDetails(product)">{{product.title}}</a></h3>
-            <div class="description">{{product.description}}</div>
-            <div class="overlay"></div>
-            <button v-on:click="addToCart(product)">{{product.priceText}}</button>
-          </div>
+        </div>
+        <div class="caption">
+          <h3><a href="javascript:void(0);" v-on:click="viewDetails(product)">{{product.title}}</a></h3>
+          <div class="description">{{product.description}}</div>
+          <div class="overlay"></div>
+        </div>
+        <div class="buy-button">
+          <button v-on:click="addToCart(product)">{{product.priceText}}</button>
         </div>
       </div>
     `,

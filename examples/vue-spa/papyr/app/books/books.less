@@ -1,0 +1,29 @@
+// main: ../../styles/main.less
+
+.book-component {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+
+  .buy-button {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+      margin-top: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      color: green;
+      padding: 10px;
+    }
+  }
+}
+
+@media screen and (max-width: 37.8125em) {
+  .book-component {
+    display: flex;
+    flex-flow: row wrap;
+  }
+}

@@ -1,0 +1,25 @@
+// out: main.css, compress: true, strictMath: true
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: @text-color;
+}
+
+a {
+ 	color: @link-color;
+	text-decoration: none;
+
+  &:hover {
+    color: @link-hover-color;
+    text-decoration: none;
+  }
+}
+
+
+@import "_variables.less";
+@import "_mixins.less";
+@import "../app/header/header.less";
+@import "../app/products/products.less";
+@import "../app/books/books.less";
+@import "../app/books/books-render.less";

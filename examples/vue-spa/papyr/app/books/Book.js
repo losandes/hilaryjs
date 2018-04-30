@@ -15,14 +15,16 @@ module.exports = {
       thumbnailLink: 'string',
       thumbnailAlt: 'string',
       type: 'string',
-      authors: 'array'
+      authors: 'string'
     })
 
     return function Book (product) {
       product = Object.assign({}, product)
       product.priceText = `$${product.price}`
       product.thumbnailAlt = product.thumbnailAlt || `the book cover of ${product.title}`
-      product.authors = product.metadata.authors
+      product.authors = product.metadata && Array.isArray(product.metadata.authors)
+        ? product.metadata.authors.map((author) => author.name).join(', ')
+        : ''
 
       return new IBook(product)
     }

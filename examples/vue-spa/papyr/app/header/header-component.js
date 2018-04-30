@@ -11,7 +11,7 @@ module.exports = {
     }
 
     const search = () => {
-      page(`/products?q=${state.query}`)
+      page(`/products?q=${encodeURIComponent(state.query)}`)
     }
 
     const component = Vue.component('main-header', {

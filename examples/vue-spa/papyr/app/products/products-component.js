@@ -12,10 +12,9 @@ module.exports = {
     const component = Vue.component('products', {
       template: `
       <div class="component products-component">
-        <div class="row">
-          <product v-for="product in products" v-bind:key="product.uid" v-bind:product="product">
-          </product>
-        </div>
+        <product v-for="product in products"
+          v-bind:key="product.uid" v-bind:product="product">
+        </product>
       </div>
     `,
       data: () => state

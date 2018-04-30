@@ -1,0 +1,36 @@
+// main: ../../styles/main.less
+
+.header-component {
+  background: @header-bg;
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  #brand {
+    padding-right: 20px;
+    letter-spacing: 1px;
+
+     a {
+      color: @header-text-color;
+      font-size: 20px;
+      line-height: 24px;
+
+      &:hover {
+        color: @header-link-hover-color;
+      }
+     }
+  }
+
+  #search {
+    vertical-align: middle;
+    width: 70%;
+
+    input {
+      width: 100%;
+      border: none;
+      font-size: 20px;
+      line-height: 24px;
+    }
+  }
+}

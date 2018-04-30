@@ -1,0 +1,77 @@
+// main: main.less
+
+.transform (@transformation) {
+    -webkit-transform: @transformation;
+    -moz-transform:    @transformation;
+    -ms-transform:     @transformation;
+    -o-transform:      @transformation;
+    transform:         @transformation;
+}
+
+.transition (@transition) {
+	-webkit-transition: @transition;
+	-moz-transition:    @transition;
+	-ms-transition:     @transition;
+	-o-transition:      @transition;
+    transition:         @transition;
+}
+
+.animate(@name, @duration: 0.6s, @timing: ease-in-out, @delay: 0.2s, @iterationCount: 1, @direction: alternate) {
+    /* Chrome, Safari, Opera */
+    -webkit-animation-name: @name;
+    -webkit-animation-duration: @duration;
+    -webkit-animation-timing-function: @timing;
+    -webkit-animation-delay: @delay;
+    -webkit-animation-iteration-count: @iterationCount;
+    -webkit-animation-direction: @direction;
+//    -webkit-animation-play-state: running;
+    /* Standard syntax */
+    animation-name: @name;
+    animation-duration: @duration;
+    animation-timing-function: @timing;
+    animation-delay: @delay;
+    animation-iteration-count: @iterationCount;
+    animation-direction: @direction;
+//    animation-play-state: running;
+}
+
+.border-radius (@radius: 1px) {
+	-webkit-border-radius: @radius;
+	-moz-border-radius:    @radius;
+	border-radius:         @radius;
+
+	-moz-background-clip:    padding;
+	-webkit-background-clip: padding-box;
+	background-clip:         padding-box;
+}
+
+.box-shadow (@string) {
+	-webkit-box-shadow: @string;
+	-moz-box-shadow:    @string;
+	box-shadow:         @string;
+}
+
+.linear-gradient(@angle: 180deg, @startColor: #eee, @endColor: white) {
+	background-image: -webkit-linear-gradient(@angle, @startColor, @endColor);
+	background-image: -moz-linear-gradient(@angle, @startColor, @endColor);
+	background-image: -ms-linear-gradient(@angle, @startColor, @endColor);
+	background-image: -o-linear-gradient(@angle, @startColor, @endColor);
+}
+
+.vertical-gradient (@startColor: #eee, @endColor: white) {
+	background-color: @startColor;
+	background: -webkit-gradient(linear, left top, left bottom, from(@startColor), to(@endColor));
+	background: -webkit-linear-gradient(top, @startColor, @endColor);
+	background: -moz-linear-gradient(top, @startColor, @endColor);
+	background: -ms-linear-gradient(top, @startColor, @endColor);
+	background: -o-linear-gradient(top, @startColor, @endColor);
+}
+
+.horizontal-gradient (@startColor: #eee, @endColor: white) {
+ 	background-color: @startColor;
+	background-image: -webkit-gradient(linear, left top, right top, from(@startColor), to(@endColor));
+	background-image: -webkit-linear-gradient(left, @startColor, @endColor);
+	background-image: -moz-linear-gradient(left, @startColor, @endColor);
+	background-image: -ms-linear-gradient(left, @startColor, @endColor);
+	background-image: -o-linear-gradient(left, @startColor, @endColor);
+}
