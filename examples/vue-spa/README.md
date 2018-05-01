@@ -3,6 +3,8 @@ Building a SPA with Vue.js & Hilary
 
 This example is a walk through for creating a SPA with [vue.js](https://vuejs.org/), [page.js](https://visionmedia.github.io/page.js), and [hilary.js](https://github.com/losandes/hilaryjs). It falls somewhere between a simple example, and a dev-team ready example in that it presents some more complex uses of both vue, and hilary, but does not get into packaging (i.e. web-pack), minification, etc.
 
+A completed implementation of the example is in the [papyr directory](./papyr)
+
 The objectives of this exercise are to:
 
 * Demonstrate a working SPA that uses vue.js, page.js, and hilary.js
