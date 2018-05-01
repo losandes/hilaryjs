@@ -139,3 +139,6 @@ When we initialized the app with `npm init`, it created a `package.json` file. L
 ```Shell
 $ npm start
 ```
+
+---
+[Next: Layout](./layout.md)

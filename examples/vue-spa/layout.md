@@ -52,3 +52,5 @@ This example uses LESS, and all of the styles will be registered in `main.less`.
 </head>
 ```
 
+---
+[Next: Composition Root](./composition-root.md)

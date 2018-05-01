@@ -99,3 +99,6 @@ The scripts need to be loaded **before** `app.js` is loaded.
 ```
 
 Now when we refresh http://localhost:3001, we should see a "Welcome to Papyr!" message.
+
+---
+[Next: The Header Vue](./header-vue.md)

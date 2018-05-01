@@ -310,3 +310,5 @@ The scripts need to be loaded **before** `app.js` is loaded.
 
 Now when we refresh http://localhost:3001, we should be able to search for products, and see the results on the page, and if we navigate to http://localhost:3001/products?q=novel, we should also see search results for the page.
 
+---
+[Next: The Book Component](./book-component.md)

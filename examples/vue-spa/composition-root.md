@@ -51,3 +51,6 @@ To start the app, we can use [hilary's bootstrapper](https://github.com/losandes
 <script src="/app/app.js"></script>
 </body>
 ```
+
+---
+[Next: The Content Vue](./content-vue.md)

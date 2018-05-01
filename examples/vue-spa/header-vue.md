@@ -147,3 +147,6 @@ The scripts need to be loaded **before** `app.js` is loaded.
 ```
 
 Now when we refresh http://localhost:3001, we should see a header with the title of our app, and a search bar.
+
+---
+[Next: The Product Components](./product-components.md)

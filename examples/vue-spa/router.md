@@ -109,3 +109,5 @@ Finally, we need to compose the router to start listening to document events. We
 
 Now if your app is running (`npm start`), and you refresh the page at http://localhost:3001, the page should be blank, and you should see a 404 in the developer console. That's because we haven't registered a handler for the home page yet. We'll do that next.
 
+---
+[Next: The Home Component](./home-component.md)

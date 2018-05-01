@@ -120,3 +120,6 @@ Finally, we need to compose the content component. We've done all the hard work.
 ```
 
 Now if your app is running (`npm start`), you should see "Loading..." if you refresh the page at http://localhost:3001.
+
+---
+[Next: The Router](./router.md)
