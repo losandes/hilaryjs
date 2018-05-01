@@ -57,6 +57,8 @@ module.exports = {
 }
 ```
 
+> NOTE that we're using `module.exports` to define our module. This is provided by "hilary-browser-module-shim.js". If we're using other code that implements `module.exports`, we can use the following syntax instead: `hilary.scope('papyr').register({ name: 'foo', factory: 'bar' })`
+
 ## Add the loading component
 Our module above sets the initial component to loading, but we haven't created that yet. Let's do that now.
 
