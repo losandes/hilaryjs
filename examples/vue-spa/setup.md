@@ -23,8 +23,8 @@ $ npm install -g nodemon
 For this app, we'll depend on the following packages:
 
 * [vue.js](https://vuejs.org/): DOM binding, and components
-* [hilary](https://github.com/losandes/hilaryjs): Inversion of Control container for Dependency Injection
-* [page](https://visionmedia.github.io/page.js/): SPA routing
+* [hilary.js](https://github.com/losandes/hilaryjs): Inversion of Control container for Dependency Injection
+* [page.js](https://visionmedia.github.io/page.js/): SPA routing
 * [polyn](https://github.com/losandes/polyn): validation, and immutability
 
 To server it, we're going to use:
@@ -122,13 +122,14 @@ When we initialized the app with `npm init`, it created a `package.json` file. L
 <body>
   Hello World!
 
-  <script src="/node_modules/vue/dist/vue.min.js"></script>
+  <script src="/node_modules/vue/dist/vue.js"></script>
   <script src="/node_modules/page/page.js"></script>
   <script src="/node_modules/polyn/release/polyn.js"></script>
   <script src="/node_modules/hilary/release/hilary.js"></script>
   <script src="/node_modules/hilary/release/hilary-browser-module-shim.js"></script>
 </body>
 </html>
+
 ```
 
 > The hilary-browser-module-shim is optional. It's a shim that allows us to define hilary modules using `module.exports`. Note that an additional convention is required to define your modules when using `module.exports`. We'll discuss that later in this exercise.

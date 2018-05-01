@@ -2,7 +2,7 @@ Building a SPA with Vue.js & Hilary: Composition Root
 =====================================================
 The [composition root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) is the entry point for our JavaScript application. It is where we will define our dependency graph, and start our app. We're going to use [hilary](https://github.com/losandes/hilaryjs) to manage our dependencies.
 
-## Create an app directory, and an app.js file
+## Create an app directory and files
 
 ```Shell
 /papyr $ mkdir app
@@ -25,7 +25,7 @@ To start the app, we can use [hilary's bootstrapper](https://github.com/losandes
   // configure the scope for our application
   hilary.scope('papyr', {
     logging: {
-      level: 'info' // trace|debug|info|warn|error|fatal|off
+      level: 'trace' // trace|debug|info|warn|error|fatal|off
     }
   // bootstrap the application
   }).bootstrap([
@@ -43,9 +43,11 @@ To start the app, we can use [hilary's bootstrapper](https://github.com/losandes
 }(hilary))
 ```
 
-## Add our composition root to `index.html`
+## Add our composition root to `index.html`, at the bottom of `body`
 
 ```HTML
 <!-- /papyr/index.html -->
+<!-- ... -->
 <script src="/app/app.js"></script>
+</body>
 ```

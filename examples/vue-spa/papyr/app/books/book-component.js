@@ -1,8 +1,8 @@
 module.exports = {
   scope: 'papyr',
   name: 'book-component',
-  dependencies: ['Vue', 'page'],
-  factory: (Vue, page) => {
+  dependencies: ['Vue'],
+  factory: (Vue) => {
     'use strict'
 
     const state = {

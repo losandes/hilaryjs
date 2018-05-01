@@ -1,10 +1,10 @@
-Building a SPA with Vue.js & Hilary: Content Component
-======================================================
+Building a SPA with Vue.js & Hilary: Content Vue
+================================================
 The content section in our HTML is where the main content will be displayed. It's where the majority of our components will be bound. In this step, we're going to setup a naming convention, so our components are registered automatically, when we add the scripts to the DOM.
 
 > Alternatively, we can register components by hand, in our main Vue instance
 
-## Add a folder and file for our main Vue instance
+## Create the layout directory and files
 
 ```Shell
 /papyr/app $ mkdir layout-content
@@ -13,28 +13,46 @@ The content section in our HTML is where the main content will be displayed. It'
 ```
 
 ## Define the main Vue instance
-This code will register a module, named "content-vue" on the "papyr" scope in hilary. It depends on Vue, and on the "all-components" module we registered in our bootstrapper above. It returns an instance of Vue, and we can change what is displayed in the `#content` element by setting `component` to the name of another component that was returned by "all-components".
+This code will register a module, named "content-vue" on the "papyr" scope in hilary. It depends on Vue, and on any module with "component" in it's name. It returns an instance of Vue, and we can change what is displayed in the `#content` element by setting `component` to the name of any component that was returned by `/component/i`.
 
 ```JavaScript
 // /papyr/app/layout-content/content-vue.js
 module.exports = {
   scope: 'papyr',
   name: 'content-vue',
-  // note the expression used in dependencies: this will resolve all modules
-  // that have the word component in their name
   dependencies: ['Vue', /component/i],
   factory: (Vue, components) => {
     'use strict'
 
-    return new Vue({
+    const app = new Vue({
       el: '#content',
       data: {
         component: 'loading'
       },
-      // note the convention we will follow is that component modules will
-      // export an object with a `component` property
-      components: components.map((item) => item.component)
+      components: components.filter((item) => {
+        return item && typeof item.component === 'object'
+      }).reduce((output, item) => {
+        output[item.name] = item.component
+        return output
+      }, {})
     })
+
+    const self = {}
+
+    Object.defineProperty(self, 'component', {
+      get: () => {
+        return app.component
+      },
+      set: (name) => {
+        scroll(0, 0)
+        app.component = 'loading' // forces the component to reload unless the current component is loading
+        app.component = name
+      },
+      enumerable: true,
+      configurable: false
+    })
+
+    return Object.freeze(self)
   }
 }
 ```
@@ -65,7 +83,7 @@ module.exports = {
       data: () => state
     })
 
-    return { component }
+    return Object.freeze({ name: 'loading', component })
   }
 }
 ```
@@ -84,7 +102,7 @@ The scripts need to be loaded **before** `app.js` is loaded.
 <script src="/app/layout-content/loading-component.js"></script>
 
 <script src="/app/app.js"></script>
-<!-- ... -->
+</body>
 ```
 
 ## Compose the content component
@@ -95,7 +113,7 @@ Finally, we need to compose the content component. We've done all the hard work.
 // ...
 (scope, next) => {
   console.log('startup::papyr::composing application')
-  scope.resolve('content-vue')
+  scope.resolve('content-vue')      // bind the main content
   next(null, scope)
 }
 // ...

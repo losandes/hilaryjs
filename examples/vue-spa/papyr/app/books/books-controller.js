@@ -1,8 +1,8 @@
 module.exports = {
   scope: 'papyr',
   name: 'books-controller',
-  dependencies: ['page', 'query-string', 'content-vue', 'Book', 'book-component', 'products-repository'],
-  factory: (page, queryString, content, Book, bookComponent, productsRepo) => {
+  dependencies: ['page', 'content-vue', 'Book', 'book-component', 'products-repository'],
+  factory: (page, content, Book, bookComponent, productsRepo) => {
     'use strict'
 
     const registerRoutes = () => {
