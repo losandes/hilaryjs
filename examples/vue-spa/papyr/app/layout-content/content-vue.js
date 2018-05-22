@@ -20,6 +20,10 @@ module.exports = {
 
     const self = {}
 
+    /**
+     * Allows you to set the current component using syntax like:
+     * `content.component = 'products'`
+     */
     Object.defineProperty(self, 'component', {
       get: () => {
         return app.component
